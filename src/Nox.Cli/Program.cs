@@ -13,10 +13,10 @@ internal class Program
                                     .InformationalVersion
                                     .ToString();
 
-            Console.WriteLine($"botsay v{versionString}");
+            Console.WriteLine($"Nox v{versionString}");
             Console.WriteLine("-------------");
             Console.WriteLine("\nUsage:");
-            Console.WriteLine("  botsay <message>");
+            Console.WriteLine("  nox <message>");
             return;
         }
 
