@@ -208,7 +208,7 @@ $goo.Command.Add( 'set-project-version', { param( $versionInfoTable, $version )
 # command: goo bump-version [<version>]| Sets or increments the project version
 $goo.Command.Add( 'bump-version', { param($version)
     $versionInfoTable = $goo.Command.Run('get-project-version-table', 
-        @("//AssemblyVersion","//FileVersion","//PackageVersion","//PackageReference[@Include='Nox.Lib']/@Version")
+        @("//AssemblyVersion","//FileVersion","//PackageVersion")
     )
     $versionArray = $null;
     if($null -eq $version){
