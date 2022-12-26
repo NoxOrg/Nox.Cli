@@ -57,3 +57,4 @@ jobs:
         #### <-- add back after 'dotnet build' line above when tests are working
         #dotnet tool install --global dotnet-coverage
         #dotnet-coverage collect 'dotnet test ./src' -f xml  -o 'coverage.xml'
+
