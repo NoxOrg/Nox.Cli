@@ -17,9 +17,9 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Copyright>Copyright (c) Andre Sharpe 2022</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.0.5.0</AssemblyVersion>
-    <FileVersion>1.0.5.0</FileVersion>
-    <PackageVersion>1.0.5</PackageVersion>
+    <AssemblyVersion>1.0.6.0</AssemblyVersion>
+    <FileVersion>1.0.6.0</FileVersion>
+    <PackageVersion>1.0.6</PackageVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/NoxOrg/Nox.Cli</PackageProjectUrl>
     <RepositoryUrl>https://github.com/NoxOrg/Nox.Cli.git</RepositoryUrl>
@@ -41,7 +41,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
     <PackageReference Include="Microsoft.Graph" Version="4.49.0" />
     <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.170.0" />
-    <PackageReference Include="Nox.Lib" Version="6.0.24" />
+    <PackageReference Include="Nox.Lib" Version="6.0.25" />
     <PackageReference Include="RestSharp" Version="108.0.3" />
     <PackageReference Include="Spectre.Console" Version="0.45.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.45.0" />
