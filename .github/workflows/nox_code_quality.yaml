@@ -54,7 +54,6 @@ jobs:
           dotnet build ./src --warnaserror --configuration Release --no-incremental
           ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
         shell: pwsh
-
         #### <-- add back after 'dotnet build' line above when tests are working
         #dotnet tool install --global dotnet-coverage
         #dotnet-coverage collect 'dotnet test ./src' -f xml  -o 'coverage.xml'
