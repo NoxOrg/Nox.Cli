@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli", "Nox.Cli\Nox.Cli.csproj", "{71AF2BBF-4D89-423A-A1EA-2644B561EB00}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5693B254-65BC-4553-AD0F-1C825F235DFE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{71AF2BBF-4D89-423A-A1EA-2644B561EB00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71AF2BBF-4D89-423A-A1EA-2644B561EB00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71AF2BBF-4D89-423A-A1EA-2644B561EB00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71AF2BBF-4D89-423A-A1EA-2644B561EB00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F253644C-9AA6-41DA-8102-7A87FFE307C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F253644C-9AA6-41DA-8102-7A87FFE307C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F253644C-9AA6-41DA-8102-7A87FFE307C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F253644C-9AA6-41DA-8102-7A87FFE307C8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B440C24E-F11D-4F28-9EE5-F7AB214679E6}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Nox.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "sync vc --path ..\\..\\samples\\design",
+      "workingDirectory": "$(ProjectDir)"
+    }
+  }
+}

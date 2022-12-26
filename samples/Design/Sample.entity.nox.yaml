@@ -1,0 +1,16 @@
+﻿#
+# Sample.entity.nox.yaml
+#
+
+Name: Sample
+
+Attributes:
+
+  - Name: Id
+    IsPrimaryKey: true
+    Type: int
+
+  - Name: Name
+    IsRequired: true
+    Type: string
+    MaxWidth: 64
