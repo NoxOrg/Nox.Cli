@@ -82,6 +82,12 @@ $goo.Command.Add( 'build', {
 })
 
 
+# command: goo run | Run the console application
+$goo.Command.Add( 'run', { param([string]$options)
+    $goo.Console.WriteInfo("Starting the application...")
+    $goo.Command.RunExternal('dotnet',"run $options -- -help",$script:ProjectFolder)
+})
+
 # command: goo env | Show all environment variables
 $goo.Command.Add( 'env', { param($dbEnvironment,$dbInstance)
     $goo.Console.WriteLine( "environment variables" )
@@ -106,12 +112,6 @@ $goo.Command.Add( 'setenv', { param( $Environment )
 $goo.Command.Add( 'dev', { 
     $goo.Command.StartProcess($script:SolutionFile)
     $goo.Command.StartProcess('code','.')
-})
-
-# command: goo run | Run the console application
-$goo.Command.Add( 'run', { param([string]$options)
-    $goo.Console.WriteInfo("Starting the application...")
-    $goo.Command.RunExternal('dotnet',"run $options -- version",$script:ProjectFolder)
 })
 
 # command: goo feature <name> | Creates a new feature branch from your main git branch

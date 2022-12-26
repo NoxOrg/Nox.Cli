@@ -14,14 +14,16 @@ using Nox.Cli.Services;
 using Nox.Cli.Commands;
 using Nox.Cli.Helpers;
 
-var installedVersion = VersionChecker.GetInstalledNoxCliVersion();
-
-AnsiConsole.MarkupLine(@$"[bold red3] _ __   _____  __ [/]");
-AnsiConsole.MarkupLine(@$"[bold red3]| '_ \ / _ \ \/ / [/] Nox.Cli version {installedVersion}");
-AnsiConsole.MarkupLine(@$"[bold red3]| | | | (_) >  <  [/] [gray]Github: https://github.com/NoxOrg/Nox.Cli[/]");
-AnsiConsole.MarkupLine(@$"[bold red3]|_| |_|\___/_/\_\ [/]");
-AnsiConsole.MarkupLine(@$"[bold red3]                  [/]");
-AnsiConsole.MarkupLine(@$"Starting...");
+if (args.Length > 0 && !args[0].Equals("version", StringComparison.OrdinalIgnoreCase))
+{
+    var installedVersion = VersionChecker.GetInstalledNoxCliVersion();
+    AnsiConsole.MarkupLine(@$"[bold red3] _ __   _____  __ [/]");
+    AnsiConsole.MarkupLine(@$"[bold red3]| '_ \ / _ \ \/ / [/] Nox.Cli version {installedVersion}");
+    AnsiConsole.MarkupLine(@$"[bold red3]| | | | (_) >  <  [/] [gray]Github: https://github.com/NoxOrg/Nox.Cli[/]");
+    AnsiConsole.MarkupLine(@$"[bold red3]|_| |_|\___/_/\_\ [/]");
+    AnsiConsole.MarkupLine(@$"[bold red3]                  [/]");
+    AnsiConsole.MarkupLine(@$"Starting...");
+}
 
 var services = new ServiceCollection();
 services.AddSingleton<IFileSystem, FileSystem>();
@@ -49,17 +51,31 @@ app.Configure(config =>
         cfg.AddCommand<SyncDirectoryServiceCommand>("directoryService")
             .WithAlias("ds")
             .WithDescription("Synchronises nox team definition with your directory service.")
-            .WithExample(new[] { "sync directoryService", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
+            .WithExample(new[] { "sync directoryService", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" })
+            .WithExample(new[] { "sync ds", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
 
         cfg.AddCommand<SyncVersionControlCommand>("versionControl")
             .WithAlias("vc")
             .WithDescription("Synchronises nox team definition with your version control service.")
-            .WithExample(new[] { "sync versionControl", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
+            .WithExample(new[] { "sync versionControl", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" })
+            .WithExample(new[] { "sync vc", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
+
+        cfg.AddCommand<SyncDatabaseCommand>("database")
+            .WithAlias("db")
+            .WithDescription("Synchronises nox definition with your hosted database.")
+            .WithExample(new[] { "sync database", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" })
+            .WithExample(new[] { "sync db", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
+
+        cfg.AddCommand<SyncContainerOrchestrationCommand>("containerOrchestration")
+            .WithAlias("co")
+            .WithDescription("Synchronises nox definition with your hosted container orchestration platform.")
+            .WithExample(new[] { "sync containerOrchestration", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" })
+            .WithExample(new[] { "sync co", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
 
     });
 
     config.AddCommand<VersionCommand>("version")
-        .WithDescription("Shows the current Nox cli vewrsion.")
+        .WithDescription("Displays the current Nox cli version.")
         .WithExample(new[] { "version" });
     
 });

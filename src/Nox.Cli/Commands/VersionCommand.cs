@@ -3,14 +3,15 @@
 using Spectre.Console.Cli;
 using Nox.Cli.Helpers;
 using Nox.Cli.Services;
+using Spectre.Console;
 
 public class VersionCommand : AsyncCommand<VersionCommand.Settings>
 {
-    private readonly IConsoleWriter _consoleWriter;
+    private readonly IAnsiConsole _console;
 
-    public VersionCommand(IConsoleWriter consoleWriter)
+    public VersionCommand(IAnsiConsole console)
     {
-        _consoleWriter = consoleWriter;
+        _console = console;
     }
 
     public class Settings : CommandSettings
@@ -21,7 +22,7 @@ public class VersionCommand : AsyncCommand<VersionCommand.Settings>
     {
         var installedVersion = VersionChecker.GetInstalledNoxCliVersion();
         
-        _consoleWriter.WriteInfo(installedVersion);
+        _console.WriteLine(installedVersion);
 
         await Task.Delay(1);
 
