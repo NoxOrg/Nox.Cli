@@ -1,51 +1,53 @@
 #
 # Service definition
 #
+# yaml-language-server: $schema=https://raw.githubusercontent.com/NoxOrg/Nox/main/src/Nox.Core/Schemas/NoxConfiguration.json
+#
+# https://raw.githubusercontent.com/NoxOrg/Nox/main/src/Nox.Core/Schemas
+# c:/users/andre/repos
+#
 
-Name: SampleCurrency
+name: SampleCurrency
 
-Description: Sample Currency Microservice
+description: A sample currency conversion microservice
 
-AutoMigrations: false
+autoMigrations: false
 
-Database:
-  Name: SampleCurrencyDb
-  Server: localhost
-  Provider: SqlServer
-  Options: Trusted_Connection=no;connection timeout=120;
-  User: sa  
-  Password: Developer*123
+database:
+  name: SampleCurrencyDb
+  server: localhost
+  provider: sqlServer
+  options: Trusted_Connection=no;connection timeout=120;
+  user: sa  
+  password: Developer*123
 
-MessagingProviders:
+messagingProviders:
 
-  - Name: AppServiceBus
-    Provider: RabbitMQ
-    ConnectionString: rabbitmq://guest:guest@localhost/
+  - name: AppServiceBus
+    provider: rabbitMQ
+    connectionString: rabbitmq://guest:guest@localhost/
       
-DataSources:
+dataSources:
 
-  - Name: JsonSeedData
-    Provider: Json
-    Options: Source=File;Path=../../docs/sample-data/;
+  - name: JsonSeedData
+    provider: json
+    options: Source=File;Path=../../docs/sample-data/;
 
-VersionControl:
-  Provider: AzureDevOps
-  Server: https://dev.azure.com/iwgplc
-  Project: Nox.SampleCurrency
-  Repository: SampleCurrency.Api.V1
+versionControl:
+  provider: azureDevOps
+  server: https://dev.azure.com/iwgplc
+  project: Nox.SampleCurrency
+  repository: SampleCurrency.Api.V1
 
-Team:
-  Developers:
-    - Name: Dionisis Stoubos
-      UserName: dionisis.stoubos@iwgplc.com
-      IsAdmin: true
-    - Name: Andre Sharpe
-      UserName: andre.sharpe@iwgplc.com
-      MobilePhoneNumber: +41789461056
-      IsAdmin: true
-    - Name: Jan Schutte
-      UserName: jan.schutte@iwgplc.com
-      IsAdmin: true
-
-
-  
+team:
+  developers:
+    - name: Dionisis Stoubos
+      userName: dionisis.stoubos@iwgplc.com
+      isAdmin: true
+    - name: Andre Sharpe
+      userName: andre.sharpe@iwgplc.com
+      mobilePhoneNumber: +41789461056
+      isAdmin: true
+    - name: Jan Schutte
+      userName: jan.schutte@iwgplc.com
+      isAdmin: true

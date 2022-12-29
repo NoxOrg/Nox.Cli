@@ -41,10 +41,15 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
     <PackageReference Include="Microsoft.Graph" Version="4.49.0" />
     <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.170.0" />
-    <PackageReference Include="Nox.Lib" Version="6.0.25" />
     <PackageReference Include="RestSharp" Version="108.0.3" />
     <PackageReference Include="Spectre.Console" Version="0.45.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.45.0" />
     <PackageReference Include="System.IO.Abstractions" Version="19.1.5" />
+    <!--
+    <PackageReference Include="Nox.Lib" Version="6.0.25" />
+    -->
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Nox\src\Nox.Core\Nox.Core.csproj" />
   </ItemGroup>
 </Project>

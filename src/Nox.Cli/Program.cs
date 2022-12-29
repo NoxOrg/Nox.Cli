@@ -14,7 +14,7 @@ using Nox.Cli.Services;
 using Nox.Cli.Commands;
 using Nox.Cli.Helpers;
 
-if (args.Length > 0 && !args[0].Equals("version", StringComparison.OrdinalIgnoreCase))
+if ((args.Length > 0 && !args[0].Equals("version")) || args.Length == 0)
 {
     var installedVersion = VersionChecker.GetInstalledNoxCliVersion();
     AnsiConsole.MarkupLine(@$"[bold red3] _ __   _____  __ [/]");
@@ -45,6 +45,14 @@ app.Configure(config =>
     config.SetApplicationName("nox");
 
     config.SetInterceptor(new OperatingSystemInterceptor());
+
+    config.AddBranch("new", cfg =>
+    {
+        cfg.AddCommand<NewServiceCommand>("service")
+            .WithDescription("Creates a nox service.")
+            .WithExample(new[] { "new service", $"--name SampleService" });
+
+    });
 
     config.AddBranch("sync", cfg =>
     {

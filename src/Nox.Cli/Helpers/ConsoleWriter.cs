@@ -13,6 +13,7 @@ public interface IConsoleWriter
     void WriteHelpHeader(string message);
     void WriteHelpText(string message);
     void WriteLogMessage(string message);
+    void WriteRule(string message);
 }
 
 public class ConsoleWriter : IConsoleWriter
@@ -53,4 +54,10 @@ public class ConsoleWriter : IConsoleWriter
     {
         _console.MarkupLine($"[grey]{message}.[/]");
     }
+
+    public void WriteRule(string message)
+    {
+        _console.Write(new Rule($"[bold mediumpurple3_1]{message.EscapeMarkup()}[/]") { Alignment = Justify.Left });
+    }
+
 }

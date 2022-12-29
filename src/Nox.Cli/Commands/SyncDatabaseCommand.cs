@@ -14,7 +14,7 @@ public class SyncDatabaseCommand : NoxCliCommand<SyncDatabaseCommand.Settings>
 
     public class Settings : CommandSettings
     {
-        [CommandOption("--path")]
+        [CommandOption("-p|--path")]
         public string DesignFolderPath { get; set; } = null!;
     }
 
