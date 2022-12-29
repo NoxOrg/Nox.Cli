@@ -22,7 +22,7 @@ public class SyncVersionControlCommand : NoxCliCommand<SyncVersionControlCommand
 
     public class Settings : CommandSettings
     {
-        [CommandOption("--path")]
+        [CommandOption("-p|--path")]
         public string DesignFolderPath { get; set; } = null!;
     }
 
@@ -43,7 +43,7 @@ public class SyncVersionControlCommand : NoxCliCommand<SyncVersionControlCommand
 
         var devOpsServer = _noxConfiguration.VersionControl!.Server;
 
-        var devOpsPat = _configuration["AZURE_DEVOPS_PAT"] ?? _configuration["AZURE-DEVOPS-PAT"];
+        var devOpsPat = _configuration["AZURE_DEVOPS_PAT"];
 
         var connection = new VssConnection(new Uri(devOpsServer), new VssBasicCredential(string.Empty, devOpsPat));
 

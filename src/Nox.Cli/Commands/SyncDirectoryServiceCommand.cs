@@ -19,7 +19,7 @@ public class SyncDirectoryServiceCommand : NoxCliCommand<SyncDirectoryServiceCom
 
     public class Settings : CommandSettings
     {
-        [CommandOption("--path")]
+        [CommandOption("-p|--path")]
         public string DesignFolderPath { get; set; } = null!;
     }
 
@@ -41,9 +41,9 @@ public class SyncDirectoryServiceCommand : NoxCliCommand<SyncDirectoryServiceCom
 
         _consoleWriter.WriteHelpText("Sync: Azure AD...");
 
-        var tenantId = _configuration["AZURE_TENANT_ID"] ?? _configuration["AZURE-TENANT-ID"];
-        var clientId = _configuration["AZURE_CLIENT_ID"] ?? _configuration["AZURE-CLIENT-ID"];
-        var clientSecret = _configuration["AZURE_CLIENT_SECRET"] ?? _configuration["AZURE-CLIENT-SECRET"];
+        var tenantId = _configuration["AZURE_TENANT_ID"];
+        var clientId = _configuration["AZURE_CLIENT_ID"];
+        var clientSecret = _configuration["AZURE_CLIENT_SECRET"];
 
         var _userScopes = new string[] { @"https://graph.microsoft.com/.default" };
 
