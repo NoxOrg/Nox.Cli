@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Nox.Core.Configuration;
 using Nox.Core.Exceptions;
 
-internal static class ServiceCollectionExtensions
+public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddNoxCliServices(this IServiceCollection services, string[] args)
     {

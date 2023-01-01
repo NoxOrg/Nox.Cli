@@ -44,7 +44,7 @@ public class NewServiceCommand : NoxCliCommand<NewServiceCommand.Settings>
 
         _console.WriteLine();
 
-        _consoleWriter.WriteRule("New Service");
+        _consoleWriter.WriteRuler("New Service");
 
         _console.WriteLine();
 

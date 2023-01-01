@@ -5,7 +5,6 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using MediatR;
 
 using Nox.Cli;
 using Nox.Cli.Interceptors;
@@ -30,7 +29,6 @@ services.AddSingleton<IFileSystem, FileSystem>();
 services.AddSingleton<IConsoleWriter, ConsoleWriter>();
 services.AddNoxCliServices(args);
 services.AddAutoMapper(Assembly.GetExecutingAssembly());
-services.AddMediatR(typeof(Program));
 
 var registrar = new TypeRegistrar(services);
 var app = new CommandApp(registrar);
@@ -48,50 +46,47 @@ app.Configure(config =>
 
     config.AddBranch("new", cfg =>
     {
+
+        cfg.SetDescription("Create new services, entities, loaders, api's, and more...");
+
         cfg.AddCommand<NewServiceCommand>("service")
-            .WithDescription("Creates a nox service.")
+            .WithDescription("Creates a new NOX service.")
             .WithExample(new[] { "new service", $"--name SampleService" });
 
     });
 
     config.AddBranch("sync", cfg =>
     {
+        cfg.SetDescription("Synchronize your project with version control and remote environments");
+
         cfg.AddCommand<SyncDirectoryServiceCommand>("directoryService")
             .WithAlias("ds")
-            .WithDescription("Synchronises nox team definition with your directory service.")
+            .WithDescription("Synchronises NOX team definition with your directory service.")
             .WithExample(new[] { "sync directoryService", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" })
             .WithExample(new[] { "sync ds", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
 
         cfg.AddCommand<SyncVersionControlCommand>("versionControl")
             .WithAlias("vc")
-            .WithDescription("Synchronises nox team definition with your version control service.")
+            .WithDescription("Synchronises NOX team definition with your version control service.")
             .WithExample(new[] { "sync versionControl", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" })
             .WithExample(new[] { "sync vc", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
 
-        cfg.AddCommand<SyncDatabaseCommand>("database")
-            .WithAlias("db")
-            .WithDescription("Synchronises nox definition with your hosted database.")
-            .WithExample(new[] { "sync database", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" })
-            .WithExample(new[] { "sync db", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
-
-        cfg.AddCommand<SyncContainerOrchestrationCommand>("containerOrchestration")
-            .WithAlias("co")
-            .WithDescription("Synchronises nox definition with your hosted container orchestration platform.")
-            .WithExample(new[] { "sync containerOrchestration", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" })
-            .WithExample(new[] { "sync co", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
+        cfg.AddNoxCommands();
 
     });
 
     config.AddCommand<VersionCommand>("version")
-        .WithDescription("Displays the current Nox cli version.")
+        .WithDescription("Displays the current NOX cli version.")
         .WithExample(new[] { "version" });
     
 });
 
 
+int returnValue = 0;
+
 try
 {
-    await app.RunAsync(args);
+    returnValue = await app.RunAsync(args);
 }
 catch (Exception e)
 {
@@ -115,9 +110,12 @@ catch (Exception e)
                 LineNumber = new Style().Foreground(Color.Cornsilk1),
             }
         });
+        returnValue = 1;
     }
 }
 finally
 {
     VersionChecker.CheckForLatestVersion();
 }
+
+return returnValue;

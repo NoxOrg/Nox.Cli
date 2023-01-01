@@ -1,8 +1,6 @@
 ﻿namespace Nox.Cli.Commands;
 
-using System.IO.Abstractions;
 using Helpers;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
