@@ -1,6 +1,8 @@
 ﻿using Nox.Cli.Actions;
 using Npgsql;
 using System.Data;
+using Microsoft.VisualStudio.Services.Common;
+using Microsoft.VisualStudio.Services.WebApi;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -11,42 +13,22 @@ public class AzDevopsConnect_v1 : NoxAction
         return new NoxActionMetaData
         {
             Name = "azdevops/connect@v1",
-            Author = "Andre Sharpe",
+            Author = "Jan Schutte",
             Description = "Connect to Azure Devops",
 
             Inputs =
             {
                 ["server"] = new NoxActionInput { 
                     Id = "server", 
-                    Description = "The database hostname or IP",
+                    Description = "The DevOps server hostname or IP",
                     Default = "localhost",
-                    IsRequired = false
-                },
-
-                ["port"] = new NoxActionInput {
-                    Id = "port",
-                    Description = "The database port to connect via",
-                    Default = 5432,
-                    IsRequired = false
-                },
-
-                ["user"] = new NoxActionInput {
-                    Id = "user",
-                    Description = "The username to connect as",
-                    Default = string.Empty,
                     IsRequired = true
                 },
 
-                ["password"] = new NoxActionInput {
-                    Id = "password",
-                    Description = "The password to connect with",
-                    Default = string.Empty,
-                    IsRequired = true
-                },
-
-                ["database"] = new NoxActionInput {
-                    Id = "database",
-                    Description = "The database name to connect to",
+                
+                ["personalAccessToken"] = new NoxActionInput {
+                    Id = "pat",
+                    Description = "The personal access token to connect with",
                     Default = string.Empty,
                     IsRequired = true
                 },
@@ -54,34 +36,23 @@ public class AzDevopsConnect_v1 : NoxAction
 
             Outputs =
             {
-                ["connection-id"] = new NoxActionOutput {
-                    Id = "connection-id",
-                    Description = "The database hostname or IP",
+                ["connection"] = new NoxActionOutput {
+                    Id = "connection",
+                    Description = "The connection to the devops project",
                 },
             }
         };
     }
 
-    private NpgsqlConnection? _connection;
+    private VssConnection? _connection;
 
-    public override async Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
+    public override Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
     {
-        var csb = new NpgsqlConnectionStringBuilder
-        {
-            Host = (string)inputs["server"],
-            Port = Convert.ToInt32(inputs["port"]),
-            Username = (string)inputs["user"],
-            Password = (string)inputs["password"],
-            Database = (string)inputs["database"],
-        };
+        var server = (string)inputs["server"];
+        var pat = (string)inputs["personalAccessToken"];
 
-        _connection = new NpgsqlConnection(csb.ToString());
-
-        // no-op
-        if (_connection.State == ConnectionState.Open)
-        {
-            await _connection.CloseAsync();
-        }
+        _connection = new VssConnection(new Uri(server), new VssBasicCredential(string.Empty, pat));
+        return Task.CompletedTask;
     }
 
     public override async Task<IDictionary<string, object>> ProcessAsync(NoxWorkflowExecutionContext ctx)
@@ -92,15 +63,15 @@ public class AzDevopsConnect_v1 : NoxAction
 
         if (_connection == null)
         {
-            _errorMessage = "The Postgres connect action was not initialized";
+            _errorMessage = "The devops connect action was not initialized";
         }
         else
         {
-            if (_connection.State == ConnectionState.Closed || _connection.State == ConnectionState.Broken)
+            if (!_connection.HasAuthenticated)
             {
                 try
                 {
-                    await _connection.OpenAsync();
+                    await _connection.ConnectAsync();
  
                     outputs["connection"] = _connection;
 
@@ -116,14 +87,15 @@ public class AzDevopsConnect_v1 : NoxAction
         return outputs;
     }
 
-    public override async Task EndAsync(NoxWorkflowExecutionContext ctx)
-
+    public override Task EndAsync(NoxWorkflowExecutionContext ctx)
     {
         if (_connection != null)
         {
-            await _connection.CloseAsync();
-            await _connection.DisposeAsync();
+            _connection.Disconnect();
+            _connection.Dispose();
         }
+
+        return Task.CompletedTask;
     }
 }
 
