@@ -28,6 +28,6 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Restore
-        run: dotnet restore ./src
+        run: dotnet restore ./src/Nox.Cli
       - name: Build
-        run: dotnet build ./src --warnaserror --configuration Release --no-restore      
+        run: dotnet build ./src/Nox.Cli --warnaserror --configuration Release --no-restore      

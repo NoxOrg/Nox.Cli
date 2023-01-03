@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli", "Nox.Cli\Nox.Cli.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5693B254-65BC-4553-AD0F-1C825F235DFE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Core", "..\..\Nox\src\Nox.Core\Nox.Core.csproj", "{9904E757-BDC8-4CFA-9D0D-32E8B6B4A36C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
