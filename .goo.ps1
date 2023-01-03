@@ -85,7 +85,7 @@ $goo.Command.Add( 'build', {
 # command: goo run [<cliParameters>]| Run the console application
 $goo.Command.Add( 'run', { param([string]$dotNetOptions, [string]$cliOptions)
     $goo.Console.WriteLine("Starting: dotnet run $dotNetOptions")
-    $goo.Command.RunExternal('dotnet',"run $dotNetOptions",$script:ProjectFolder)
+    $goo.Command.RunExternal('dotnet',"run $dotNetOptions", $script:ProjectFolder)
 })
 
 # command: goo env | Show all environment variables
