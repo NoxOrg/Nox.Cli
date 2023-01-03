@@ -46,11 +46,7 @@
     <PackageReference Include="Spectre.Console" Version="0.45.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.45.0" />
     <PackageReference Include="System.IO.Abstractions" Version="19.1.5" />
-    <!--
     <PackageReference Include="Nox.Lib" Version="6.0.26" />
-    -->
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Nox\src\Nox.Core\Nox.Core.csproj" />
-  </ItemGroup>
+
 </Project>

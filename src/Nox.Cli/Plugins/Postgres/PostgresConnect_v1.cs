@@ -54,8 +54,8 @@ public class PostgresConnect_v1 : NoxAction
 
             Outputs =
             {
-                ["connection-id"] = new NoxActionOutput {
-                    Id = "connection-id",
+                ["connection"] = new NoxActionOutput {
+                    Id = "connection",
                     Description = "The database hostname or IP",
                 },
             }
@@ -64,7 +64,7 @@ public class PostgresConnect_v1 : NoxAction
 
     private NpgsqlConnection? _connection;
 
-    public override async Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
+    public override Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
     {
         var csb = new NpgsqlConnectionStringBuilder
         {
@@ -77,11 +77,7 @@ public class PostgresConnect_v1 : NoxAction
 
         _connection = new NpgsqlConnection(csb.ToString());
 
-        // no-op
-        if (_connection.State == ConnectionState.Open)
-        {
-            await _connection.CloseAsync();
-        }
+        return Task.FromResult(true);
     }
 
     public override async Task<IDictionary<string, object>> ProcessAsync(NoxWorkflowExecutionContext ctx)
