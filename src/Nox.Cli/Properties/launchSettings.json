@@ -2,7 +2,7 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "new service",
+      "commandLineArgs": "sync db",
       "workingDirectory": "$(ProjectDir)"
     }
   }

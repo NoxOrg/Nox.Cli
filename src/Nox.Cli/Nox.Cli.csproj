@@ -35,21 +35,18 @@
     <PackageReference Include="Azure.Identity" Version="1.8.0" />
     <PackageReference Include="Azure.ResourceManager" Version="1.3.2" />
     <PackageReference Include="Azure.ResourceManager.Resources" Version="1.3.1" />
-    <PackageReference Include="MediatR" Version="11.1.0" />
-    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+    <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.4.0" />
+    <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.39" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
     <PackageReference Include="Microsoft.Graph" Version="4.49.0" />
     <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.170.0" />
+    <PackageReference Include="Npgsql" Version="7.0.1" />
     <PackageReference Include="RestSharp" Version="108.0.3" />
     <PackageReference Include="Spectre.Console" Version="0.45.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.45.0" />
     <PackageReference Include="System.IO.Abstractions" Version="19.1.5" />
-    <!--
-    <PackageReference Include="Nox.Lib" Version="6.0.25" />
-    -->
+    <PackageReference Include="Nox.Lib" Version="6.0.26" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Nox\src\Nox.Core\Nox.Core.csproj" />
-  </ItemGroup>
+
 </Project>

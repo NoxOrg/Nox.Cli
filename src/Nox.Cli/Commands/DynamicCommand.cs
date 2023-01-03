@@ -2,14 +2,20 @@
 
 using Helpers;
 using Microsoft.Extensions.Configuration;
+using Nox.Cli.Actions;
+using Nox.Core.Constants;
 using Nox.Core.Interfaces.Configuration;
+using Npgsql;
 using Spectre.Console;
 using Spectre.Console.Cli;
+using System.IO.Abstractions;
+using System.Net.NetworkInformation;
+using System.Text;
 
-public class SyncDatabaseCommand : NoxCliCommand<SyncDatabaseCommand.Settings>
+public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
 {
-    public SyncDatabaseCommand(IAnsiConsole console, IConsoleWriter consoleWriter, 
-        INoxConfiguration noxConfiguration, IConfiguration configuration) 
+    public DynamicCommand(IAnsiConsole console, IConsoleWriter consoleWriter, 
+        INoxConfiguration noxConfiguration, IConfiguration configuration, IFileSystem fileSystem) 
         : base(console, consoleWriter, noxConfiguration, configuration) {}
 
     public class Settings : CommandSettings
@@ -22,8 +28,10 @@ public class SyncDatabaseCommand : NoxCliCommand<SyncDatabaseCommand.Settings>
     {
         await base.ExecuteAsync(context, settings);
 
-        _console.WriteLine("not yet implemented, but coming soon...");
+        var yaml = (string)context.Data!;
 
-        return 0;
+        return await NoxWorkflowExecutor.Execute(yaml, _configuration, _noxConfiguration, _console) ? 0 : 1;
     }
+
 }
+
