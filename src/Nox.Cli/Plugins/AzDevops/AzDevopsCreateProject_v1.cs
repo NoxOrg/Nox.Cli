@@ -20,21 +20,22 @@ public class AzDevopsCreateProject_v1 : NoxAction
                 ["connection"] = new NoxActionInput {
                     Id = "connection",
                     Description = "The connection established with action 'azdevops/connect@v1'",
-                    Default = null!,
+                    Default = new VssConnection(new Uri("https://localhost"), null),
                     IsRequired = true
                 },
 
-                ["projectName"] = new NoxActionInput { 
-                    Id = "projectName", 
+                ["project-name"] = new NoxActionInput { 
+                    Id = "project-name", 
                     Description = "The DevOps project name",
-                    Default = "",
+                    Default = string.Empty,
                     IsRequired = true
                 },
-                ["projectDescription"] = new NoxActionInput { 
-                    Id = "projectDescription", 
+                
+                ["project-description"] = new NoxActionInput { 
+                    Id = "project-description", 
                     Description = "The description of the DevOps project",
-                    Default = "",
-                    IsRequired = true
+                    Default = string.Empty,
+                    IsRequired = false
                 },
             },
 
@@ -57,10 +58,8 @@ public class AzDevopsCreateProject_v1 : NoxAction
     public override async Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
     {
         var connection = (VssConnection)inputs["connection"];
-        _projectName = (string)inputs["projectName"];
-        _projectDescription = (string)inputs["projectDescription"];
-        if (string.IsNullOrEmpty(_projectDescription)) _projectDescription = _projectName;
-        
+        _projectName = (string)inputs["project-name"];
+        _projectDescription = (string)inputs["project-description"];
         _projectClient = await connection.GetClientAsync<ProjectHttpClient>();
         _processClient = await connection.GetClientAsync<ProcessHttpClient>();
         _operationsClient = await connection.GetClientAsync<OperationsHttpClient>();
@@ -78,6 +77,7 @@ public class AzDevopsCreateProject_v1 : NoxAction
         }
         else
         {
+            if (string.IsNullOrEmpty(_projectDescription)) _projectDescription = _projectName;
             try
             {
                 var project = await _projectClient.GetProject(_projectName);

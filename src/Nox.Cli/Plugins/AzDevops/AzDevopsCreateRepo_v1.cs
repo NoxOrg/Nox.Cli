@@ -20,19 +20,19 @@ public class AzDevopsCreateRepo_v1 : NoxAction
                 ["connection"] = new NoxActionInput {
                     Id = "connection",
                     Description = "The connection established with action 'azdevops/connect@v1'",
-                    Default = null!,
+                    Default = new VssConnection(new Uri("https://localhost"), null),
                     IsRequired = true
                 },
-                ["projectName"] = new NoxActionInput { 
-                    Id = "projectName", 
+                ["project-name"] = new NoxActionInput { 
+                    Id = "project-name", 
                     Description = "The DevOps project name",
-                    Default = "",
+                    Default = string.Empty,
                     IsRequired = true
                 },
-                ["repositoryName"] = new NoxActionInput { 
-                    Id = "repositoryName", 
+                ["repository-name"] = new NoxActionInput { 
+                    Id = "repository-name", 
                     Description = "The DevOps repository name",
-                    Default = "",
+                    Default = string.Empty,
                     IsRequired = true
                 },
             },
@@ -54,8 +54,8 @@ public class AzDevopsCreateRepo_v1 : NoxAction
     public override async Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
     {
         var connection = (VssConnection)inputs["connection"];
-        _projectName = (string)inputs["projectName"]; 
-        _repoName = (string)inputs["repositoryName"];
+        _projectName = (string)inputs["project-name"]; 
+        _repoName = (string)inputs["repository-name"];
         _repoClient = await connection.GetClientAsync<GitHttpClient>();
     }
 

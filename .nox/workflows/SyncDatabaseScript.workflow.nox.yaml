@@ -63,15 +63,16 @@ jobs:
         display:
           success: Added variable 
 
-      - name: Check if the database exists
-        id: db-exists
+      - name: Check that the database does not exist
+        id: db-not-exist
         uses: postgres/execute-scalar@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
           sql: SELECT datname FROM pg_database WHERE datname=($1);
           parameters: ['${{ vars.db-name }}']
         validate: 
-          that: '"${{ steps.db-exists.outputs.result }}" != "${{ vars.db-name }}"' 
+          that: '"${{ steps.db-not-exist.outputs.result }}" != "${{ vars.db-name }}"' 
+          #that: ${{ steps.db-not-exist.outputs.result }} != ${{ vars.db-name }}
         display:
           success: Database not found
           error: Database already exists
@@ -79,7 +80,8 @@ jobs:
 
       - name: Create database 
         id: create-db
-        if: '"${{ steps.db-exists.outputs.result }}" != "${{ vars.db-name }}"'
+        #if: ${{ steps.db-not-exist.was-valid }}
+		if: '"${{ steps.db-not-exist.outputs.result }}" != "${{ vars.db-name }}"'
         uses: postgres/execute-nonquery@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
@@ -108,6 +110,7 @@ jobs:
           db-role: ${{ vars.db-name }}_owneraccess
           db-admin: ${{vars.db-name }}_pg_admin
           db-password: ${{ vars.db-name }}_$123
+          #db-password: ${{ env.SOME_VARIABLE }}_$123          
         display:
           success: Done!
 

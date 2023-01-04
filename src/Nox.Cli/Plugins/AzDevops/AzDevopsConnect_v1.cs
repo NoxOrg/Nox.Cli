@@ -26,8 +26,8 @@ public class AzDevopsConnect_v1 : NoxAction
                 },
 
                 
-                ["personalAccessToken"] = new NoxActionInput {
-                    Id = "pat",
+                ["personal-access-token"] = new NoxActionInput {
+                    Id = "personal-access-token",
                     Description = "The personal access token to connect with",
                     Default = string.Empty,
                     IsRequired = true
@@ -49,7 +49,7 @@ public class AzDevopsConnect_v1 : NoxAction
     public override Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
     {
         var server = (string)inputs["server"];
-        var pat = (string)inputs["personalAccessToken"];
+        var pat = (string)inputs["personal-access-token"];
 
         _connection = new VssConnection(new Uri(server), new VssBasicCredential(string.Empty, pat));
         return Task.CompletedTask;

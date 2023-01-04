@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.VisualStudio.Services.Graph.Client;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Actions;
+using Nox.Cli.Helpers;
 using Nox.Core.Configuration;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -22,27 +23,27 @@ public class AzDevopsAddTeamMembers_v1 : NoxAction
                 {
                     Id = "connection",
                     Description = "The connection established with action 'azdevops/connect@v1'",
-                    Default = null!,
+                    Default = new VssConnection(new Uri("https://localhost"), null),
                     IsRequired = true
                 },
-                ["projectName"] = new NoxActionInput
+                ["project-name"] = new NoxActionInput
                 {
-                    Id = "projectName",
+                    Id = "project-name",
                     Description = "The DevOps project name",
-                    Default = "",
+                    Default = string.Empty,
                     IsRequired = true
                 },
-                ["teamMembers"] = new NoxActionInput
+                ["team-members"] = new NoxActionInput
                 {
-                    Id = "teamMembers",
+                    Id = "team-members",
                     Description = "The developers to add to the project",
-                    Default = null!,
+                    Default = new List<TeamMemberConfiguration>(),
                     IsRequired = true
                 },
             }
         };
     }
-
+    
     private GraphHttpClient? _graphClient;
     private string? _projectName;
     private List<TeamMemberConfiguration>? _members;
@@ -50,8 +51,8 @@ public class AzDevopsAddTeamMembers_v1 : NoxAction
     public override async Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string, object> inputs)
     {
         var connection = (VssConnection)inputs["connection"];
-        _projectName = (string)inputs["projectName"];
-        _members = GetTeamMembers((List<object>)inputs["teamMembers"]);
+        _projectName = (string)inputs["project-name"];
+        _members = ((List<object>)inputs["team-members"]).ToTeamMemberConfiguration();
         _graphClient = await connection.GetClientAsync<GraphHttpClient>();
     }
 
@@ -145,20 +146,4 @@ public class AzDevopsAddTeamMembers_v1 : NoxAction
             usersInGraph = await _graphClient.ListUsersAsync(new string[] {"aad"}, continuationToken: usersInGraph.ContinuationToken.FirstOrDefault());
         }
     }
-
-    private List<TeamMemberConfiguration> GetTeamMembers(List<object> source)
-    {
-        var result = new List<TeamMemberConfiguration>();
-        foreach (Dictionary<object, object> item in source)
-        {
-            result.Add(new TeamMemberConfiguration
-            {
-                Name = item.GetValueOrDefault("name").ToString(),
-                UserName = item.GetValueOrDefault("userName").ToString(),
-                IsAdmin = item.GetValueOrDefault("isAdmin").ToString() == "true"
-            });
-        }
-        return result;
-    }
-    
 }

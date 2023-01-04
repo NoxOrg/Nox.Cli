@@ -59,18 +59,6 @@ app.Configure(config =>
     {
         cfg.SetDescription("Synchronize your project with version control and remote environments");
 
-        cfg.AddCommand<SyncDirectoryServiceCommand>("directoryService")
-            .WithAlias("ds")
-            .WithDescription("Synchronises NOX team definition with your directory service.")
-            .WithExample(new[] { "sync directoryService", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" })
-            .WithExample(new[] { "sync ds", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
-
-        // cfg.AddCommand<SyncVersionControlCommand>("versionControl")
-        //     .WithAlias("vc")
-        //     .WithDescription("Synchronises NOX team definition with your version control service.")
-        //     .WithExample(new[] { "sync versionControl", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" })
-        //     .WithExample(new[] { "sync vc", $"--path my{Path.DirectorySeparatorChar}nox{Path.DirectorySeparatorChar}design{Path.DirectorySeparatorChar}folder" });
-
         cfg.AddNoxCommands();
 
     });
