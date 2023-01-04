@@ -1,0 +1,71 @@
+# NOX Database Sync Command
+
+name: Synchronise NOX definition with Azure Active Directory
+
+cli:
+  branch: sync
+  command: directory-service
+  command-alias: ds
+  description: Synchronises NOX team definition with your Azure Active Directory (AAD).
+  examples:
+    - ["sync directoryService", "--path <designFolder>"]
+    - ["sync ds", "--path <designFolder>"]
+    
+jobs:
+  sync-directory-service:
+    steps:
+
+      - name: Connect to Azure Active Directory
+        id: connect
+        uses: azds/connect@v1
+        with:
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+        display:
+          success: Successfully connected to Azure Active Directory
+          error: Unable to connect to Azure Active Directory
+          
+      - name: Create the project AAD group
+        id: create-project-group
+        uses: azds/create-group@v1
+        with:
+          aad-client: ${{ steps.connect.outputs.aad-client }}
+          group-name: NOX_PROJECT_${{ config.name }}
+          group-description: ${{ config.description }}
+        display:
+          success: Created the Project AAD group
+          error: Unable to create the Project AAD group
+          
+      - name: Create an AAD security group
+        id: create-security-group
+        uses: azds/create-group@v1
+        with:
+          aad-client: ${{ steps.connect.outputs.aad-client }}
+          group-name: NOX_PROJECTS_ALL
+          group-description: Nox Projects - Security Group
+        display:
+          success: Created the AAD security group
+          error: Unable to create the AAD security group
+          
+      - name: Add project group as a member of security group
+        id: add-project-group-to-security-group
+        uses: azds/add-group-to-group@v1
+        with:
+          aad-client: ${{ steps.connect.outputs.aad-client }}
+          child-group: ${{ steps.create-project-group.outputs.aad-group }}
+          parent-group: ${{ steps.create-security-group.outputs.aad-group }}
+        display:
+          success: Added the project group to the security group
+          error: Unable to add the project group to the security group
+          
+      - name: Add project team members to project group
+        id: add-project-team
+        uses: azds/add-team-members@v1
+        with:
+          aad-client: ${{ steps.connect.outputs.aad-client }}
+          group: ${{ steps.create-project-group.outputs.aad-group }}
+          team-members: ${{ config.team.developers }}
+        display:
+          success: Added project team members to project group
+          error: Unable to add project team members to project group                  
