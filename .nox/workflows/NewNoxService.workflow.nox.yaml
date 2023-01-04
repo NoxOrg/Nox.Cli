@@ -1,0 +1,21 @@
+# NOX Database Sync Command
+
+name: Creates a new NOX service
+
+cli:
+  branch: new
+  command: service
+  description: Creates a new NOX service
+  examples:
+    - ["new service", "--path <designFolder>"]
+
+jobs:
+  new-entity:
+    steps:
+      - name: Create a new entity definition
+        id: add-new-service
+        uses: core/add-yaml-from-schema
+        with:
+          schema: https://noxorg.dev/schemas/NoxConfiguration.json
+          output-path: ./src/${{ config.Name }}/Design
+          interactive: true

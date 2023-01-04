@@ -1,0 +1,22 @@
+# NOX Database Sync Command
+
+name: Create a new NOX entity 
+
+cli:
+  branch: new
+  command: entity
+  description: Creates a new NOX entity
+  examples:
+    - ["new entity", "--path <designFolder>"]
+
+jobs:
+  new-entity:
+    steps:
+      - name: Create a new entity definition
+        id: add-new-entity
+        uses: core/add-yaml-from-schema
+        with:
+          schema: https://noxorg.dev/schemas/Entity.json
+          output-path: ./src/${{ config.Name }}/Design
+          exclude-properties: ["schema"]
+          interactive: true
