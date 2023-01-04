@@ -4,6 +4,8 @@ using Nox.Cli.Helpers;
 using Nox.Core.Configuration;
 using ActionState = Nox.Cli.Actions.ActionState;
 
+namespace Nox.Cli.Plugins.AzDevops;
+
 public class AzDsAddTeamMembers_v1 : NoxAction
 {
     public override NoxActionMetaData Discover()
