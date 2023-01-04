@@ -16,15 +16,16 @@ public static class NestedDictionaryExtensions
             {
                 subDictionary.WalkDictionary(func, $"{prefix}.{key}");
             }
-            else if (value is IEnumerable<IDictionary<object, object>> subDictionaryEnumeralbe)
+            else if (value is IEnumerable<IDictionary<object, object>> subDictionaryEnumerable)
             {
-                foreach (var d in subDictionaryEnumeralbe)
+                foreach (var d in subDictionaryEnumerable)
                 {
                     d.WalkDictionary(func, $"{prefix}.{key}");
                 }
             }
             else if (value is IEnumerable<object> subList)
             {
+                func.Invoke(new KeyValuePair<string, object>($"{prefix}.{key}".TrimStart('.'), value));
                 foreach (var d in subList)
                 {
                     if (d is IDictionary<object, object> subListDictionary)

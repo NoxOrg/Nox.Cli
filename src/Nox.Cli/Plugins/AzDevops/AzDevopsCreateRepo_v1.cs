@@ -48,7 +48,6 @@ public class AzDevopsCreateRepo_v1 : NoxAction
     }
 
     private GitHttpClient? _repoClient;
-    private GraphHttpClient? _graphClient;
     private string? _repoName;
     private string? _projectName;
 
@@ -58,7 +57,6 @@ public class AzDevopsCreateRepo_v1 : NoxAction
         _projectName = (string)inputs["projectName"]; 
         _repoName = (string)inputs["repositoryName"];
         _repoClient = await connection.GetClientAsync<GitHttpClient>();
-        _graphClient = await connection.GetClientAsync<GraphHttpClient>();
     }
 
     public override async Task<IDictionary<string, object>> ProcessAsync(NoxWorkflowExecutionContext ctx)
@@ -104,7 +102,6 @@ public class AzDevopsCreateRepo_v1 : NoxAction
     public override Task EndAsync(NoxWorkflowExecutionContext ctx)
     {
         _repoClient?.Dispose();
-        _graphClient.Dispose();
         return Task.CompletedTask;
     }
     
@@ -118,7 +115,7 @@ public class AzDevopsCreateRepo_v1 : NoxAction
         GitRepository repo = null!;
         try
         {
-            repo = await _repoClient.CreateRepositoryAsync(repoCreateParameters, _projectName);
+            repo = await _repoClient!.CreateRepositoryAsync(repoCreateParameters, _projectName);
             return repo;
         }
         catch (Exception ex)

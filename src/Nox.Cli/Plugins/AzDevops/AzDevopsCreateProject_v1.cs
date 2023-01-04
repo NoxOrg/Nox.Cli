@@ -109,8 +109,8 @@ public class AzDevopsCreateProject_v1 : NoxAction
     public override Task EndAsync(NoxWorkflowExecutionContext ctx)
     {
         _projectClient?.Dispose();
-        _processClient.Dispose();
-        _operationsClient.Dispose();
+        _processClient?.Dispose();
+        _operationsClient?.Dispose();
         return Task.CompletedTask;
     }
     
