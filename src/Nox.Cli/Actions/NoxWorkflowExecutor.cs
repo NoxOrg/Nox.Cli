@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.Extensions.Configuration;
+using Nox.Cli.Actions.Configuration;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 using YamlDotNet.Serialization;
@@ -11,27 +12,20 @@ public class NoxWorkflowExecutor
 {
     public async static Task<bool> Execute(string workflowYaml, IConfiguration appConfig, INoxConfiguration noxConfig, IAnsiConsole console)
     {
-        var serializer = new SerializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .Build();
-
-        var configYaml = serializer.Serialize(noxConfig);
 
         var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .WithNamingConvention(HyphenatedNamingConvention.Instance)
             .Build();
 
-        var config = deserializer.Deserialize<Dictionary<object, object>>(configYaml);
-
-        var workflow = deserializer.Deserialize<Dictionary<object, object>>(workflowYaml);
+        var workflow = deserializer.Deserialize<WorkflowConfiguration>(workflowYaml);
 
         console.WriteLine();
         console.WriteLine($"Validating...");
-        console.MarkupLine($"[green3]Workflow: {workflow["name"].ToString().EscapeMarkup()}[/]");
+        console.MarkupLine($"[green3]Workflow: {workflow.Name.EscapeMarkup()}[/]");
 
-        var ctx = new NoxWorkflowExecutionContext(workflow, config, appConfig);
+        var ctx = new NoxWorkflowExecutionContext(workflow, noxConfig, appConfig);
 
-        List<INoxAction> processedActions = new();
+        List<NoxAction> processedActions = new();
 
         while (ctx.CurrentAction != null)
         {
@@ -44,13 +38,13 @@ public class NoxWorkflowExecutor
             if (!ctx.CurrentAction.EvaluateIf())
             {
                 console.MarkupLine($"{Emoji.Known.ThumbsUp} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} failed");
-                ctx.Next();
+                ctx.NextStep();
                 continue;
             }
 
-            await ctx.CurrentAction.BeginAsync(ctx, inputs);
+            await ctx.CurrentAction.ActionProvider.BeginAsync(ctx, inputs);
 
-            var outputs = await ctx.CurrentAction.ProcessAsync(ctx);
+            var outputs = await ctx.CurrentAction.ActionProvider.ProcessAsync(ctx);
 
             ctx.StoreOutputVariables(ctx.CurrentAction, outputs);
 
@@ -62,27 +56,27 @@ public class NoxWorkflowExecutor
             {
                 if (ctx.CurrentAction.ContinueOnError)
                 {
-                    console.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} {ctx.CurrentAction.Display.Error.EscapeMarkup()}");
+                    console.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} {ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}");
                 }
                 else
                 {
                     ctx.SetErrorMessage(ctx.CurrentAction, ctx.CurrentAction.ErrorMessage);
-                    console.MarkupLine($"{Emoji.Known.CryingFace} [bold indianred1]{ctx.CurrentAction.Display.Error.EscapeMarkup()}[/]");
+                    console.MarkupLine($"{Emoji.Known.CryingFace} [bold indianred1]{ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}[/]");
                     break;
                 }
             }
             else
             {
-                if (!string.IsNullOrWhiteSpace(ctx.CurrentAction.Display.Success))
+                if (!string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.Success))
                 {
                     console.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} {ctx.CurrentAction.Display.Success.EscapeMarkup()}");
                 }
             }
 
-            ctx.Next();
+            ctx.NextStep();
         }
 
-        await Task.WhenAll( processedActions.Select(p => p.EndAsync(ctx) ) );
+        await Task.WhenAll( processedActions.Select(p => p.ActionProvider.EndAsync(ctx) ) );
 
         return true;
     }

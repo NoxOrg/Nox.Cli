@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Nox.Cli.Actions.Configuration;
 using Nox.Core.Configuration;
+using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -8,46 +10,44 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Nox.Cli.Actions;
 
-public class NoxWorkflowExecutionContext
+public class NoxWorkflowExecutionContext : INoxWorkflowExecutionContext
 {
 
     private readonly IConfiguration _appConfig;
-    private readonly IDictionary<object, object> _noxConfig;
-    private readonly IDictionary<object, object> _workflow;
-    private readonly IDictionary<object, object> _jobs;
+    private readonly INoxConfiguration _noxConfig;
+    private readonly WorkflowConfiguration _workflow;
     private readonly IDictionary<string, NoxAction> _steps;
     private readonly IDictionary<string, object> _vars;
-    
+
     private int _currentActionSequence = 0;
-    
+
     private NoxAction? _previousAction;
     private NoxAction? _currentAction;
     private NoxAction? _nextAction;
 
-    private readonly Regex _variableRegex = new (@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled);
+    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled);
 
-    private readonly Regex _secretsVariableRegex = new (@"\$\{\{\s*(?<variable>secrets.[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled);
+    private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>secrets.[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled);
 
     public NoxAction? CurrentAction => _currentAction;
 
-    public NoxWorkflowExecutionContext(IDictionary<object, object> workflow, IDictionary<object, object> noxConfig, IConfiguration appConfig)
+    public NoxWorkflowExecutionContext(WorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig)
     {
         _appConfig = appConfig;
         _noxConfig = noxConfig;
         _workflow = workflow;
-        _jobs = (IDictionary<object, object>)workflow["jobs"];
         _vars = InitiazeVariables();
         _steps = ParseSteps();
         _currentActionSequence = 0;
-        Next();
+        NextStep();
     }
 
-    public void Next()
+    public void NextStep()
     {
         _currentActionSequence++;
         _previousAction = _currentAction;
         _currentAction = _steps.Select(kv => kv.Value).Where(a => a.Sequence == _currentActionSequence).FirstOrDefault();
-        _nextAction = _steps.Select(kv => kv.Value).Where(a => a.Sequence == _currentActionSequence+1).FirstOrDefault();
+        _nextAction = _steps.Select(kv => kv.Value).Where(a => a.Sequence == _currentActionSequence + 1).FirstOrDefault();
     }
 
 
@@ -86,7 +86,7 @@ public class NoxWorkflowExecutionContext
             .ToArray();
 
 
-        _noxConfig.WalkDictionary(kv => { if (configKeys.Contains(kv.Key)) { variables[$"config.{kv.Key}"] = kv.Value; } });
+        _noxConfig.WalkObjectProperties(kv => { if (configKeys.Contains(kv.Key)) { variables[$"config.{kv.Key}"] = kv.Value ?? new object(); } });
 
         return variables;
     }
@@ -94,6 +94,22 @@ public class NoxWorkflowExecutionContext
     public void AddToVariables(string key, object value)
     {
         _vars[$"vars.{key}"] = value;
+    }
+
+    public void SetState(ActionState state)
+    {
+        if (_currentAction != null)
+        {
+            _currentAction.State = state;
+        }
+    }
+
+    public void SetErrorMessage(string errorMessage)
+    {
+        if (_currentAction != null)
+        {
+            _currentAction.ErrorMessage = errorMessage;
+        }
     }
 
     private object ReplaceVariables(string value)
@@ -118,7 +134,7 @@ public class NoxWorkflowExecutionContext
             {
                 result = result.ToString()!.Replace(fullPhrase, resolvedValue.ToString());
             }
-            else 
+            else
             {
                 result = resolvedValue;
                 break;
@@ -146,23 +162,15 @@ public class NoxWorkflowExecutionContext
     {
         var steps = new Dictionary<string, NoxAction>();
 
-        foreach (var (jobKey, jobValueObject) in _jobs)
+        foreach (var (jobKey, stepConfiguration) in _workflow.Jobs)
         {
-            var jobValue = jobValueObject as IDictionary<object, object>;
-
-            if (jobValue == null) continue;
-
             var sequence = 0;
 
-            foreach (var stepObject in (IList<object>)jobValue["steps"])
+            foreach (var step in stepConfiguration.Steps)
             {
                 sequence++;
 
-                var step = stepObject as IDictionary<object, object>;
-
-                if (step is null) continue;
-
-                var actionType = ResolveActionTypeFromUses((string)step["uses"]);
+                var actionType = ResolveActionProviderTypeFromUses(step.Uses);
 
                 if (actionType == null)
                 {
@@ -170,70 +178,45 @@ public class NoxWorkflowExecutionContext
                     continue;
                 }
 
-                var newAction = (NoxAction)Activator.CreateInstance(actionType)!;
-
-                newAction.Sequence = sequence;
-                newAction.Id = (string)step["id"];
-                newAction.Job = (string)jobKey;
-                newAction.Name = (string)step["name"];
-                newAction.Uses = (string)step["uses"];
-
-                if (step.ContainsKey("if"))
+                var newAction = new NoxAction()
                 {
-                    newAction.If = (string)step["if"];
+                    Sequence = sequence,
+                    Id = step.Id,
+                    Job = jobKey,
+                    Name = step.Name,
+                    Uses = step.Uses,
+                    If = step.If,
+                    Validate = step.Validate,
+                    Display = step.Display,
+                    ContinueOnError = step.ContinueOnError,
+                };
+                newAction.ActionProvider = (INoxActionProvider)Activator.CreateInstance(actionType)!;
+
+                foreach (var (withKey, withValue) in step.With)
+                {
+                    var input = new NoxActionInput
+                    {
+                        Id = withKey,
+                        Default = withValue
+                    };
+
+                    newAction.Inputs.Add(withKey, input);
                 }
 
-                if (step.ContainsKey("with"))
+                if (newAction.Display != null)
                 {
-                    var withs = (IDictionary<object, object>)step["with"];
-
-                    foreach (var (withKey, withValue) in withs)
+                    if (newAction.Display.Error != null)
                     {
-                        if (withKey == null) continue;
+                        newAction.Display.Error = MaskSecretsInDisplayText(newAction.Display.Error);
+                    }
 
-                        var input = new NoxActionInput
-                        {
-                            Id = (string)withKey,
-                            Default = withValue
-                        };
-
-                        newAction.Inputs.Add((string)withKey, input);
+                    if (newAction.Display.Success != null)
+                    {
+                        newAction.Display.Success = MaskSecretsInDisplayText(newAction.Display.Success);
                     }
                 }
 
-                if (step.ContainsKey("validate"))
-                {
-                    var validate = (IDictionary<object, object>)step["validate"];
-
-                    foreach (var (validateKey, validateValue) in validate)
-                    {
-                        if (validateKey == null) continue;
-
-                        newAction.Validate.Add(((string)validateKey, (string)validateValue));
-                    }
-                }
-
-                if (step.ContainsKey("display"))
-                {
-                    var display = (IDictionary<object, object>)step["display"];
-
-                    if (display.ContainsKey("error"))
-                    {
-                        newAction.Display.Error = MaskSecretsInDisplayText((string)display["error"]);
-                    }
-
-                    if (display.ContainsKey("success"))
-                    {
-                        newAction.Display.Success = MaskSecretsInDisplayText((string)display["success"]);
-                    }
-                }
-
-                if (step.ContainsKey("continue-on-error"))
-                {
-                    newAction.ContinueOnError = Convert.ToBoolean(step["continue-on-error"]);
-                }
-
-                steps[(string)step["id"]] = newAction;
+                steps[newAction.Id] = newAction;
 
             }
         }
@@ -249,21 +232,21 @@ public class NoxWorkflowExecutionContext
         {
             var variable = match.Groups["variable"].Value;
             string resolvedValue = LookupVariableValue(variable)?.ToString() ?? "";
-            output = _secretsVariableRegex.Replace(input, 
-                new string('*', Math.Min(20,resolvedValue.Length))
+            output = _secretsVariableRegex.Replace(input,
+                new string('*', Math.Min(20, resolvedValue.Length))
             );
             match = _secretsVariableRegex.Match(output);
         }
         return output;
     }
 
-    private static Type? ResolveActionTypeFromUses(string uses)
+    private static Type? ResolveActionProviderTypeFromUses(string uses)
     {
         var actionClassNameLower = uses.Replace("/", "").Replace("-", "").Replace("@", "_").ToLower();
 
         var actionType = Assembly.GetExecutingAssembly().GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract)
-            .Where(t => t.IsAssignableTo(typeof(INoxAction)))
+            .Where(t => t.IsAssignableTo(typeof(INoxActionProvider)))
             .Where(t => t.Name.ToLower().Equals(actionClassNameLower))
             .FirstOrDefault();
 
@@ -294,7 +277,7 @@ public class NoxWorkflowExecutionContext
     public void SetErrorMessage(NoxAction action, string errorMessage)
     {
         var varKey = $"steps.{action.Id}.error-message";
-        
+
         _vars[varKey] = errorMessage;
 
         ResolveAllVariables(action);
@@ -303,7 +286,7 @@ public class NoxWorkflowExecutionContext
 
     private void ResolveAllVariables(NoxAction action)
     {
-        foreach(var (_,input) in action.Inputs)
+        foreach (var (_, input) in action.Inputs)
         {
             if (input.Default is string inputValueString)
             {
@@ -320,27 +303,27 @@ public class NoxWorkflowExecutionContext
                     }
                 }
             }
-
         }
 
-        for(var i = 0; i < action.Validate.Count; i++)
+        if (action.Validate != null)
         {
-            var v = action.Validate[i];
-            v.Item2 = ReplaceVariables(action.Validate[i].Item2).ToString()!;
-            action.Validate[i] = v;
+            foreach(var (key, value) in action.Validate)
+            {
+                action.Validate[key] = ReplaceVariables(value).ToString()!;
+            }
         }
 
-        if (action.Display.Success != string.Empty)
+        if (!string.IsNullOrWhiteSpace(action.Display?.Success))
         {
             action.Display.Success = ReplaceVariables(action.Display.Success).ToString()!;
         }
 
-        if (action.Display.Error != string.Empty)
+        if (!string.IsNullOrWhiteSpace(action.Display?.Error))
         {
             action.Display.Error = ReplaceVariables(action.Display.Error).ToString()!;
         }
 
-        if (action.If != string.Empty)
+        if (!string.IsNullOrWhiteSpace(action.If))
         {
             action.If = ReplaceVariables(action.If).ToString()!;
         }

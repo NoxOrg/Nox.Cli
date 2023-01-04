@@ -4,9 +4,9 @@ using System.Data;
 
 namespace Nox.Cli.Plugins.Postgres;
 
-public class PostgresConnect_v1 : NoxAction
+public class PostgresConnect_v1 : INoxActionProvider
 {
-    public override NoxActionMetaData Discover()
+    public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
@@ -64,7 +64,7 @@ public class PostgresConnect_v1 : NoxAction
 
     private NpgsqlConnection? _connection;
 
-    public override Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(INoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
     {
         var csb = new NpgsqlConnectionStringBuilder
         {
@@ -80,15 +80,15 @@ public class PostgresConnect_v1 : NoxAction
         return Task.FromResult(true);
     }
 
-    public override async Task<IDictionary<string, object>> ProcessAsync(NoxWorkflowExecutionContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowExecutionContext ctx)
     {
         var outputs = new Dictionary<string, object>();
 
-        _state = ActionState.Error;
+        ctx.SetState(ActionState.Error);
 
         if (_connection == null)
         {
-            _errorMessage = "The Postgres connect action was not initialized";
+            ctx.SetErrorMessage("The Postgres connect action was not initialized");
         }
         else
         {
@@ -100,11 +100,11 @@ public class PostgresConnect_v1 : NoxAction
  
                     outputs["connection"] = _connection;
 
-                    _state = ActionState.Success;
+                    ctx.SetState(ActionState.Success);
                 }
                 catch (Exception ex)
                 {
-                    _errorMessage = ex.Message;
+                    ctx.SetErrorMessage(ex.Message);
                 }
             }
         }
@@ -112,7 +112,7 @@ public class PostgresConnect_v1 : NoxAction
         return outputs;
     }
 
-    public override async Task EndAsync(NoxWorkflowExecutionContext ctx)
+    public async Task EndAsync(INoxWorkflowExecutionContext ctx)
 
     {
         if (_connection != null)

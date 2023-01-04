@@ -3,9 +3,9 @@ using Npgsql;
 
 namespace Nox.Cli.Plugins.Postgres;
 
-public class PostgresSanitizeSqlString_v1 : NoxAction
+public class PostgresSanitizeSqlString_v1 : INoxActionProvider
 {
-    public override NoxActionMetaData Discover()
+    public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
@@ -35,27 +35,27 @@ public class PostgresSanitizeSqlString_v1 : NoxAction
 
     private string _inputString = string.Empty;
 
-    public override Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(INoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
     {
         _inputString = (string)inputs["input-string"];
 
         return Task.FromResult(true);
     }
 
-    public override Task<IDictionary<string, object>> ProcessAsync(NoxWorkflowExecutionContext ctx)
+    public  Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowExecutionContext ctx)
     {
         var outputs = new Dictionary<string, object?>();
 
-        _state = ActionState.Error;
+        ctx.SetState(ActionState.Error);
 
         outputs["result"] = _inputString.Sanitize();
 
-        _state = ActionState.Success;
+        ctx.SetState(ActionState.Success);
 
         return Task.FromResult((IDictionary<string,object>)outputs);
     }
 
-    public override Task EndAsync(NoxWorkflowExecutionContext ctx)
+    public Task EndAsync(INoxWorkflowExecutionContext ctx)
     {
         return Task.FromResult(true);
     }

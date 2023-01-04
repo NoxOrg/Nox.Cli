@@ -3,9 +3,9 @@ using Npgsql;
 
 namespace Nox.Cli.Plugins.Postgres;
 
-public class PostgresExecuteNonQuery_v1 : NoxAction
+public class PostgresExecuteNonQuery_v1 : INoxActionProvider
 {
-    public override NoxActionMetaData Discover()
+    public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
@@ -53,7 +53,7 @@ public class PostgresExecuteNonQuery_v1 : NoxAction
 
     private List<object>? _parameters;
 
-    public override Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(INoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
     {
         _connection = (NpgsqlConnection)inputs["connection"];
 
@@ -67,19 +67,19 @@ public class PostgresExecuteNonQuery_v1 : NoxAction
         return Task.FromResult(true);
     }
 
-    public override async Task<IDictionary<string, object>> ProcessAsync(NoxWorkflowExecutionContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowExecutionContext ctx)
     {
         var outputs = new Dictionary<string, object?>();
 
-        _state = ActionState.Error;
+        ctx.SetState(ActionState.Error);
 
         if (_connection == null)
         {
-            _errorMessage = "The Postgres connect action was not initialized";
+            ctx.SetErrorMessage("The Postgres connect action was not initialized");
         }
         else if (_sql == null)
         {
-            _errorMessage = "The sql query was not initialized";
+            ctx.SetErrorMessage("The sql query was not initialized");
         }
         else
         {
@@ -99,18 +99,18 @@ public class PostgresExecuteNonQuery_v1 : NoxAction
 
                 outputs["result"] = result;
 
-                _state = ActionState.Success;
+                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {
-                _errorMessage = ex.Message;
+                ctx.SetErrorMessage(ex.Message);
             }
         }
 
         return outputs!;
     }
 
-    public override Task EndAsync(NoxWorkflowExecutionContext ctx)
+    public Task EndAsync(INoxWorkflowExecutionContext ctx)
     {
         return Task.FromResult(true);
     }
