@@ -2,9 +2,9 @@
 
 namespace Nox.Cli.Plugins.Core;
 
-public class CoreAddVariables_v1 : NoxAction
+public class CoreAddVariables_v1 : INoxCliAddin
 {
-    public override NoxActionMetaData Discover()
+    public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
@@ -38,14 +38,14 @@ public class CoreAddVariables_v1 : NoxAction
 
     private IDictionary<string,object> _variables=null!;
 
-    public override Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
         _variables = inputs;
         
         return Task.FromResult(true);
     }
 
-    public override Task<IDictionary<string,object>> ProcessAsync(NoxWorkflowExecutionContext ctx)
+    public Task<IDictionary<string,object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string,object>();
 
@@ -54,12 +54,12 @@ public class CoreAddVariables_v1 : NoxAction
             ctx.AddToVariables(key, value);
         }
 
-        _state = ActionState.Success;
+        ctx.SetState( ActionState.Success );
 
         return Task.FromResult((IDictionary<string,object>)outputs);
     }
 
-    public override Task EndAsync(NoxWorkflowExecutionContext ctx)
+    public Task EndAsync(INoxWorkflowContext ctx)
 
     {
         return Task.FromResult(true);
