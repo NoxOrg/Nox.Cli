@@ -41,6 +41,11 @@ public class NetworkPing_v1 : INoxCliAddin
     public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
     {
         _host = (string)inputs["host"];
+        if (Uri.IsWellFormedUriString(_host, UriKind.Absolute))
+        {
+            var uri = new Uri(_host);
+            _host = uri.Host;
+        }
 
         _ping = new Ping();
 

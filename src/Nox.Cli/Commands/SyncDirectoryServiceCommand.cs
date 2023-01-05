@@ -36,9 +36,6 @@ public class SyncDirectoryServiceCommand : NoxCliCommand<SyncDirectoryServiceCom
 
     private async Task SyncGroupsAndUsersInAzureActiveDirectoryAsync()
     {
-        // var armClient = new ArmClient(new DefaultAzureCredential());
-        // SubscriptionResource subscription = armClient.GetDefaultSubscription();
-
         _console.WriteLine();
 
         _consoleWriter.WriteHelpText("Sync: Azure AD...");
