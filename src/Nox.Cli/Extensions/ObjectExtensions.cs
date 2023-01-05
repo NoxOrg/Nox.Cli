@@ -9,117 +9,65 @@ namespace Nox.Cli;
 
 public static class ObjectExtensions
 {
-    public static void WalkDictionary(this IDictionary<object, object> dictionary, Action<KeyValuePair<string, object>> func, string prefix = "")
+    public static void WalkProperties(this object obj, Action<string, object> propertyAction, string path = "")
     {
-        foreach (var (key, value) in dictionary)
+        if (obj == null)
         {
-            if (value is IDictionary<object, object> subDictionary)
-            {
-                subDictionary.WalkDictionary(func, $"{prefix}.{key}");
-            }
-            else if (value is IEnumerable<IDictionary<object, object>> subDictionaryEnumeralbe)
-            {
-                foreach (var d in subDictionaryEnumeralbe)
-                {
-                    d.WalkDictionary(func, $"{prefix}.{key}");
-                }
-            }
-            else if (value is IEnumerable<object> subList)
-            {
-                var i = 0;
-                foreach (var d in subList)
-                {
-                    if (d is IDictionary<object, object> subListDictionary)
-                    {
-                        subListDictionary.WalkDictionary(func, $"{prefix}.{key}[{i++}]");
-                    }
-                    else
-                    {
-                        func.Invoke(new KeyValuePair<string, object>($"{prefix}.{key}[{i++}]".TrimStart('.'), d));
-                    }
-                }
-            }
-            else
-            {
-                func.Invoke(new KeyValuePair<string, object>($"{prefix}.{key}".TrimStart('.'), value));
-            }
-        }
-
-    }
-
-    public static void WalkObjectProperties(this object? obj, Action<KeyValuePair<string, object?>> func, string prefix = "")
-    {
-        if (obj == null) return;
-        
-        Type objType = obj.GetType();
-
-        if (objType.IsAssignableTo(typeof(IList)))
-        {
-            var i = 0;
-            foreach (var item in (IEnumerable)obj)
-            {
-                if (item.GetType().IsSimpleType())
-                {
-                    func.Invoke(new KeyValuePair<string, object?>($"{prefix}[{i++}]".TrimStart('.'), item));
-                }
-                else
-                {
-                    WalkObjectProperties(item, func, $"{prefix}[{i++}]");
-                }
-            }
+            propertyAction(path, null!);
             return;
         }
 
-        var properties = objType.GetProperties();
+        var type = obj.GetType();
 
-        foreach (var property in properties)
+        if (type.IsSimpleType())
         {
-            var propValue = property.GetValue(obj);
-
-            if (property.PropertyType.IsAssignableTo(typeof(IList)))
+            propertyAction(path, obj);
+        }
+        else if (type.IsDictionary())
+        {
+            var dictionary = obj as IDictionary;
+            if (dictionary != null)
             {
-                var i = 0;
-                var list = (IList?)propValue;
-                if (list != null)
+                foreach (var key in dictionary.Keys)
                 {
-                    foreach (var item in list)
+                    var value = dictionary[key];
+                    var fullPath = string.IsNullOrEmpty(path) ? $"[{key}]" : $"{path}[{key}]";
+                    if (value == null)
                     {
-                        WalkObjectProperties(item, func, $"{prefix}.{property.Name}[{i++}]");
+                        propertyAction(fullPath, null!);
                     }
-                }
-            }
-            else if (property.PropertyType.IsAssignableTo(typeof(IDictionary)))
-            {
-                dynamic dict = propValue!;
-                if (dict != null)
-                {
-                    foreach (var kv in dict)
+                    else
                     {
-                        var t = (Type)kv.Value.GetType();
-
-                        if (t.IsSimpleType())
-                        {
-                            func.Invoke(new KeyValuePair<string, object?>($"{prefix}.{property.Name}.{kv.Key}".TrimStart('.'), kv.Value));
-                        }
-                        else
-                        {
-                            WalkObjectProperties(kv.Value, func, $"{prefix}.{property.Name}.{kv.Key}");
-                        }
+                        value.WalkProperties(propertyAction, fullPath);
                     }
-                }
-            }
-            else
-            {
-                if (property.PropertyType.Assembly == objType.Assembly)
-                {
-                    WalkObjectProperties(propValue, func, $"{prefix}.{property.Name}");
-                }
-                else
-                {
-                    func.Invoke(new KeyValuePair<string, object?>($"{prefix}.{property.Name}".TrimStart('.'), propValue));
                 }
             }
         }
-    }
+        else if (type.IsArray || type.IsEnumerable())
+        {
+            var enumerable = obj as IEnumerable;
+            if (enumerable != null)
+            {
+                var index = 0;
+                foreach (var item in enumerable)
+                {
+                    item.WalkProperties(propertyAction, $"{path}[{index}]");
+                    index++;
+                }
+            }
+        }
+        else
+        {
+            var properties = type.GetProperties();
+            foreach (var property in properties)
+            {
+                var propertyName = property.Name;
+                var propertyValue = property.GetValue(obj);
+                var fullPath = string.IsNullOrEmpty(path) ? propertyName : $"{path}.{propertyName}";
 
+                WalkProperties(propertyValue!, propertyAction, $"{fullPath}");
+
+            }
+        }
+    }
 }

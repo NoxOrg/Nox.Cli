@@ -85,8 +85,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
             .Select(e => e[7..])
             .ToArray();
 
-
-        _noxConfig.WalkObjectProperties(kv => { if (configKeys.Contains(kv.Key)) { variables[$"config.{kv.Key}"] = kv.Value ?? new object(); } });
+        _noxConfig.WalkProperties( (name, value) => { if (configKeys.Contains(name)) { variables[$"config.{name}"] = value ?? new object(); } });
 
         return variables;
     }
