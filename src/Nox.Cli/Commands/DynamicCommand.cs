@@ -3,14 +3,10 @@
 using Helpers;
 using Microsoft.Extensions.Configuration;
 using Nox.Cli.Actions;
-using Nox.Core.Constants;
 using Nox.Core.Interfaces.Configuration;
-using Npgsql;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.IO.Abstractions;
-using System.Net.NetworkInformation;
-using System.Text;
 
 public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
 {
