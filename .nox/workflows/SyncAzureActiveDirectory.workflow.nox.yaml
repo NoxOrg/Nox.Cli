@@ -4,12 +4,12 @@ name: Synchronise NOX definition with Azure Active Directory
 
 cli:
   branch: sync
-  command: directory-service
-  command-alias: ds
+  command: azure-active-directory
+  command-alias: azad
   description: Synchronises NOX team definition with your Azure Active Directory (AAD).
   examples:
-    - ["sync directoryService", "--path <designFolder>"]
-    - ["sync ds", "--path <designFolder>"]
+    - ["sync azure-active-directory", "--path <designFolder>"]
+    - ["sync azad", "--path <designFolder>"]
     
 jobs:
   sync-directory-service:
@@ -17,7 +17,7 @@ jobs:
 
       - name: Connect to Azure Active Directory
         id: connect
-        uses: azds/connect@v1
+        uses: azuread/connect@v1
         with:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -28,7 +28,7 @@ jobs:
           
       - name: Create the project AAD group
         id: create-project-group
-        uses: azds/create-group@v1
+        uses: azuread/create-group@v1
         with:
           aad-client: ${{ steps.connect.outputs.aad-client }}
           group-name: NOX_PROJECT_${{ config.name }}
@@ -39,7 +39,7 @@ jobs:
           
       - name: Create an AAD security group
         id: create-security-group
-        uses: azds/create-group@v1
+        uses: azuread/create-group@v1
         with:
           aad-client: ${{ steps.connect.outputs.aad-client }}
           group-name: NOX_PROJECTS_ALL
@@ -50,7 +50,7 @@ jobs:
           
       - name: Add project group as a member of security group
         id: add-project-group-to-security-group
-        uses: azds/add-group-to-group@v1
+        uses: azuread/add-group-to-group@v1
         with:
           aad-client: ${{ steps.connect.outputs.aad-client }}
           child-group: ${{ steps.create-project-group.outputs.aad-group }}
@@ -61,7 +61,7 @@ jobs:
           
       - name: Add project team members to project group
         id: add-project-team
-        uses: azds/add-team-members@v1
+        uses: azuread/add-team-members@v1
         with:
           aad-client: ${{ steps.connect.outputs.aad-client }}
           group: ${{ steps.create-project-group.outputs.aad-group }}

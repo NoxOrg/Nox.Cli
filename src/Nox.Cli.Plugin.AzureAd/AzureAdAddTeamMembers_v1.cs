@@ -1,14 +1,13 @@
 using Microsoft.Graph;
 using Nox.Cli.Actions;
-using Nox.Cli.Helpers;
 using Nox.Core.Configuration;
 using ActionState = Nox.Cli.Actions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDsAddTeamMembers_v1 : NoxAction
+public class AzureAdAddTeamMembers_v1 : INoxCliAddin
 {
-    public override NoxActionMetaData Discover()
+    public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
@@ -51,7 +50,7 @@ public class AzDsAddTeamMembers_v1 : NoxAction
     private GraphServiceClient? _aadClient;
     private List<TeamMemberConfiguration>? _members;
 
-    public override Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string, object> inputs)
+    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
     {
         _group = (Group)inputs["group"];
         _aadClient = (GraphServiceClient)inputs["aad-client"];
@@ -59,15 +58,15 @@ public class AzDsAddTeamMembers_v1 : NoxAction
         return Task.CompletedTask;
     }
 
-    public override async Task<IDictionary<string, object>> ProcessAsync(NoxWorkflowExecutionContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string, object>();
 
-        _state = ActionState.Error;
+        ctx.SetState(ActionState.Error);
 
         if (_aadClient == null || _group == null || _members == null)
         {
-            _errorMessage = "The az active directory add-team-members action was not initialized";
+            ctx.SetErrorMessage("The az active directory add-team-members action was not initialized");
         }
         else
         {
@@ -90,21 +89,21 @@ public class AzDsAddTeamMembers_v1 : NoxAction
                     }
                     else
                     {
-                        _errorMessage = $"AAD User {developer.UserName} not found.";
+                        ctx.SetErrorMessage($"AAD User {developer.UserName} not found.");
                     }
                 }
-                _state = ActionState.Success;
+                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {
-                _errorMessage = ex.Message;
+                ctx.SetErrorMessage(ex.Message);
             }
         }
 
         return outputs;
     }
 
-    public override Task EndAsync(NoxWorkflowExecutionContext ctx)
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
     }

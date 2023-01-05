@@ -5,9 +5,9 @@ using ActionState = Nox.Cli.Actions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDsConnect_v1 : NoxAction
+public class AzureAdConnect_v1 : INoxCliAddin
 {
-    public override NoxActionMetaData Discover()
+    public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
@@ -57,7 +57,7 @@ public class AzDsConnect_v1 : NoxAction
     private string? _clientId;
     private string? _clientSecret;
 
-    public override Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string, object> inputs)
+    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
     {
         _tenantId = (string)inputs["tenant-id"];
         _clientId = (string)inputs["client-id"];
@@ -65,11 +65,11 @@ public class AzDsConnect_v1 : NoxAction
         return Task.CompletedTask;
     }
 
-    public override Task<IDictionary<string, object>> ProcessAsync(NoxWorkflowExecutionContext ctx)
+    public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string, object>();
 
-        _state = ActionState.Error;
+        ctx.SetState(ActionState.Error);
 
         try
         {
@@ -77,17 +77,17 @@ public class AzDsConnect_v1 : NoxAction
             var credentials = new ClientSecretCredential(_tenantId, _clientId, _clientSecret);
             var client = new GraphServiceClient(credentials, userScopes);
             outputs["aad-client"] = client;
-            _state = ActionState.Success;
+            ctx.SetState(ActionState.Success);
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            ctx.SetErrorMessage(ex.Message);
         }
 
         return Task.FromResult((IDictionary<string, object>)outputs);
     }
 
-    public override Task EndAsync(NoxWorkflowExecutionContext ctx)
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
     }

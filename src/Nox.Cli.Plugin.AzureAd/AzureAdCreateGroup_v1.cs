@@ -1,13 +1,12 @@
-using Azure.Identity;
 using Microsoft.Graph;
 using Nox.Cli.Actions;
 using ActionState = Nox.Cli.Actions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDsCreateGroup_v1 : NoxAction
+public class AzureAdCreateGroup_v1 : INoxCliAddin
 {
-    public override NoxActionMetaData Discover()
+    public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
@@ -66,7 +65,7 @@ public class AzDsCreateGroup_v1 : NoxAction
     private string? _projectName;
     private GraphServiceClient? _aadClient;
 
-    public override Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string, object> inputs)
+    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
     {
         _groupName = (string)inputs["group-name"];
         _groupDescription = (string)inputs["group-description"];
@@ -75,15 +74,15 @@ public class AzDsCreateGroup_v1 : NoxAction
         return Task.CompletedTask;
     }
 
-    public override async Task<IDictionary<string, object>> ProcessAsync(NoxWorkflowExecutionContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string, object>();
 
-        _state = ActionState.Error;
+        ctx.SetState(ActionState.Error);
 
         if (_aadClient == null || string.IsNullOrEmpty(_groupName))
         {
-            _errorMessage = "The az active directory create-group action was not initialized";
+            ctx.SetErrorMessage("The az active directory create-group action was not initialized");
         }
         else
         {
@@ -105,18 +104,18 @@ public class AzDsCreateGroup_v1 : NoxAction
                 {
                     outputs["aad-group"] = await CreateAdGroupAsync(projectGroupName);
                 }
-                _state = ActionState.Success;
+                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {
-                _errorMessage = ex.Message;
+                ctx.SetErrorMessage(ex.Message);
             }
         }
 
         return outputs;
     }
 
-    public override Task EndAsync(NoxWorkflowExecutionContext ctx)
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
     }

@@ -1,14 +1,12 @@
-using Azure.Identity;
 using Microsoft.Graph;
 using Nox.Cli.Actions;
-using Nox.Core.Configuration;
 using ActionState = Nox.Cli.Actions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDsAddGroupToGroup_v1 : NoxAction
+public class AzureAdAddGroupToGroup_v1 : INoxCliAddin
 {
-    public override NoxActionMetaData Discover()
+    public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
@@ -49,7 +47,7 @@ public class AzDsAddGroupToGroup_v1 : NoxAction
     private Group? _parentGroup;
     private GraphServiceClient? _aadClient;
 
-    public override Task BeginAsync(NoxWorkflowExecutionContext ctx, IDictionary<string, object> inputs)
+    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
     {
         _aadClient = (GraphServiceClient)inputs["aad-client"];
         _childGroup = (Group)inputs["child-group"];
@@ -57,15 +55,15 @@ public class AzDsAddGroupToGroup_v1 : NoxAction
         return Task.CompletedTask;
     }
 
-    public override async Task<IDictionary<string, object>> ProcessAsync(NoxWorkflowExecutionContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string, object>();
 
-        _state = ActionState.Error;
+        ctx.SetState(ActionState.Error);
 
         if (_aadClient == null || _childGroup == null || _parentGroup == null)
         {
-            _errorMessage = "The az active directory add-group-to-group action was not initialized";
+            ctx.SetErrorMessage("The az active directory add-group-to-group action was not initialized");
         }
         else
         {
@@ -93,28 +91,28 @@ public class AzDsAddGroupToGroup_v1 : NoxAction
                         {
                             await _aadClient.Groups[parentGroup.Id].Members.References.Request().AddAsync(childGroup);
                         }
-                        _state = ActionState.Success;
+                        ctx.SetState(ActionState.Success);
                     }
                     else
                     {
-                        _errorMessage = $"The group {_childGroup} does not exist in your Azure Active Directory";
+                        ctx.SetErrorMessage($"The group {_childGroup} does not exist in your Azure Active Directory");
                     }
                 }
                 else
                 {
-                    _errorMessage = $"The group {_parentGroup} does not exist in your Azure Active Directory";
+                    ctx.SetErrorMessage($"The group {_parentGroup} does not exist in your Azure Active Directory");
                 }
             }
             catch (Exception ex)
             {
-                _errorMessage = ex.Message;
+                ctx.SetErrorMessage(ex.Message);
             }
         }
 
         return outputs;
     }
 
-    public override Task EndAsync(NoxWorkflowExecutionContext ctx)
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
     }
