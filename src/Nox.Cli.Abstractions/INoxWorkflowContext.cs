@@ -1,6 +1,6 @@
 ﻿namespace Nox.Cli.Actions
 {
-    public interface INoxWorkflowExecutionContext
+    public interface INoxWorkflowContext
     {
         void AddToVariables(string key, object value);
         void SetErrorMessage(string errorMessage);

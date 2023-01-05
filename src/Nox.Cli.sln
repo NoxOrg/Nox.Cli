@@ -7,6 +7,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli", "Nox.Cli\Nox.Cli.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5693B254-65BC-4553-AD0F-1C825F235DFE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli.Abstractions", "Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj", "{AFEB9CCC-92CA-4AFD-9536-5AC41B2EC329}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli.Plugin.Network", "Nox.Cli.Plugins\Nox.Cli.Plugin.Network\Nox.Cli.Plugin.Network.csproj", "{8E8A45E5-B66E-41CE-B2D6-9247CA53B34B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli.Plugin.Postgres", "Nox.Cli.Plugins\Nox.Cli.Plugin.Postgres\Nox.Cli.Plugin.Postgres.csproj", "{E4CFA41A-B61C-45E8-BB27-FD430E83AD59}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.Core", "Nox.Cli.Plugin.Core\Nox.Cli.Plugin.Core.csproj", "{AE01032E-ECD0-4407-8403-DFD13C05BC98}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +25,22 @@ Global
 		{71AF2BBF-4D89-423A-A1EA-2644B561EB00}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71AF2BBF-4D89-423A-A1EA-2644B561EB00}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71AF2BBF-4D89-423A-A1EA-2644B561EB00}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9904E757-BDC8-4CFA-9D0D-32E8B6B4A36C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9904E757-BDC8-4CFA-9D0D-32E8B6B4A36C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9904E757-BDC8-4CFA-9D0D-32E8B6B4A36C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9904E757-BDC8-4CFA-9D0D-32E8B6B4A36C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFEB9CCC-92CA-4AFD-9536-5AC41B2EC329}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFEB9CCC-92CA-4AFD-9536-5AC41B2EC329}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFEB9CCC-92CA-4AFD-9536-5AC41B2EC329}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFEB9CCC-92CA-4AFD-9536-5AC41B2EC329}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E8A45E5-B66E-41CE-B2D6-9247CA53B34B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E8A45E5-B66E-41CE-B2D6-9247CA53B34B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E8A45E5-B66E-41CE-B2D6-9247CA53B34B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E8A45E5-B66E-41CE-B2D6-9247CA53B34B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4CFA41A-B61C-45E8-BB27-FD430E83AD59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4CFA41A-B61C-45E8-BB27-FD430E83AD59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4CFA41A-B61C-45E8-BB27-FD430E83AD59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4CFA41A-B61C-45E8-BB27-FD430E83AD59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE01032E-ECD0-4407-8403-DFD13C05BC98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE01032E-ECD0-4407-8403-DFD13C05BC98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE01032E-ECD0-4407-8403-DFD13C05BC98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE01032E-ECD0-4407-8403-DFD13C05BC98}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

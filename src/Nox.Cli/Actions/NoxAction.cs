@@ -2,13 +2,6 @@
 
 namespace Nox.Cli.Actions;
 
-public enum ActionState
-{
-    NotStarted,
-    Success,
-    Error,
-}
-
 public class NoxAction 
 {
     public int Sequence { get; set; } = 0;
@@ -24,7 +17,7 @@ public class NoxAction
 
     public ActionState State { get; set; } = ActionState.NotStarted;
     public string ErrorMessage { get; set; } = string.Empty;
-    public INoxActionProvider ActionProvider { get; set; } = null!;
+    public INoxCliAddin ActionProvider { get; set; } = null!;
 
 
     public bool EvaluateValidate()

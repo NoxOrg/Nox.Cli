@@ -3,7 +3,7 @@ using System.Net.NetworkInformation;
 
 namespace Nox.Cli.Plugins.Network;
 
-public class NetworkPing_v1 : INoxActionProvider
+public class NetworkPing_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
@@ -38,7 +38,7 @@ public class NetworkPing_v1 : INoxActionProvider
 
     private string? _host;
 
-    public Task BeginAsync(INoxWorkflowExecutionContext ctx, IDictionary<string, object> inputs)
+    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
     {
         _host = (string)inputs["host"];
 
@@ -47,7 +47,7 @@ public class NetworkPing_v1 : INoxActionProvider
         return Task.FromResult(true);
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowExecutionContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string, object>();
 
@@ -80,7 +80,7 @@ public class NetworkPing_v1 : INoxActionProvider
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowExecutionContext ctx)
+    public Task EndAsync(INoxWorkflowContext ctx)
 
     {
         if (_ping != null)

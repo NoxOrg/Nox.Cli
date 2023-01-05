@@ -4,7 +4,7 @@ using System.Data;
 
 namespace Nox.Cli.Plugins.Postgres;
 
-public class PostgresConnect_v1 : INoxActionProvider
+public class PostgresConnect_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
@@ -64,7 +64,7 @@ public class PostgresConnect_v1 : INoxActionProvider
 
     private NpgsqlConnection? _connection;
 
-    public Task BeginAsync(INoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
         var csb = new NpgsqlConnectionStringBuilder
         {
@@ -80,7 +80,7 @@ public class PostgresConnect_v1 : INoxActionProvider
         return Task.FromResult(true);
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowExecutionContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string, object>();
 
@@ -112,7 +112,7 @@ public class PostgresConnect_v1 : INoxActionProvider
         return outputs;
     }
 
-    public async Task EndAsync(INoxWorkflowExecutionContext ctx)
+    public async Task EndAsync(INoxWorkflowContext ctx)
 
     {
         if (_connection != null)

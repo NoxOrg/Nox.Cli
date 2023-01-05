@@ -23,7 +23,7 @@ public class NoxWorkflowExecutor
         console.WriteLine($"Validating...");
         console.MarkupLine($"[green3]Workflow: {workflow.Name.EscapeMarkup()}[/]");
 
-        var ctx = new NoxWorkflowExecutionContext(workflow, noxConfig, appConfig);
+        var ctx = new NoxWorkflowContext(workflow, noxConfig, appConfig);
 
         List<NoxAction> processedActions = new();
 

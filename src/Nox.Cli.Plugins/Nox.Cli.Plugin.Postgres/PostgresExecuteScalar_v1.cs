@@ -3,15 +3,15 @@ using Npgsql;
 
 namespace Nox.Cli.Plugins.Postgres;
 
-public class PostgresExecuteNonQuery_v1 : INoxActionProvider
+public class PostgresExecuteScalar_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "postgres/execute-nonquery@v1",
+            Name = "postgres/execute-scalar@v1",
             Author = "Andre Sharpe",
-            Description = "Execute a non-query statement on Postgres",
+            Description = "Execute a scalar query on Postgres",
 
             Inputs =
             {
@@ -28,7 +28,6 @@ public class PostgresExecuteNonQuery_v1 : INoxActionProvider
                     Default = new NpgsqlConnection(),
                     IsRequired = true
                 },
-
                 ["parameters"] = new NoxActionInput {
                     Id = "parameters",
                     Description = "The parameters for the query",
@@ -41,7 +40,7 @@ public class PostgresExecuteNonQuery_v1 : INoxActionProvider
             {
                 ["result"] = new NoxActionOutput {
                     Id = "result",
-                    Description = "The integer result of the non-query",
+                    Description = "The result of the scalar query",
                 },
             }
         };
@@ -53,7 +52,7 @@ public class PostgresExecuteNonQuery_v1 : INoxActionProvider
 
     private List<object>? _parameters;
 
-    public Task BeginAsync(INoxWorkflowExecutionContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
         _connection = (NpgsqlConnection)inputs["connection"];
 
@@ -67,7 +66,7 @@ public class PostgresExecuteNonQuery_v1 : INoxActionProvider
         return Task.FromResult(true);
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowExecutionContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string, object?>();
 
@@ -95,9 +94,9 @@ public class PostgresExecuteNonQuery_v1 : INoxActionProvider
                     }
                 }
 
-                var result = await cmd.ExecuteNonQueryAsync();
+                var result = await cmd.ExecuteScalarAsync();
 
-                outputs["result"] = result;
+                outputs["result"] = result ?? new object();
 
                 ctx.SetState(ActionState.Success);
             }
@@ -110,7 +109,7 @@ public class PostgresExecuteNonQuery_v1 : INoxActionProvider
         return outputs!;
     }
 
-    public Task EndAsync(INoxWorkflowExecutionContext ctx)
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.FromResult(true);
     }

@@ -10,7 +10,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Nox.Cli.Actions;
 
-public class NoxWorkflowExecutionContext : INoxWorkflowExecutionContext
+public class NoxWorkflowContext : INoxWorkflowContext
 {
 
     private readonly IConfiguration _appConfig;
@@ -31,7 +31,7 @@ public class NoxWorkflowExecutionContext : INoxWorkflowExecutionContext
 
     public NoxAction? CurrentAction => _currentAction;
 
-    public NoxWorkflowExecutionContext(WorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig)
+    public NoxWorkflowContext(WorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig)
     {
         _appConfig = appConfig;
         _noxConfig = noxConfig;
@@ -174,8 +174,7 @@ public class NoxWorkflowExecutionContext : INoxWorkflowExecutionContext
 
                 if (actionType == null)
                 {
-                    // throw new Exception($"Step {sequence} ({step["name"]}) uses {step["uses"]} which was not found.");
-                    continue;
+                    throw new Exception($"Step {sequence} ({step.Name}) uses {step.Uses} which was not found.");
                 }
 
                 var newAction = new NoxAction()
@@ -190,7 +189,7 @@ public class NoxWorkflowExecutionContext : INoxWorkflowExecutionContext
                     Display = step.Display,
                     ContinueOnError = step.ContinueOnError,
                 };
-                newAction.ActionProvider = (INoxActionProvider)Activator.CreateInstance(actionType)!;
+                newAction.ActionProvider = (INoxCliAddin)Activator.CreateInstance(actionType)!;
 
                 foreach (var (withKey, withValue) in step.With)
                 {
@@ -242,16 +241,46 @@ public class NoxWorkflowExecutionContext : INoxWorkflowExecutionContext
 
     private static Type? ResolveActionProviderTypeFromUses(string uses)
     {
+        var actionAssemblyName = $"Nox.Cli.Plugin.{uses.Split('/')[0]}";
         var actionClassNameLower = uses.Replace("/", "").Replace("-", "").Replace("@", "_").ToLower();
 
-        var actionType = Assembly.GetExecutingAssembly().GetTypes()
-            .Where(t => t.IsClass && !t.IsAbstract)
-            .Where(t => t.IsAssignableTo(typeof(INoxActionProvider)))
-            .Where(t => t.Name.ToLower().Equals(actionClassNameLower))
-            .FirstOrDefault();
+        var loadedPaths = AppDomain.CurrentDomain
+            .GetAssemblies()
+            .Where(a => !a.IsDynamic)
+            .Where(a => a.GetName().Name?.Contains(actionAssemblyName, StringComparison.InvariantCultureIgnoreCase) ?? false)
+            .Select(a => a.Location)
+            .ToArray();
+
+        var referencedPaths = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll");
+
+        var toLoad = referencedPaths
+            .Where(r => r.Contains(actionAssemblyName, StringComparison.InvariantCultureIgnoreCase))
+            .Where(r => !loadedPaths.Contains(r, StringComparer.InvariantCultureIgnoreCase))
+            .ToArray();
+
+        if (toLoad.Length > 0)
+        {
+            AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(toLoad[0]));
+        }
+
+        var assembly = AppDomain.CurrentDomain.GetAssemblies()
+            .Where(a => a.GetName().Name?.Contains(actionAssemblyName, StringComparison.InvariantCultureIgnoreCase) ?? false)
+            .ToArray();
+
+        Type? actionType = null;
+        
+        if (assembly.Length > 0)
+        {
+            actionType = assembly[0].GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract)
+                .Where(t => t.IsAssignableTo(typeof(INoxCliAddin)))
+                .Where(t => t.Name.ToLower().Equals(actionClassNameLower))
+                .FirstOrDefault();
+        }
 
         return actionType;
     }
+
 
     public IDictionary<string, object> GetInputVariables(NoxAction action)
     {

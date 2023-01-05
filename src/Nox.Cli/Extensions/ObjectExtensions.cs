@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Nox.Cli;
 
-public static class NestedDictionaryExtensions
+public static class ObjectExtensions
 {
     public static void WalkDictionary(this IDictionary<object, object> dictionary, Action<KeyValuePair<string, object>> func, string prefix = "")
     {
