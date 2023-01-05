@@ -10,7 +10,7 @@ public class AzureAdAddGroupToGroup_v1 : INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "azds/add-group-to-group@v1",
+            Name = "azuread/add-group-to-group@v1",
             Author = "Jan Schutte",
             Description = "Create an Azure Active Directory group",
 

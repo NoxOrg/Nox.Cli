@@ -51,7 +51,7 @@ jobs:
         id: get-dbname
         uses: postgres/sanitize-sql-string@v1
         with:
-          input-string: NOX_${{ config.database.name }}
+          input-string: NOX_${{ config.Database.Name }}
         display:
           success: Database name is ${{ steps.get-dbname.outputs.result }}
 

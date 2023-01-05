@@ -82,6 +82,7 @@ public static class ObjectExtensions
                 var list = (IList?)propValue;
                 if (list != null)
                 {
+                    func.Invoke(new KeyValuePair<string, object?>($"{prefix}.{property.Name}".TrimStart('.'), propValue));
                     foreach (var item in list)
                     {
                         WalkObjectProperties(item, func, $"{prefix}.{property.Name}[{i++}]");

@@ -61,7 +61,7 @@ jobs:
           
       - name: Add project team members to project group
         id: add-project-team
-        uses: azuread/add-team-members@v1
+        uses: azuread/add-team-members-to-group@v1
         with:
           aad-client: ${{ steps.connect.outputs.aad-client }}
           group: ${{ steps.create-project-group.outputs.aad-group }}

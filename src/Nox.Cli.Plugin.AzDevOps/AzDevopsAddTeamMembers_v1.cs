@@ -50,7 +50,7 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
     {
         var connection = (VssConnection)inputs["connection"];
         _projectName = (string)inputs["project-name"];
-        _members = ((List<object>)inputs["team-members"]).ToTeamMemberConfiguration();
+        _members = ((List<TeamMemberConfiguration>)inputs["team-members"]);
         _graphClient = await connection.GetClientAsync<GraphHttpClient>();
     }
 

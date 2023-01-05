@@ -11,7 +11,7 @@ public class AzureAdConnect_v1 : INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "azds/connect@v1",
+            Name = "azuread/connect@v1",
             Author = "Jan Schutte",
             Description = "Connect to Azure Active Directory",
 

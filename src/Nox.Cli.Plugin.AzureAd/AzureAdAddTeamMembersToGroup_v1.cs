@@ -5,13 +5,13 @@ using ActionState = Nox.Cli.Actions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzureAdAddTeamMembers_v1 : INoxCliAddin
+public class AzureAdAddTeamMembersToGroup_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azds/add-team-members@v1",
+            Name = "azuread/add-team-members-to-group@v1",
             Author = "Jan Schutte",
             Description = "Add project team members to an Azure Active Directory group",
 
@@ -54,7 +54,7 @@ public class AzureAdAddTeamMembers_v1 : INoxCliAddin
     {
         _group = (Group)inputs["group"];
         _aadClient = (GraphServiceClient)inputs["aad-client"];
-        _members = ((List<object>)inputs["team-members"]).ToTeamMemberConfiguration();
+        _members = ((List<TeamMemberConfiguration>)inputs["team-members"]);
         return Task.CompletedTask;
     }
 
