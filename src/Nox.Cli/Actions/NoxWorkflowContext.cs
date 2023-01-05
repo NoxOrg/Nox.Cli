@@ -25,9 +25,9 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private NoxAction? _currentAction;
     private NoxAction? _nextAction;
 
-    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled);
+    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>secrets.[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled);
+    private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>secrets.[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public NoxAction? CurrentAction => _currentAction;
 
@@ -64,10 +64,10 @@ public class NoxWorkflowContext : INoxWorkflowContext
         var variables = matches.Select(m => m.Groups[1].Value)
             .Distinct()
             .OrderBy(e => e)
-            .ToDictionary(e => e, e => new object());
+            .ToDictionary(e => e, e => new object(), StringComparer.OrdinalIgnoreCase);
 
         var secretKeys = variables.Select(kv => kv.Key)
-            .Where(e => e.StartsWith("secrets."))
+            .Where(e => e.StartsWith("secrets.", StringComparison.OrdinalIgnoreCase))
             .Select(e => e[8..])
             .ToArray();
 
@@ -81,11 +81,11 @@ public class NoxWorkflowContext : INoxWorkflowContext
         }
 
         var configKeys = variables.Select(kv => kv.Key)
-            .Where(e => e.StartsWith("config."))
+            .Where(e => e.StartsWith("config.", StringComparison.OrdinalIgnoreCase))
             .Select(e => e[7..])
             .ToArray();
 
-        _noxConfig.WalkProperties( (name, value) => { if (configKeys.Contains(name)) { variables[$"config.{name}"] = value ?? new object(); } });
+        _noxConfig.WalkProperties( (name, value) => { if (configKeys.Contains(name, StringComparer.OrdinalIgnoreCase)) { variables[$"config.{name}"] = value ?? new object(); } });
 
         return variables;
     }
@@ -159,7 +159,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     private Dictionary<string, NoxAction> ParseSteps()
     {
-        var steps = new Dictionary<string, NoxAction>();
+        var steps = new Dictionary<string, NoxAction>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var (jobKey, stepConfiguration) in _workflow.Jobs)
         {
@@ -285,7 +285,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     {
         ResolveAllVariables(action);
 
-        return action.Inputs.ToDictionary(i => i.Key, i => i.Value.Default);
+        return action.Inputs.ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
     }
 
     public void StoreOutputVariables(NoxAction action, IDictionary<string, object> outputs)

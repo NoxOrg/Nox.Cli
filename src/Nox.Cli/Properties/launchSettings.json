@@ -2,7 +2,7 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "sync db",
+      "commandLineArgs": "sync azad",
       "workingDirectory": "$(ProjectDir)"
     }
   }
