@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.Services.WebApi;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsCreateProject_v1 : INoxCliAddin
+public class AzDevopsDeleteProject_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
@@ -30,21 +30,6 @@ public class AzDevopsCreateProject_v1 : INoxCliAddin
                     Default = string.Empty,
                     IsRequired = true
                 },
-                
-                ["project-description"] = new NoxActionInput { 
-                    Id = "project-description", 
-                    Description = "The description of the DevOps project",
-                    Default = string.Empty,
-                    IsRequired = false
-                },
-            },
-
-            Outputs =
-            {
-                ["project-id"] = new NoxActionOutput {
-                    Id = "project-id",
-                    Description = "The Id of the Azure devops project",
-                },
             }
         };
     }
@@ -53,14 +38,11 @@ public class AzDevopsCreateProject_v1 : INoxCliAddin
     private ProcessHttpClient? _processClient;
     private OperationsHttpClient? _operationsClient;
     private string? _projectName;
-    private string? _projectDescription;
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
         var connection = (VssConnection)inputs["connection"];
         _projectName = (string)inputs["project-name"];
-        _projectDescription = (string)inputs["project-description"];
-        if (string.IsNullOrEmpty(_projectDescription)) _projectDescription = _projectName;
         _projectClient = await connection.GetClientAsync<ProjectHttpClient>();
         _processClient = await connection.GetClientAsync<ProcessHttpClient>();
         _operationsClient = await connection.GetClientAsync<OperationsHttpClient>();
@@ -80,8 +62,8 @@ public class AzDevopsCreateProject_v1 : INoxCliAddin
         {
             try
             {
-                var project = await _projectClient.GetProject(_projectName);
-                outputs["project-id"] = project.Id;
+                var project = await _projectClient.QueueDeleteProject()
+                outputs["project"] = project;
                 ctx.SetState(ActionState.Success);
             }
             catch

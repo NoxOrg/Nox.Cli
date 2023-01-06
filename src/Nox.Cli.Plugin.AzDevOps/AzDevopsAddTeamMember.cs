@@ -60,8 +60,8 @@ public class AzDevopsAddTeamMember_v1 : INoxCliAddin
         var connection = (VssConnection)inputs["connection"];
         _projectName = (string)inputs["project-name"];
         _username = (string)inputs["user-name"];
-        _isAdmin = (bool)inputs["is-admin"];
-        if (_isAdmin == null) _isAdmin = (bool)this.DefaultValue("is_admin");
+        _isAdmin = bool.Parse(inputs["is-admin"].ToString());
+        if (_isAdmin == null) _isAdmin = bool.Parse(this.DefaultValue("is_admin").ToString());
         _graphClient = await connection.GetClientAsync<GraphHttpClient>();
     }
 
