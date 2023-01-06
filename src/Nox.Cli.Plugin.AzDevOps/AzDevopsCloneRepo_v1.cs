@@ -13,7 +13,7 @@ public class AzDevopsCloneRepo_v1 : INoxCliAddin
         {
             Name = "azdevops/clone-repo@v1",
             Author = "Jan Schutte",
-            Description = "Get an Azure Devops repository",
+            Description = "Clone an Azure Devops repository",
 
             Inputs =
             {
@@ -23,16 +23,16 @@ public class AzDevopsCloneRepo_v1 : INoxCliAddin
                     Default = new VssConnection(new Uri("https://localhost"), null),
                     IsRequired = true
                 },
-                ["repository"] = new NoxActionInput {
-                    Id = "repository",
-                    Description = "a reference to a devops repository. Normally the output from 'azdevops/get-repo@v1'",
-                    Default = new GitRepository(),
+                ["repository-id"] = new NoxActionInput {
+                    Id = "repository-id",
+                    Description = "The Id (Guid) of the devops repository. Normally the output from 'azdevops/get-repo@v1'",
+                    Default = Guid.Empty,
                     IsRequired = true
                 },
                 ["branch-name"] = new NoxActionInput { 
                     Id = "branch-name", 
                     Description = "The name of the branch to clone, defaults to 'main'",
-                    Default = string.Empty,
+                    Default = "main",
                     IsRequired = false
                 }
             },
@@ -48,16 +48,15 @@ public class AzDevopsCloneRepo_v1 : INoxCliAddin
     }
 
     private GitHttpClient? _repoClient;
-    private GitRepository? _repo;
+    private Guid? _repoId;
     private string? _branchName;
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
         var connection = (VssConnection)inputs["connection"];
         _repoClient = await connection.GetClientAsync<GitHttpClient>();
-        _repo = (GitRepository)inputs["repository"]; 
-        _branchName = (string)inputs["branch-name"];
-        if (string.IsNullOrEmpty(_branchName)) _branchName = (string)this.DefaultValue("branch-name");
+        _repoId = inputs.Value<Guid?>("repository-id");
+        _branchName = inputs.ValueOrDefault<string>("branch-name", this);
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -66,7 +65,7 @@ public class AzDevopsCloneRepo_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_repoClient == null || _repo == null || string.IsNullOrEmpty(_branchName))
+        if (_repoClient == null || _repoId == null || string.IsNullOrEmpty(_branchName))
         {
             ctx.SetErrorMessage("The devops clone-repo action was not initialized");
         }
@@ -74,7 +73,7 @@ public class AzDevopsCloneRepo_v1 : INoxCliAddin
         {
             try
             {
-                var items = await _repoClient.GetItemsAsync(_repo.ProjectReference.Name, _repo.Id);
+                var items = await _repoClient.GetItemsAsync(_repoId!.Value);
                 //outputs["repository-path"] = repoPath;
             }
             catch

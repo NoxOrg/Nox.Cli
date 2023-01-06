@@ -38,9 +38,9 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
 
             Outputs =
             {
-                ["repository"] = new NoxActionOutput {
-                    Id = "repository",
-                    Description = "The Azure devops repository",
+                ["repository-id"] = new NoxActionOutput {
+                    Id = "repository-id",
+                    Description = "The Id (Guid) of the Azure devops repository",
                 },
             }
         };
@@ -73,7 +73,7 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
             try
             {
                 var repo = await _repoClient.GetRepositoryAsync(_projectName, _repoName);
-                outputs["repository"] = repo;
+                outputs["repository-id"] = repo.Id;
             }
             catch
             {

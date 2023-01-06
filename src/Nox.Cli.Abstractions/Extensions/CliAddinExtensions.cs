@@ -13,29 +13,42 @@ public static class CliAddinExtensions
         }
     }
 
-    public static object DefaultValue(this INoxCliAddin addin, string key)
+    public static T? Value<T>(this IDictionary<string, object> inputs, string key)
     {
-        var metadata = addin.Discover();
-        return metadata.Inputs[key];
-    }
-
-    public static bool? ToNullableBoolean(this object input)
-    {
-        bool? result = null;
-        if (bool.TryParse(input.ToString(), out var value))
+        var result = default(T);
+        if (!inputs.ContainsKey(key)) return result;
+        var value = inputs[key];
+        try
         {
-            result = value;
-        };
+            result = (T)Convert.ChangeType(value, typeof(T));
+        }
+        catch (Exception ex)
+        {
+            //Ignore exception result is already default(T);
+        }
         return result;
     }
     
-    public static Guid? ToNullableGuid(this object input)
+    public static T ValueOrDefault<T>(this IDictionary<string, object> inputs, string key, INoxCliAddin addin)
     {
-        Guid? result = null;
-        if (Guid.TryParse(input.ToString(), out var value))
+        var result = default(T);
+        //Set the default
+        var metaValue = addin.Discover().Inputs[key].Default;
+        if (metaValue != null)
         {
-            result = value;
-        };
+            result = (T)Convert.ChangeType(metaValue, typeof(T));
+        }
+        
+        if (!inputs.ContainsKey(key)) return result;
+        var value = inputs[key];
+        try
+        {
+            result = (T)Convert.ChangeType(value, typeof(T));
+        }
+        catch (Exception ex)
+        {
+            //Ignore exception result is already defaulted;
+        }
         return result;
     }
 }

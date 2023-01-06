@@ -49,10 +49,9 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
         var connection = (VssConnection)inputs["connection"];
-        _projectId = inputs["project-id"].ToNullableGuid();
+        _projectId = inputs.Value<Guid?>("project-id");
         _projectClient = await connection.GetClientAsync<ProjectHttpClient>();
-        _isHardDelete = inputs["hard-delete"].ToNullableBoolean();
-        if (_isHardDelete == null) _isHardDelete = this.DefaultValue("hard-delete").ToNullableBoolean();
+        _isHardDelete = inputs.ValueOrDefault<bool?>("hard-delete", this);
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
