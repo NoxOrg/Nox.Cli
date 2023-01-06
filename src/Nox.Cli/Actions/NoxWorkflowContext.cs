@@ -36,7 +36,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _appConfig = appConfig;
         _noxConfig = noxConfig;
         _workflow = workflow;
-        _vars = InitiazeVariables();
+        _vars = InitializeVariables();
         _steps = ParseSteps();
         _currentActionSequence = 0;
         NextStep();
@@ -51,7 +51,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     }
 
 
-    private Dictionary<string, object> InitiazeVariables()
+    private Dictionary<string, object> InitializeVariables()
     {
         var serializer = new SerializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)

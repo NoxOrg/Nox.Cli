@@ -58,7 +58,6 @@ app.Configure(config =>
     config.AddBranch("sync", cfg =>
     {
         cfg.SetDescription("Synchronize your project with version control and remote environments");
-
         cfg.AddNoxCommands();
 
     });
