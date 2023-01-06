@@ -18,4 +18,24 @@ public static class CliAddinExtensions
         var metadata = addin.Discover();
         return metadata.Inputs[key];
     }
+
+    public static bool? ToNullableBoolean(this object input)
+    {
+        bool? result = null;
+        if (bool.TryParse(input.ToString(), out var value))
+        {
+            result = value;
+        };
+        return result;
+    }
+    
+    public static Guid? ToNullableGuid(this object input)
+    {
+        Guid? result = null;
+        if (Guid.TryParse(input.ToString(), out var value))
+        {
+            result = value;
+        };
+        return result;
+    }
 }
