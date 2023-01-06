@@ -1,16 +1,17 @@
 using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsGetRepo_v1 : INoxCliAddin
+public class AzDevopsCloneRepo_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/get-repo@v1",
+            Name = "azdevops/clone-repo@v1",
             Author = "Jan Schutte",
             Description = "Get an Azure Devops repository",
 
@@ -22,40 +23,41 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
                     Default = new VssConnection(new Uri("https://localhost"), null),
                     IsRequired = true
                 },
-                ["project-name"] = new NoxActionInput { 
-                    Id = "project-name", 
-                    Description = "The DevOps project name",
-                    Default = string.Empty,
+                ["repository"] = new NoxActionInput {
+                    Id = "repository",
+                    Description = "a reference to a devops repository. Normally the output from 'azdevops/get-repo@v1'",
+                    Default = new GitRepository(),
                     IsRequired = true
                 },
-                ["repository-name"] = new NoxActionInput { 
-                    Id = "repository-name", 
-                    Description = "The DevOps repository name",
+                ["branch-name"] = new NoxActionInput { 
+                    Id = "branch-name", 
+                    Description = "The name of the branch to clone, defaults to 'main'",
                     Default = string.Empty,
-                    IsRequired = true
+                    IsRequired = false
                 }
             },
 
             Outputs =
             {
-                ["repository"] = new NoxActionOutput {
-                    Id = "repository",
-                    Description = "The Azure devops repository",
+                ["repository-path"] = new NoxActionOutput {
+                    Id = "repository-path",
+                    Description = "The local path where the repository was cloned",
                 },
             }
         };
     }
 
     private GitHttpClient? _repoClient;
-    private string? _repoName;
-    private string? _projectName;
+    private GitRepository? _repo;
+    private string? _branchName;
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
         var connection = (VssConnection)inputs["connection"];
-        _projectName = (string)inputs["project-name"]; 
-        _repoName = (string)inputs["repository-name"];
         _repoClient = await connection.GetClientAsync<GitHttpClient>();
+        _repo = (GitRepository)inputs["repository"]; 
+        _branchName = (string)inputs["branch-name"];
+        if (string.IsNullOrEmpty(_branchName)) _branchName = (string)this.DefaultValue("branch-name");
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -64,21 +66,20 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_repoClient == null || string.IsNullOrEmpty(_repoName) || string.IsNullOrEmpty(_projectName))
+        if (_repoClient == null || _repo == null || string.IsNullOrEmpty(_branchName))
         {
-            ctx.SetErrorMessage("The devops fetch-repo action was not initialized");
+            ctx.SetErrorMessage("The devops clone-repo action was not initialized");
         }
         else
         {
             try
             {
-                var repo = await _repoClient.GetRepositoryAsync(_projectName, _repoName);
-                outputs["repository"] = repo;
-                
+                var items = await _repoClient.GetItemsAsync(_repo.ProjectReference.Name, _repo.Id);
+                //outputs["repository-path"] = repoPath;
             }
             catch
             {
-                outputs["repository"] = null!;
+                outputs["repository-path"] = null!;
             }
             ctx.SetState(ActionState.Success);
         }
@@ -88,7 +89,6 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
 
     public Task EndAsync(INoxWorkflowContext ctx)
     {
-        _repoClient?.Dispose();
         return Task.CompletedTask;
     }
 }
