@@ -81,7 +81,7 @@ jobs:
       - name: Create database 
         id: create-db
         #if: ${{ steps.db-not-exist.was-valid }}
-		if: '"${{ steps.db-not-exist.outputs.result }}" != "${{ vars.db-name }}"'
+        if: '"${{ steps.db-not-exist.outputs.result }}" != "${{ vars.db-name }}"'
         uses: postgres/execute-nonquery@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
