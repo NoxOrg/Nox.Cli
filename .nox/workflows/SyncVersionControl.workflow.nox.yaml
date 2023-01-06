@@ -1,4 +1,4 @@
-# NOX Database Sync Command
+# NOX Version Control Sync Command
 
 name: Synchronise NOX definition with version control
 
@@ -12,7 +12,7 @@ cli:
     - ["sync vc", "--path <designFolder>"]
 
 jobs:
-  sync-versionControl:
+  sync-versionControl:  
     steps:
 
       - name: Locate the DevOps server
