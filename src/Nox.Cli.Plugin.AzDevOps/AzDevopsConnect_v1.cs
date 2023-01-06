@@ -70,7 +70,7 @@ public class AzDevopsConnect_v1 : INoxCliAddin
                 try
                 {
                     await _connection.ConnectAsync();
- 
+                    
                     outputs["connection"] = _connection;
 
                     ctx.SetState(ActionState.Success);
