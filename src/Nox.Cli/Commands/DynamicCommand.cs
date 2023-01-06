@@ -3,6 +3,7 @@
 using Helpers;
 using Microsoft.Extensions.Configuration;
 using Nox.Cli.Actions;
+using Nox.Cli.Actions.Configuration;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -24,9 +25,9 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
     {
         await base.ExecuteAsync(context, settings);
 
-        var yaml = (string)context.Data!;
+        var workflow = (WorkflowConfiguration)context.Data!;
 
-        return await NoxWorkflowExecutor.Execute(yaml, _configuration, _noxConfiguration, _console) ? 0 : 1;
+        return await NoxWorkflowExecutor.Execute(workflow, _configuration, _noxConfiguration, _console) ? 0 : 1;
     }
 
 }
