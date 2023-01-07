@@ -119,7 +119,7 @@ internal static class ConfiguratorExtensions
             if (yamlFiles.ContainsKey(fileName))
             {
                 AnsiConsole.WriteLine();
-                AnsiConsole.MarkupLine($"[bold indianred1]Warning: Local {file} overrides remote file with the same name[/]");
+                AnsiConsole.MarkupLine($"[bold yellow]Warning: Local {file} overrides remote file with the same name[/]");
             }
 
             yamlFiles[fileName] = yaml;

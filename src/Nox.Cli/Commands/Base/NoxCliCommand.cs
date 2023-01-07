@@ -38,6 +38,7 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
             throw new Exception($"The nox definition contains no 'Developers' in the 'Team' section.");
         }
 
+        _console.WriteLine();
         _consoleWriter.WriteHelpText("Reading: Project Definition...");
 
         _console.WriteLine();
