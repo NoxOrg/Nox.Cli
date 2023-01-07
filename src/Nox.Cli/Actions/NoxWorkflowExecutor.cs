@@ -69,6 +69,9 @@ public class NoxWorkflowExecutor
 
         await Task.WhenAll( processedActions.Select(p => p.ActionProvider.EndAsync(ctx) ) );
 
+        console.WriteLine();
+        console.MarkupLine($"[bold mediumpurple3_1]Done.[/]");
+
         return true;
     }
 
