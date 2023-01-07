@@ -5,7 +5,7 @@ name: Synchronise NOX definition with Azure Active Directory
 cli:
   branch: sync
   command: azure-active-directory
-  command-alias: azad
+  command-alias: ad
   description: Synchronises NOX team definition with your Azure Active Directory (AAD).
   examples:
     - ["sync azure-active-directory", "--path <designFolder>"]
