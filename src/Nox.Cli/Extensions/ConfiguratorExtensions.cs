@@ -8,8 +8,8 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using System.Text.Json;
 using Spectre.Console;
-using Nox.Cli.Actions.Configuration;
 using Nox.Cli.Services.Caching;
+using Nox.Cli.Configuration;
 
 namespace Nox.Cli;
 
