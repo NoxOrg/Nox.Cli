@@ -1,6 +1,6 @@
 ﻿
 using Microsoft.Extensions.Configuration;
-using Nox.Cli.Actions.Configuration;
+using Nox.Cli.Configuration;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 

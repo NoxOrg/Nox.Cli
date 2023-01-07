@@ -1,6 +1,6 @@
 ﻿using Nox.Core.Constants;
 
-namespace Nox.Cli.Actions.Configuration;
+namespace Nox.Cli.Configuration;
 
 public class SecretsConfiguration
 {

@@ -1,4 +1,4 @@
-﻿namespace Nox.Cli.Actions.Configuration;
+﻿namespace Nox.Cli.Configuration;
 
 public class BranchesConfiguration
 {
