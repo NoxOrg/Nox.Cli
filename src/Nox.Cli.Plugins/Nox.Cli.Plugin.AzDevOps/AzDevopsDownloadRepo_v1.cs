@@ -124,9 +124,9 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
         return result;
     }
 
-    private static string UnzipRepo(Guid repoId, string zipFilePath, string destinationPath)
+    private static string UnzipRepo(Guid repoId, string zipFilePath, string destinationRoot)
     {
-        var extractFolder = Path.Combine(destinationPath, repoId.ToString());
+        var extractFolder = Path.Combine(destinationRoot, repoId.ToString());
         if (Directory.Exists(extractFolder)) Directory.Delete(extractFolder);
         //ZipFile.ExtractToDirectory(zipFilePath, extractFolder);
         var THRESHOLD_ENTRIES = 10000;
@@ -169,7 +169,14 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
             if(totalEntryArchive > THRESHOLD_ENTRIES) {
                 throw new NoxCliException("Too many entries in this archive, can lead to inodes exhaustion of the system");
             }
-            entry.ExtractToFile(Path.Combine(extractFolder, entry.FullName));
+            var destinationDirectoryFullPath = Path.GetFullPath(destinationRoot);
+            var destinationPath = Path.Combine(destinationDirectoryFullPath, entry.FullName);
+            var destinationFullPath = Path.GetFullPath(destinationPath);
+            if (!destinationFullPath.StartsWith(destinationDirectoryFullPath))
+            {
+                throw new NoxCliException("Attempting to extract archive entry outside destination directory");
+            }
+            entry.ExtractToFile(destinationFullPath); // OK
         }
         
         return extractFolder;
