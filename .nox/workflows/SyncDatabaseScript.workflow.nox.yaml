@@ -151,7 +151,7 @@ jobs:
                END IF;  
             END
             $do$;
-            GRANT ${{vars.db-role}} TO ${{vars.db-admin}};
+            -- GRANT ${{vars.db-role}} TO ${{vars.db-admin}};
             ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${{vars.db-role}};
             ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${{vars.db-role}};
             ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO ${{vars.db-role}};     
