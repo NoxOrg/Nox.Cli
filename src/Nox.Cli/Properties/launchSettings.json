@@ -2,7 +2,7 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "sync tc",
+      "commandLineArgs": "sync tcr",
       "workingDirectory": "$(ProjectDir)"
     }
   }

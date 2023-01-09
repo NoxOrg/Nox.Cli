@@ -53,9 +53,9 @@ public class AzDevopsCloneRepo_v1 : INoxCliAddin
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
-        var connection = (VssConnection)inputs["connection"];
-        _repoClient = await connection.GetClientAsync<GitHttpClient>();
-        _repoId = inputs.Value<Guid?>("repository-id");
+        var connection = inputs.Value<VssConnection>("connection");
+        _repoClient = await connection!.GetClientAsync<GitHttpClient>();
+        _repoId = inputs.Value<Guid>("repository-id");
         _branchName = inputs.ValueOrDefault<string>("branch-name", this);
     }
 
@@ -65,7 +65,7 @@ public class AzDevopsCloneRepo_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_repoClient == null || _repoId == null || string.IsNullOrEmpty(_branchName))
+        if (_repoClient == null || _repoId == null || _repoId == Guid.Empty || string.IsNullOrEmpty(_branchName))
         {
             ctx.SetErrorMessage("The devops clone-repo action was not initialized");
         }
@@ -73,7 +73,7 @@ public class AzDevopsCloneRepo_v1 : INoxCliAddin
         {
             try
             {
-                var items = await _repoClient.GetItemsAsync(_repoId!.Value);
+                var items = await _repoClient.GetItemsAsync(_repoId!.Value, scopePath: "/main", VersionControlRecursionType.OneLevel);
                 //outputs["repository-path"] = repoPath;
             }
             catch

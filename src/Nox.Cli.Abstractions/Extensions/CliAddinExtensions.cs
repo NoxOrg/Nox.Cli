@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Nox.Cli.Actions;
 
 namespace Nox.Cli.Abstractions.Extensions;
@@ -20,23 +21,35 @@ public static class CliAddinExtensions
         var value = inputs[key];
         try
         {
-            result = (T)Convert.ChangeType(value, typeof(T));
+            if (typeof(T).IsClass)
+            {
+                result = (T)Convert.ChangeType(value, typeof(T));
+            }
+            else
+            {
+                result = (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFrom(value.ToString()!)!;    
+            }
+            
         }
-        catch (Exception ex)
+        catch
         {
             //Ignore exception result is already default(T);
         }
         return result;
     }
     
-    public static T ValueOrDefault<T>(this IDictionary<string, object> inputs, string key, INoxCliAddin addin)
+    public static T? ValueOrDefault<T>(this IDictionary<string, object> inputs, string key, INoxCliAddin addin)
     {
         var result = default(T);
         //Set the default
-        var metaValue = addin.Discover().Inputs[key].Default;
-        if (metaValue != null)
+        var meta = addin.Discover();
+        if (meta.Inputs.ContainsKey(key))
         {
-            result = (T)Convert.ChangeType(metaValue, typeof(T));
+            var metaValue = meta.Inputs[key];
+            if (metaValue != null)
+            {
+                result = (T)Convert.ChangeType(metaValue.Default, typeof(T));
+            }    
         }
         
         if (!inputs.ContainsKey(key)) return result;
@@ -45,7 +58,7 @@ public static class CliAddinExtensions
         {
             result = (T)Convert.ChangeType(value, typeof(T));
         }
-        catch (Exception ex)
+        catch
         {
             //Ignore exception result is already defaulted;
         }

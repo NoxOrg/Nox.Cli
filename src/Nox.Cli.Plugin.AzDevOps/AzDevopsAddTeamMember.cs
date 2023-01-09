@@ -57,11 +57,11 @@ public class AzDevopsAddTeamMember_v1 : INoxCliAddin
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
     {
-        var connection = (VssConnection)inputs["connection"];
-        _projectName = (string)inputs["project-name"];
-        _username = (string)inputs["user-name"];
-        _isAdmin = inputs.ValueOrDefault<bool?>("is-admin", this);
-        _graphClient = await connection.GetClientAsync<GraphHttpClient>();
+        var connection = inputs.Value<VssConnection>("connection");
+        _projectName = inputs.Value<string>("project-name");
+        _username = inputs.Value<string>("user-name");
+        _isAdmin = inputs.ValueOrDefault<bool>("is-admin", this);
+        _graphClient = await connection!.GetClientAsync<GraphHttpClient>();
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)

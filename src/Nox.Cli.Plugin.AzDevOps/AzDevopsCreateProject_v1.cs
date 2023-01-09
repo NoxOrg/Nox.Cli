@@ -2,6 +2,7 @@ using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.VisualStudio.Services.Operations;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -57,13 +58,13 @@ public class AzDevopsCreateProject_v1 : INoxCliAddin
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
-        var connection = (VssConnection)inputs["connection"];
-        _projectName = (string)inputs["project-name"];
-        _projectDescription = (string)inputs["project-description"];
+        var connection = inputs.Value<VssConnection>("connection");
+        _projectName = inputs.Value<string>("project-name");
+        _projectDescription = inputs.Value<string>("project-description");
         if (string.IsNullOrEmpty(_projectDescription)) _projectDescription = _projectName;
-        _projectClient = await connection.GetClientAsync<ProjectHttpClient>();
-        _processClient = await connection.GetClientAsync<ProcessHttpClient>();
-        _operationsClient = await connection.GetClientAsync<OperationsHttpClient>();
+        _projectClient = await connection!.GetClientAsync<ProjectHttpClient>();
+        _processClient = await connection!.GetClientAsync<ProcessHttpClient>();
+        _operationsClient = await connection!.GetClientAsync<OperationsHttpClient>();
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)

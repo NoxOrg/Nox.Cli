@@ -39,7 +39,7 @@ internal static class ConfiguratorExtensions
         foreach (var (_,yaml) in yamlWorkflows)
         {
             var cmdConfig = deserializer.Deserialize<NoxWorkflowConfiguration>(yaml).Cli;
-
+            if (cmdConfig == null) continue;
             var cmdConfigContinuation = cfg.AddCommand<DynamicCommand>(cmdConfig.Command)
                 .WithData(yaml)
                 .WithAlias(cmdConfig.CommandAlias)
@@ -49,6 +49,7 @@ internal static class ConfiguratorExtensions
             {
                 cmdConfigContinuation = cmdConfigContinuation.WithExample(example.ToArray());
             };
+
         }
 
         return cfg;
@@ -110,7 +111,7 @@ internal static class ConfiguratorExtensions
 
             if (yaml != null)
             {
-                if (yamlWorkflows[file] != null)
+                if (yamlWorkflows.ContainsKey(file))
                 {
                     AnsiConsole.MarkupLine($"[bold olive]WARNING: {$"Local workflow {file} has been replaced by the online version. Local workflows are only applied if they do not exist in the online repository.".EscapeMarkup()}[/]");
                 }

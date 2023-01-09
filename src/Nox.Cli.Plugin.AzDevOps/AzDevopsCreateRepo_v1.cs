@@ -1,6 +1,7 @@
 using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -52,10 +53,10 @@ public class AzDevopsCreateRepo_v1 : INoxCliAddin
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
-        var connection = (VssConnection)inputs["connection"];
-        _projectName = (string)inputs["project-name"]; 
-        _repoName = (string)inputs["repository-name"];
-        _repoClient = await connection.GetClientAsync<GitHttpClient>();
+        var connection = inputs.Value<VssConnection>("connection");
+        _projectName = inputs.Value<string>("project-name");
+        _repoName = inputs.Value<string>("repository-name");
+        _repoClient = await connection!.GetClientAsync<GitHttpClient>();
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
