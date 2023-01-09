@@ -107,8 +107,6 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
     
         var graphGroup = graphGroups.FirstOrDefault( g => g.PrincipalName.Contains($"\\{_projectName} Team", StringComparison.OrdinalIgnoreCase));
     
-        var graphAdminGroup = graphGroups.FirstOrDefault(g => g.PrincipalName.Contains($"\\Project Administrators", StringComparison.OrdinalIgnoreCase));
-    
         var usersInGraph = _graphClient.ListUsersAsync(new string[] {"aad"}).Result;
         while (usersInGraph.ContinuationToken is not null)
         {
@@ -123,23 +121,6 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
                     {
                         var membership = await _graphClient.AddMembershipAsync(user.Descriptor, graphGroup!.Descriptor);
                     }
-    
-                    var isUserInAdminGroup = await _graphClient.CheckMembershipExistenceAsync(user.Descriptor, graphAdminGroup!.Descriptor);
-                    if (developer.IsAdmin)
-                    {
-                        if (!isUserInAdminGroup)
-                        {
-                            var membership = await _graphClient.AddMembershipAsync(user.Descriptor, graphAdminGroup!.Descriptor);
-                        }
-                    }
-                    else
-                    {
-                        if (isUserInAdminGroup)
-                        {
-                            await _graphClient.RemoveMembershipAsync(user.Descriptor, graphAdminGroup!.Descriptor);
-                        }
-                    }
-    
                 }
             }
             usersInGraph = await _graphClient.ListUsersAsync(new string[] {"aad"}, continuationToken: usersInGraph.ContinuationToken.FirstOrDefault());

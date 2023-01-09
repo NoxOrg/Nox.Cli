@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
@@ -39,9 +40,9 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
 
             Outputs =
             {
-                ["repository-path"] = new NoxActionOutput {
-                    Id = "repository-path",
-                    Description = "The local path where the repository was cloned",
+                ["local-repository-path"] = new NoxActionOutput {
+                    Id = "local-repository-path",
+                    Description = "The path to the locally downloaded repository",
                 },
             }
         };
@@ -73,23 +74,26 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
         {
             try
             {
-                var branch = new GitVersionDescriptor
+                var repoId = Guid.NewGuid();
+                var repoPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "nox", "repositories");
+                var zipFilePath = await DownloadRepo(repoId, repoPath);
+                if (!string.IsNullOrEmpty(zipFilePath))
                 {
-                    Version = _branchName,
-                    VersionType = GitVersionType.Branch
-                };
-                var item = await _gitClient.GetItemAsync(_repoId!.Value, "/", recursionLevel: VersionControlRecursionType.None, versionDescriptor: branch);
-                var zipStream = await _gitClient.GetTreeZipAsync(_repoId!.Value, item.ObjectId);
-                var fileStream = File.Create("/home/jan/Test/TestRepo.zip");
-                await zipStream.CopyToAsync(fileStream);
-                fileStream.Close();
-                //outputs["repository-path"] = repoPath;
+                    var extractFolder = UnzipRepo(repoId, zipFilePath, repoPath);
+                    File.Delete(zipFilePath);
+                    outputs["local-repository-path"] = extractFolder;
+                    ctx.SetState(ActionState.Success);    
+                }
+                else
+                {
+                    ctx.SetErrorMessage("Unable to download remote repository to local zip file.");
+                }               
+                
             }
-            catch
+            catch (Exception ex)
             {
-                outputs["repository-path"] = null!;
+                ctx.SetErrorMessage(ex.Message);
             }
-            ctx.SetState(ActionState.Success);
         }
 
         return outputs;
@@ -98,6 +102,33 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
     public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
+    }
+
+    private async Task<string> DownloadRepo(Guid repoId, string downloadFolder)
+    {
+        var result = "";
+        var branch = new GitVersionDescriptor
+        {
+            Version = _branchName,
+            VersionType = GitVersionType.Branch
+        };
+        var item = await _gitClient!.GetItemAsync(_repoId!.Value, "/", recursionLevel: VersionControlRecursionType.None, versionDescriptor: branch);
+        var zipStream = await _gitClient.GetTreeZipAsync(_repoId!.Value, item.ObjectId);
+        Directory.CreateDirectory(downloadFolder);
+        result = Path.Combine(downloadFolder, $"{repoId}.zip");
+        if (File.Exists(result)) File.Delete(result);
+        var fileStream = File.Create(result);
+        await zipStream.CopyToAsync(fileStream);
+        fileStream.Close();
+        return result;
+    }
+
+    private string UnzipRepo(Guid repoId, string zipFilePath, string destinationPath)
+    {
+        var extractFolder = Path.Combine(destinationPath, repoId.ToString());
+        if (Directory.Exists(extractFolder)) Directory.Delete(extractFolder);
+        ZipFile.ExtractToDirectory(zipFilePath, extractFolder);
+        return extractFolder;
     }
 }
 

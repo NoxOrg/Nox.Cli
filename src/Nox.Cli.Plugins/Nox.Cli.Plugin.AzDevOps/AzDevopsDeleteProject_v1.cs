@@ -60,7 +60,7 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_projectClient == null || _projectId == null || _isHardDelete == null)
+        if (_projectClient == null || _projectId == null || _projectId == Guid.Empty || _isHardDelete == null)
         {
             ctx.SetErrorMessage("The devops delete-project action was not initialized");
         }
@@ -68,7 +68,7 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
         {
             try
             {
-                var project = await _projectClient.QueueDeleteProject(_projectId.Value, _isHardDelete);
+                await _projectClient.QueueDeleteProject(_projectId.Value, _isHardDelete);
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

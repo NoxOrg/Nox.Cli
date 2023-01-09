@@ -69,14 +69,13 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
             {
                 var project = await _projectClient.GetProject(_projectName);
                 outputs["project-id"] = project.Id;
+                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {
                 ctx.SetErrorMessage(ex.Message);
             }
         }
-        
-        ctx.SetState(ActionState.Success);
         return outputs;
     }
 

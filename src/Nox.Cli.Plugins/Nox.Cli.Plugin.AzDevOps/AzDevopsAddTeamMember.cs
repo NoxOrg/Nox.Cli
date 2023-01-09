@@ -39,11 +39,11 @@ public class AzDevopsAddTeamMember_v1 : INoxCliAddin
                     Default = string.Empty,
                     IsRequired = true
                 },
-                ["is-admin"] = new NoxActionInput
+                ["group-name"] = new NoxActionInput
                 {
-                    Id = "is-admin",
-                    Description = "Determines if this team member will be a project administrator",
-                    Default = false,
+                    Id = "group-name",
+                    Description = "The group to add this team member to",
+                    Default = "",
                     IsRequired = false
                 },
             }
@@ -53,14 +53,14 @@ public class AzDevopsAddTeamMember_v1 : INoxCliAddin
     private GraphHttpClient? _graphClient;
     private string? _projectName;
     private string? _username;
-    private bool? _isAdmin;
+    private string? _groupName;
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectName = inputs.Value<string>("project-name");
         _username = inputs.Value<string>("user-name");
-        _isAdmin = inputs.ValueOrDefault<bool>("is-admin", this);
+        _groupName = inputs.Value<string>("group-name");
         _graphClient = await connection!.GetClientAsync<GraphHttpClient>();
     }
 
@@ -70,7 +70,7 @@ public class AzDevopsAddTeamMember_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_graphClient == null || string.IsNullOrEmpty(_projectName) || _username == null || _isAdmin == null)
+        if (_graphClient == null || string.IsNullOrEmpty(_projectName) || _username == null)
         {
             ctx.SetErrorMessage("The devops add-team-member action was not initialized");
         }
@@ -114,9 +114,13 @@ public class AzDevopsAddTeamMember_v1 : INoxCliAddin
             groupsInGraph = await _graphClient.ListGroupsAsync(continuationToken: groupsInGraph.ContinuationToken.FirstOrDefault());
         }
     
-        var graphGroup = graphGroups.FirstOrDefault( g => g.PrincipalName.Contains($"\\{_projectName} Team", StringComparison.OrdinalIgnoreCase));
-    
-        var graphAdminGroup = graphGroups.FirstOrDefault(g => g.PrincipalName.Contains($"\\Project Administrators", StringComparison.OrdinalIgnoreCase));
+        var graphTeamGroup = graphGroups.FirstOrDefault( g => g.PrincipalName.Contains($"\\{_projectName} Team", StringComparison.OrdinalIgnoreCase));
+
+        GraphGroup? graphSpecificGroup = null;
+        if (!string.IsNullOrEmpty(_groupName))
+        {
+            graphSpecificGroup = graphGroups.FirstOrDefault(g => g.PrincipalName.Contains($"\\{_groupName}", StringComparison.OrdinalIgnoreCase));    
+        }
     
         var usersInGraph = _graphClient.ListUsersAsync(new string[] {"aad"}).Result;
         while (usersInGraph.ContinuationToken is not null)
@@ -124,28 +128,20 @@ public class AzDevopsAddTeamMember_v1 : INoxCliAddin
             var user = usersInGraph.GraphUsers.FirstOrDefault(u => u.PrincipalName.Equals(_username, StringComparison.OrdinalIgnoreCase));
             if (user != null)
             {
-                var isUserInGroup = await _graphClient.CheckMembershipExistenceAsync(user.Descriptor, graphGroup!.Descriptor);
+                var isUserInGroup = await _graphClient.CheckMembershipExistenceAsync(user.Descriptor, graphTeamGroup!.Descriptor);
                 if (!isUserInGroup)
                 {
-                    var membership = await _graphClient.AddMembershipAsync(user.Descriptor, graphGroup!.Descriptor);
+                    var membership = await _graphClient.AddMembershipAsync(user.Descriptor, graphTeamGroup!.Descriptor);
                 }
-    
-                var isUserInAdminGroup = await _graphClient.CheckMembershipExistenceAsync(user.Descriptor, graphAdminGroup!.Descriptor);
-                if (_isAdmin == true)
+
+                if (graphSpecificGroup != null)
                 {
-                    if (!isUserInAdminGroup)
+                    var isUserInSpecificGroup = await _graphClient.CheckMembershipExistenceAsync(user.Descriptor, graphSpecificGroup!.Descriptor);
+                    if (!isUserInSpecificGroup)
                     {
-                        var membership = await _graphClient.AddMembershipAsync(user.Descriptor, graphAdminGroup!.Descriptor);
+                        var membership = await _graphClient.AddMembershipAsync(user.Descriptor, graphSpecificGroup!.Descriptor);
                     }
                 }
-                else
-                {
-                    if (isUserInAdminGroup)
-                    {
-                        await _graphClient.RemoveMembershipAsync(user.Descriptor, graphAdminGroup!.Descriptor);
-                    }
-                }
-    
             }
             usersInGraph = await _graphClient.ListUsersAsync(new string[] {"aad"}, continuationToken: usersInGraph.ContinuationToken.FirstOrDefault());
         }
