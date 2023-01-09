@@ -2,18 +2,19 @@ using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.VisualStudio.Services.Operations;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsCreateProject_v1 : INoxCliAddin
+public class AzDevopsEnsureProject_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/create-Project@v1",
+            Name = "azdevops/ensure-Project@v1",
             Author = "Jan Schutte",
-            Description = "Create an Azure Devops project",
+            Description = "Get a reference to a DevOps project, if it does not exist then create it.",
 
             Inputs =
             {
@@ -41,9 +42,9 @@ public class AzDevopsCreateProject_v1 : INoxCliAddin
 
             Outputs =
             {
-                ["project"] = new NoxActionOutput {
-                    Id = "project",
-                    Description = "The Azure devops project",
+                ["project-id"] = new NoxActionOutput {
+                    Id = "project-id",
+                    Description = "The Id of the Azure devops project",
                 },
             }
         };
@@ -57,12 +58,13 @@ public class AzDevopsCreateProject_v1 : INoxCliAddin
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
-        var connection = (VssConnection)inputs["connection"];
-        _projectName = (string)inputs["project-name"];
-        _projectDescription = (string)inputs["project-description"];
-        _projectClient = await connection.GetClientAsync<ProjectHttpClient>();
-        _processClient = await connection.GetClientAsync<ProcessHttpClient>();
-        _operationsClient = await connection.GetClientAsync<OperationsHttpClient>();
+        var connection = inputs.Value<VssConnection>("connection");
+        _projectName = inputs.Value<string>("project-name");
+        _projectDescription = inputs.Value<string>("project-description");
+        if (string.IsNullOrEmpty(_projectDescription)) _projectDescription = _projectName;
+        _projectClient = await connection!.GetClientAsync<ProjectHttpClient>();
+        _processClient = await connection!.GetClientAsync<ProcessHttpClient>();
+        _operationsClient = await connection!.GetClientAsync<OperationsHttpClient>();
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -77,11 +79,10 @@ public class AzDevopsCreateProject_v1 : INoxCliAddin
         }
         else
         {
-            if (string.IsNullOrEmpty(_projectDescription)) _projectDescription = _projectName;
             try
             {
                 var project = await _projectClient.GetProject(_projectName);
-                outputs["project"] = project;
+                outputs["project-id"] = project.Id;
                 ctx.SetState(ActionState.Success);
             }
             catch

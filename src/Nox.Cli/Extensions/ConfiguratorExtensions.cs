@@ -7,6 +7,8 @@ using System.IdentityModel.Tokens.Jwt;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using System.Text.Json;
+using Nox.Cli.Helpers;
+using Spectre.Console;
 
 namespace Nox.Cli;
 
@@ -20,7 +22,7 @@ internal static class ConfiguratorExtensions
 
         NoxCliCache? cache = GetOrCreateCache(cacheFile);
 
-        Dictionary<string,string> yamlWorkflows = new();
+        Dictionary<string,string> yamlWorkflows = new(StringComparer.OrdinalIgnoreCase);
 
         GetLocalWorkflows(yamlWorkflows);
 
@@ -37,7 +39,7 @@ internal static class ConfiguratorExtensions
         foreach (var (_,yaml) in yamlWorkflows)
         {
             var cmdConfig = deserializer.Deserialize<NoxWorkflowConfiguration>(yaml).Cli;
-
+            if (cmdConfig == null) continue;
             var cmdConfigContinuation = cfg.AddCommand<DynamicCommand>(cmdConfig.Command)
                 .WithData(yaml)
                 .WithAlias(cmdConfig.CommandAlias)
@@ -47,6 +49,7 @@ internal static class ConfiguratorExtensions
             {
                 cmdConfigContinuation = cmdConfigContinuation.WithExample(example.ToArray());
             };
+
         }
 
         return cfg;
@@ -108,6 +111,10 @@ internal static class ConfiguratorExtensions
 
             if (yaml != null)
             {
+                if (yamlWorkflows.ContainsKey(file))
+                {
+                    AnsiConsole.MarkupLine($"[bold olive]WARNING: {$"Local workflow {file} has been replaced by the online version. Local workflows are only applied if they do not exist in the online repository.".EscapeMarkup()}[/]");
+                }
                 yamlWorkflows[file] = yaml;
                 File.WriteAllText(Path.Combine(workflowCachePath, file), yaml);
                 if (existingCacheList.Contains(file))

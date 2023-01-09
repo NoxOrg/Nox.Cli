@@ -1,6 +1,7 @@
 ﻿using Nox.Cli.Actions;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -46,10 +47,10 @@ public class AzDevopsConnect_v1 : INoxCliAddin
 
     public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
-        var server = (string)inputs["server"];
-        var pat = (string)inputs["personal-access-token"];
+        var server = inputs.Value<string>("server");
+        var pat = inputs.Value<string>("personal-access-token");
 
-        _connection = new VssConnection(new Uri(server), new VssBasicCredential(string.Empty, pat));
+        _connection = new VssConnection(new Uri(server!), new VssBasicCredential(string.Empty, pat));
         return Task.CompletedTask;
     }
 
@@ -70,7 +71,7 @@ public class AzDevopsConnect_v1 : INoxCliAddin
                 try
                 {
                     await _connection.ConnectAsync();
- 
+                    
                     outputs["connection"] = _connection;
 
                     ctx.SetState(ActionState.Success);

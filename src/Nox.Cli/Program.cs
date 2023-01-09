@@ -7,8 +7,8 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 
 using Nox.Cli;
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Interceptors;
-using Nox.Cli.Exceptions;
 using Nox.Cli.Services;
 using Nox.Cli.Commands;
 using Nox.Cli.Helpers;
@@ -58,7 +58,6 @@ app.Configure(config =>
     config.AddBranch("sync", cfg =>
     {
         cfg.SetDescription("Synchronize your project with version control and remote environments");
-
         cfg.AddNoxCommands();
 
     });
