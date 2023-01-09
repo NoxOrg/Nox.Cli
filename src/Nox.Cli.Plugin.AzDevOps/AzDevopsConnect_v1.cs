@@ -1,5 +1,4 @@
-﻿using Nox.Cli.Actions;
-using Microsoft.VisualStudio.Services.Common;
+﻿using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 
 namespace Nox.Cli.Plugins.AzDevops;

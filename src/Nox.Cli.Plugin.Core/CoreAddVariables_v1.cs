@@ -1,6 +1,4 @@
-﻿using Nox.Cli.Actions;
-
-namespace Nox.Cli.Plugins.Core;
+﻿namespace Nox.Cli.Plugins.Core;
 
 public class CoreAddVariables_v1 : INoxCliAddin
 {

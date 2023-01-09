@@ -1,5 +1,5 @@
 ﻿
-namespace Nox.Cli.Actions;
+namespace Nox.Cli;
 
 public interface INoxCliAddin
 {

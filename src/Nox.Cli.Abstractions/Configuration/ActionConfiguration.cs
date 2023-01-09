@@ -1,6 +1,4 @@
-﻿using Nox.Cli.Actions;
-
-namespace Nox.Cli.Configuration;
+﻿namespace Nox.Cli.Configuration;
 
 public class ActionConfiguration
 {

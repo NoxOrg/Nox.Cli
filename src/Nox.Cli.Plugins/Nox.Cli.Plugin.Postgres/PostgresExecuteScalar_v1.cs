@@ -1,5 +1,4 @@
-﻿using Nox.Cli.Actions;
-using Npgsql;
+﻿using Npgsql;
 
 namespace Nox.Cli.Plugins.Postgres;
 

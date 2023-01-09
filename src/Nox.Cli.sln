@@ -13,11 +13,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli.Plugin.Network", "N
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli.Plugin.Postgres", "Nox.Cli.Plugins\Nox.Cli.Plugin.Postgres\Nox.Cli.Plugin.Postgres.csproj", "{E4CFA41A-B61C-45E8-BB27-FD430E83AD59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.Core", "Nox.Cli.Plugin.Core\Nox.Cli.Plugin.Core.csproj", "{AE01032E-ECD0-4407-8403-DFD13C05BC98}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli.Plugin.Core", "Nox.Cli.Plugin.Core\Nox.Cli.Plugin.Core.csproj", "{AE01032E-ECD0-4407-8403-DFD13C05BC98}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.AzureAd", "Nox.Cli.Plugin.AzureAd\Nox.Cli.Plugin.AzureAd.csproj", "{525BE305-D86D-4D12-BC0E-1DD680970521}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli.Plugin.AzureAd", "Nox.Cli.Plugin.AzureAd\Nox.Cli.Plugin.AzureAd.csproj", "{525BE305-D86D-4D12-BC0E-1DD680970521}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.AzDevOps", "Nox.Cli.Plugin.AzDevOps\Nox.Cli.Plugin.AzDevOps.csproj", "{EBD62630-AAEB-4535-9133-8C2B9F70B92E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli.Plugin.AzDevOps", "Nox.Cli.Plugin.AzDevOps\Nox.Cli.Plugin.AzDevOps.csproj", "{EBD62630-AAEB-4535-9133-8C2B9F70B92E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Server", "Nox.Cli.Server\Nox.Cli.Server.csproj", "{D3467EB8-A930-496F-9489-20A35E972187}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Workflow", "Nox.Workflow\Nox.Workflow.csproj", "{83D4C2D2-37DE-4260-9898-0D36F2620406}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +57,14 @@ Global
 		{EBD62630-AAEB-4535-9133-8C2B9F70B92E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBD62630-AAEB-4535-9133-8C2B9F70B92E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBD62630-AAEB-4535-9133-8C2B9F70B92E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3467EB8-A930-496F-9489-20A35E972187}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3467EB8-A930-496F-9489-20A35E972187}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3467EB8-A930-496F-9489-20A35E972187}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3467EB8-A930-496F-9489-20A35E972187}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83D4C2D2-37DE-4260-9898-0D36F2620406}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83D4C2D2-37DE-4260-9898-0D36F2620406}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83D4C2D2-37DE-4260-9898-0D36F2620406}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83D4C2D2-37DE-4260-9898-0D36F2620406}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

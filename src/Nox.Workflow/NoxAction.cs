@@ -1,6 +1,7 @@
 ﻿using CodingSeb.ExpressionEvaluator;
+using Nox.Cli;
 
-namespace Nox.Cli.Actions;
+namespace Nox.Workflow;
 
 public class NoxAction 
 {

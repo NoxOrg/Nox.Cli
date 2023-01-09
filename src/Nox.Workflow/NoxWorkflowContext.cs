@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿namespace Nox.Workflow;
+
+using Microsoft.Extensions.Configuration;
+using Nox.Cli;
 using Nox.Cli.Configuration;
 using Nox.Core.Configuration;
 using Nox.Core.Interfaces.Configuration;
@@ -8,14 +11,14 @@ using System.Text.RegularExpressions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Nox.Cli.Actions;
 
 public class NoxWorkflowContext : INoxWorkflowContext
 {
 
+    private readonly NoxWorkflowParameters _workflowParameters;
     private readonly IConfiguration _appConfig;
     private readonly INoxConfiguration _noxConfig;
-    private readonly WorkflowConfiguration _workflow;
+    private readonly WorkflowConfiguration _workflowConfig;
     private readonly IDictionary<string, NoxAction> _steps;
     private readonly IDictionary<string, object> _vars;
 
@@ -31,11 +34,12 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     public NoxAction? CurrentAction => _currentAction;
 
-    public NoxWorkflowContext(WorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig)
+    public NoxWorkflowContext(NoxWorkflowParameters workflowParameters)
     {
-        _appConfig = appConfig;
-        _noxConfig = noxConfig;
-        _workflow = workflow;
+        _workflowParameters = workflowParameters;
+        _appConfig = workflowParameters.AppConfiguration;
+        _noxConfig = workflowParameters.NoxConfiguration;
+        _workflowConfig = workflowParameters.WorkflowConfiguration;
         _vars = InitiazeVariables();
         _steps = ParseSteps();
         _currentActionSequence = 0;
@@ -49,15 +53,14 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _currentAction = _steps.Select(kv => kv.Value).Where(a => a.Sequence == _currentActionSequence).FirstOrDefault();
         _nextAction = _steps.Select(kv => kv.Value).Where(a => a.Sequence == _currentActionSequence + 1).FirstOrDefault();
     }
-
-
+    
     private Dictionary<string, object> InitiazeVariables()
     {
         var serializer = new SerializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .Build();
 
-        var workflowString = serializer.Serialize(_workflow);
+        var workflowString = serializer.Serialize(_workflowConfig);
 
         var matches = _variableRegex.Matches(workflowString);
 
@@ -161,7 +164,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     {
         var steps = new Dictionary<string, NoxAction>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var (jobKey, stepConfiguration) in _workflow.Jobs)
+        foreach (var (jobKey, stepConfiguration) in _workflowConfig.Jobs)
         {
             var sequence = 0;
 

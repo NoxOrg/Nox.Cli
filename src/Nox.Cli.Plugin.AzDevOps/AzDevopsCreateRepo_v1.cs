@@ -1,4 +1,3 @@
-using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 

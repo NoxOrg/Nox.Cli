@@ -2,9 +2,9 @@
 
 using Helpers;
 using Microsoft.Extensions.Configuration;
-using Nox.Cli.Actions;
 using Nox.Cli.Configuration;
 using Nox.Core.Interfaces.Configuration;
+using Nox.Workflow;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.IO.Abstractions;
@@ -27,7 +27,16 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
 
         var workflow = (WorkflowConfiguration)context.Data!;
 
-        return await NoxWorkflowExecutor.Execute(workflow, _configuration, _noxConfiguration, _console) ? 0 : 1;
+        var parameters = new NoxWorkflowParameters()
+        {
+            WorkflowConfiguration = workflow,
+            AppConfiguration = _configuration,
+            NoxConfiguration = _noxConfiguration
+        };
+
+        var executor = new NoxWorkflowExecutor(parameters, _console);
+
+        return await executor.Execute() ? 0 : 1;
     }
 
 }

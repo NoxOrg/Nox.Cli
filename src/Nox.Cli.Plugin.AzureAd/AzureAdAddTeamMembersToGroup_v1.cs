@@ -1,7 +1,5 @@
 using Microsoft.Graph;
-using Nox.Cli.Actions;
 using Nox.Core.Configuration;
-using ActionState = Nox.Cli.Actions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 

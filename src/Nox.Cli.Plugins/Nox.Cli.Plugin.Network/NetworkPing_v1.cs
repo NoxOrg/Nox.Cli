@@ -1,5 +1,4 @@
-﻿using Nox.Cli.Actions;
-using System.Net.NetworkInformation;
+﻿using System.Net.NetworkInformation;
 
 namespace Nox.Cli.Plugins.Network;
 

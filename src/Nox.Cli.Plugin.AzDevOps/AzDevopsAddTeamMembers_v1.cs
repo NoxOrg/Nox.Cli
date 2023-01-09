@@ -1,6 +1,5 @@
 using Microsoft.VisualStudio.Services.Graph.Client;
 using Microsoft.VisualStudio.Services.WebApi;
-using Nox.Cli.Actions;
 using Nox.Core.Configuration;
 
 namespace Nox.Cli.Plugins.AzDevops;

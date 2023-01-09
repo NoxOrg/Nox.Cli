@@ -1,7 +1,5 @@
 using Azure.Identity;
 using Microsoft.Graph;
-using Nox.Cli.Actions;
-using ActionState = Nox.Cli.Actions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 

@@ -1,34 +1,42 @@
-﻿
-using Microsoft.Extensions.Configuration;
-using Nox.Cli.Configuration;
-using Nox.Core.Interfaces.Configuration;
+﻿using Nox.Cli;
 using Spectre.Console;
+using System.Text.Json;
 
-namespace Nox.Cli.Actions;
+namespace Nox.Workflow;
 
 public class NoxWorkflowExecutor
 {
-    public async static Task<bool> Execute(WorkflowConfiguration workflow, IConfiguration appConfig, INoxConfiguration noxConfig, IAnsiConsole console)
-    {
-        console.WriteLine();
-        console.WriteLine($"Validating...");
-        console.MarkupLine($"[green3]Workflow: {workflow.Name.EscapeMarkup()}[/]");
+    private readonly NoxWorkflowParameters _workflowParameters;
+    private readonly IAnsiConsole _console;
 
-        var ctx = new NoxWorkflowContext(workflow, noxConfig, appConfig);
+    public NoxWorkflowExecutor(NoxWorkflowParameters workflowParameters, IAnsiConsole console)
+    {
+        _workflowParameters = workflowParameters;
+        _console = console;
+    }
+
+    public async Task<bool> Execute()
+    {
+
+        _console.WriteLine();
+        _console.WriteLine($"Validating...");
+        _console.MarkupLine($"[green3]Workflow: {_workflowParameters.WorkflowConfiguration.Name.EscapeMarkup()}[/]");
+
+        var ctx = new NoxWorkflowContext(_workflowParameters);
 
         List<NoxAction> processedActions = new();
 
         while (ctx.CurrentAction != null)
         {
-            console.WriteLine();
+            _console.WriteLine();
             var message = $"Step {ctx.CurrentAction.Sequence}: {ctx.CurrentAction.Name}";
-            console.MarkupLine($"[bold mediumpurple3_1]{message.EscapeMarkup()}[/]");
+            _console.MarkupLine($"[bold mediumpurple3_1]{message.EscapeMarkup()}[/]");
 
             var inputs = ctx.GetInputVariables(ctx.CurrentAction);
 
             if (!ctx.CurrentAction.EvaluateIf())
             {
-                console.MarkupLine($"{Emoji.Known.ThumbsUp} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} failed");
+                _console.MarkupLine($"{Emoji.Known.ThumbsUp} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} failed");
                 ctx.NextStep();
                 continue;
             }
@@ -47,12 +55,12 @@ public class NoxWorkflowExecutor
             {
                 if (ctx.CurrentAction.ContinueOnError)
                 {
-                    console.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} {ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}");
+                    _console.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} {ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}");
                 }
                 else
                 {
                     ctx.SetErrorMessage(ctx.CurrentAction, ctx.CurrentAction.ErrorMessage);
-                    console.MarkupLine($"{Emoji.Known.CryingFace} [bold indianred1]{ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}[/]");
+                    _console.MarkupLine($"{Emoji.Known.CryingFace} [bold indianred1]{ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}[/]");
                     break;
                 }
             }
@@ -60,7 +68,7 @@ public class NoxWorkflowExecutor
             {
                 if (!string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.Success))
                 {
-                    console.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} {ctx.CurrentAction.Display.Success.EscapeMarkup()}");
+                    _console.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} {ctx.CurrentAction.Display.Success.EscapeMarkup()}");
                 }
             }
 
@@ -69,8 +77,8 @@ public class NoxWorkflowExecutor
 
         await Task.WhenAll( processedActions.Select(p => p.ActionProvider.EndAsync(ctx) ) );
 
-        console.WriteLine();
-        console.MarkupLine($"[bold mediumpurple3_1]Done.[/]");
+        _console.WriteLine();
+        _console.MarkupLine($"[bold mediumpurple3_1]Done.[/]");
 
         return true;
     }
