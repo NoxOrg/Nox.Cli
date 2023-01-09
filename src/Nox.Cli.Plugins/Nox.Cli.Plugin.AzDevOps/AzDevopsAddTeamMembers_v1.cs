@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.Services.Graph.Client;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions.Extensions;
 using Nox.Cli.Actions;
 using Nox.Core.Configuration;
 
@@ -48,10 +49,10 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
     {
-        var connection = (VssConnection)inputs["connection"];
-        _projectName = (string)inputs["project-name"];
-        _members = ((List<TeamMemberConfiguration>)inputs["team-members"]);
-        _graphClient = await connection.GetClientAsync<GraphHttpClient>();
+        var connection = inputs.Value<VssConnection>("connection");
+        _projectName = inputs.Value<string>("project-name");
+        _members = inputs.Value<List<TeamMemberConfiguration>>("team-members");
+        _graphClient = await connection!.GetClientAsync<GraphHttpClient>();
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -106,8 +107,6 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
     
         var graphGroup = graphGroups.FirstOrDefault( g => g.PrincipalName.Contains($"\\{_projectName} Team", StringComparison.OrdinalIgnoreCase));
     
-        var graphAdminGroup = graphGroups.FirstOrDefault(g => g.PrincipalName.Contains($"\\Project Administrators", StringComparison.OrdinalIgnoreCase));
-    
         var usersInGraph = _graphClient.ListUsersAsync(new string[] {"aad"}).Result;
         while (usersInGraph.ContinuationToken is not null)
         {
@@ -122,23 +121,6 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
                     {
                         var membership = await _graphClient.AddMembershipAsync(user.Descriptor, graphGroup!.Descriptor);
                     }
-    
-                    var isUserInAdminGroup = await _graphClient.CheckMembershipExistenceAsync(user.Descriptor, graphAdminGroup!.Descriptor);
-                    if (developer.IsAdmin)
-                    {
-                        if (!isUserInAdminGroup)
-                        {
-                            var membership = await _graphClient.AddMembershipAsync(user.Descriptor, graphAdminGroup!.Descriptor);
-                        }
-                    }
-                    else
-                    {
-                        if (isUserInAdminGroup)
-                        {
-                            await _graphClient.RemoveMembershipAsync(user.Descriptor, graphAdminGroup!.Descriptor);
-                        }
-                    }
-    
                 }
             }
             usersInGraph = await _graphClient.ListUsersAsync(new string[] {"aad"}, continuationToken: usersInGraph.ContinuationToken.FirstOrDefault());

@@ -1,18 +1,19 @@
 using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsCreateRepo_v1 : INoxCliAddin
+public class AzDevopsEnsureRepo_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/create-repo@v1",
+            Name = "azdevops/ensure-repo@v1",
             Author = "Jan Schutte",
-            Description = "Create an Azure Devops repository",
+            Description = "Get a reference to a DevOps repository, if it does not exist then create it.",
 
             Inputs =
             {
@@ -38,9 +39,9 @@ public class AzDevopsCreateRepo_v1 : INoxCliAddin
 
             Outputs =
             {
-                ["repository"] = new NoxActionOutput {
-                    Id = "repository",
-                    Description = "The Azure devops repository",
+                ["repository-id"] = new NoxActionOutput {
+                    Id = "repository-id",
+                    Description = "The Azure devops repository id",
                 },
             }
         };
@@ -52,10 +53,10 @@ public class AzDevopsCreateRepo_v1 : INoxCliAddin
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
-        var connection = (VssConnection)inputs["connection"];
-        _projectName = (string)inputs["project-name"]; 
-        _repoName = (string)inputs["repository-name"];
-        _repoClient = await connection.GetClientAsync<GitHttpClient>();
+        var connection = inputs.Value<VssConnection>("connection");
+        _projectName = inputs.Value<string>("project-name");
+        _repoName = inputs.Value<string>("repository-name");
+        _repoClient = await connection!.GetClientAsync<GitHttpClient>();
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -73,7 +74,7 @@ public class AzDevopsCreateRepo_v1 : INoxCliAddin
             try
             {
                 var repo = await _repoClient.GetRepositoryAsync(_projectName, _repoName);
-                outputs["repository"] = repo;
+                outputs["repository-id"] = repo!.Id;
                 ctx.SetState(ActionState.Success);
             }
             catch
@@ -84,7 +85,7 @@ public class AzDevopsCreateRepo_v1 : INoxCliAddin
                     var repo = await CreateRepositoryAsync(ctx);
                     if (repo != null)
                     {
-                        outputs["repository"] = repo;
+                        outputs["repository-id"] = repo!.Id;
                         ctx.SetState(ActionState.Success);
                     }
                 }
