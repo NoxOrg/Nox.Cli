@@ -2,6 +2,7 @@ using System.IO.Compression;
 using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -123,11 +124,54 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
         return result;
     }
 
-    private string UnzipRepo(Guid repoId, string zipFilePath, string destinationPath)
+    private static string UnzipRepo(Guid repoId, string zipFilePath, string destinationPath)
     {
         var extractFolder = Path.Combine(destinationPath, repoId.ToString());
         if (Directory.Exists(extractFolder)) Directory.Delete(extractFolder);
-        ZipFile.ExtractToDirectory(zipFilePath, extractFolder);
+        //ZipFile.ExtractToDirectory(zipFilePath, extractFolder);
+        var THRESHOLD_ENTRIES = 10000;
+        var THRESHOLD_SIZE = 10 * 1024 * 1024; // 10 MB
+        double THRESHOLD_RATIO = 10;
+        var totalSizeArchive = 0;
+        var totalEntryArchive = 0;
+
+        using var zipToOpen = new FileStream(zipFilePath, FileMode.Open);
+        using var archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read);
+        foreach (var entry in archive.Entries)
+        {
+            totalEntryArchive ++;
+
+            using (var st = entry.Open())
+            {
+                var buffer = new byte[1024];
+                var totalSizeEntry = 0;
+                var numBytesRead = 0;
+
+                do
+                {
+                    numBytesRead = st.Read(buffer, 0, 1024);
+                    totalSizeEntry += numBytesRead;
+                    totalSizeArchive += numBytesRead;
+                    double compressionRatio = totalSizeEntry / entry.CompressedLength;
+
+                    if(compressionRatio > THRESHOLD_RATIO)
+                    {
+                        throw new NoxCliException("Ratio between compressed and uncompressed data is highly suspicious, looks like a Zip Bomb Attack");
+                    }
+                }
+                while (numBytesRead > 0);
+            }
+
+            if(totalSizeArchive > THRESHOLD_SIZE) {
+                throw new NoxCliException("The uncompressed data size is too much for the application resource capacity");
+            }
+
+            if(totalEntryArchive > THRESHOLD_ENTRIES) {
+                throw new NoxCliException("Too many entries in this archive, can lead to inodes exhaustion of the system");
+            }
+            entry.ExtractToFile(Path.Combine(extractFolder, entry.FullName));
+        }
+        
         return extractFolder;
     }
 }
