@@ -21,4 +21,4 @@ jobs:
           username: ${{ secrets.ftp_user }}
           password: ${{ secrets.ftp_password }}
           protocol: ftps
-          local-dir: .goo/workflows/          
+          local-dir: .nox/workflows/          
