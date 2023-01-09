@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
@@ -9,16 +9,11 @@
     <ItemGroup>
         <PackageReference Include="Azure.Identity" Version="1.8.0" />
         <PackageReference Include="Microsoft.Graph" Version="4.49.0" />
+        <PackageReference Include="Nox.Core" Version="6.0.29" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="Nox.Core">
-            <HintPath>..\..\..\..\..\.nuget\packages\nox.core\6.0.28\lib\net6.0\Nox.Core.dll</HintPath>
-        </Reference>
     </ItemGroup>
     
 </Project>
