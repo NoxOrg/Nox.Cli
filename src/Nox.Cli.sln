@@ -15,9 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nox.Cli.Plugin.Postgres", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.Core", "Nox.Cli.Plugin.Core\Nox.Cli.Plugin.Core.csproj", "{AE01032E-ECD0-4407-8403-DFD13C05BC98}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.AzureAd", "Nox.Cli.Plugin.AzureAd\Nox.Cli.Plugin.AzureAd.csproj", "{525BE305-D86D-4D12-BC0E-1DD680970521}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.AzureAd", "Nox.Cli.Plugins\Nox.Cli.Plugin.AzureAd\Nox.Cli.Plugin.AzureAd.csproj", "{525BE305-D86D-4D12-BC0E-1DD680970521}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.AzDevOps", "Nox.Cli.Plugin.AzDevOps\Nox.Cli.Plugin.AzDevOps.csproj", "{EBD62630-AAEB-4535-9133-8C2B9F70B92E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.AzDevOps", "Nox.Cli.Plugins\Nox.Cli.Plugin.AzDevOps\Nox.Cli.Plugin.AzDevOps.csproj", "{EBD62630-AAEB-4535-9133-8C2B9F70B92E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

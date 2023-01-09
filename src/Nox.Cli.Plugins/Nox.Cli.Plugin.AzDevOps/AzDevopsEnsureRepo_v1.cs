@@ -5,15 +5,15 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsGetRepo_v1 : INoxCliAddin
+public class AzDevopsEnsureRepo_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/get-repo@v1",
+            Name = "azdevops/ensure-repo@v1",
             Author = "Jan Schutte",
-            Description = "Get an Azure Devops repository",
+            Description = "Get a reference to a DevOps repository, if it does not exist then create it.",
 
             Inputs =
             {
@@ -34,14 +34,14 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
                     Description = "The DevOps repository name",
                     Default = string.Empty,
                     IsRequired = true
-                }
+                },
             },
 
             Outputs =
             {
                 ["repository-id"] = new NoxActionOutput {
                     Id = "repository-id",
-                    Description = "The Id (Guid) of the Azure devops repository",
+                    Description = "The Azure devops repository id",
                 },
             }
         };
@@ -67,20 +67,33 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
 
         if (_repoClient == null || string.IsNullOrEmpty(_repoName) || string.IsNullOrEmpty(_projectName))
         {
-            ctx.SetErrorMessage("The devops fetch-repo action was not initialized");
+            ctx.SetErrorMessage("The devops create-repo action was not initialized");
         }
         else
         {
             try
             {
                 var repo = await _repoClient.GetRepositoryAsync(_projectName, _repoName);
-                outputs["repository-id"] = repo.Id;
+                outputs["repository-id"] = repo!.Id;
+                ctx.SetState(ActionState.Success);
             }
             catch
             {
-                outputs["repository"] = null!;
+                try
+                {
+                    //Create the Repo
+                    var repo = await CreateRepositoryAsync(ctx);
+                    if (repo != null)
+                    {
+                        outputs["repository-id"] = repo!.Id;
+                        ctx.SetState(ActionState.Success);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    ctx.SetErrorMessage(ex.Message);
+                }
             }
-            ctx.SetState(ActionState.Success);
         }
 
         return outputs;
@@ -90,6 +103,27 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
     {
         _repoClient?.Dispose();
         return Task.CompletedTask;
+    }
+    
+    private async Task<GitRepository?> CreateRepositoryAsync(INoxWorkflowContext ctx)
+    {
+        var repoCreateParameters = new GitRepository()
+        {
+            Name = _repoName,
+        };
+
+        GitRepository repo = null!;
+        try
+        {
+            repo = await _repoClient!.CreateRepositoryAsync(repoCreateParameters, _projectName);
+            return repo;
+        }
+        catch (Exception ex)
+        {
+            ctx.SetErrorMessage(ex.Message);
+        }
+
+        return null;
     }
 }
 

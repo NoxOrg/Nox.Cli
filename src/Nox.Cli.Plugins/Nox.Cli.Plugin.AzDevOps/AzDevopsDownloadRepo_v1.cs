@@ -5,15 +5,15 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsCloneRepo_v1 : INoxCliAddin
+public class AzDevopsDownloadRepo_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/clone-repo@v1",
+            Name = "azdevops/download-repo@v1",
             Author = "Jan Schutte",
-            Description = "Clone an Azure Devops repository",
+            Description = "Download an Azure Devops repository",
 
             Inputs =
             {
@@ -47,14 +47,14 @@ public class AzDevopsCloneRepo_v1 : INoxCliAddin
         };
     }
 
-    private GitHttpClient? _repoClient;
+    private GitHttpClient? _gitClient;
     private Guid? _repoId;
     private string? _branchName;
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
-        _repoClient = await connection!.GetClientAsync<GitHttpClient>();
+        _gitClient = await connection!.GetClientAsync<GitHttpClient>();
         _repoId = inputs.Value<Guid>("repository-id");
         _branchName = inputs.ValueOrDefault<string>("branch-name", this);
     }
@@ -65,7 +65,7 @@ public class AzDevopsCloneRepo_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_repoClient == null || _repoId == null || _repoId == Guid.Empty || string.IsNullOrEmpty(_branchName))
+        if (_gitClient == null || _repoId == null || _repoId == Guid.Empty || string.IsNullOrEmpty(_branchName))
         {
             ctx.SetErrorMessage("The devops clone-repo action was not initialized");
         }
@@ -73,7 +73,16 @@ public class AzDevopsCloneRepo_v1 : INoxCliAddin
         {
             try
             {
-                var items = await _repoClient.GetItemsAsync(_repoId!.Value, scopePath: "/main", VersionControlRecursionType.OneLevel);
+                var branch = new GitVersionDescriptor
+                {
+                    Version = _branchName,
+                    VersionType = GitVersionType.Branch
+                };
+                var item = await _gitClient.GetItemAsync(_repoId!.Value, "/", recursionLevel: VersionControlRecursionType.None, versionDescriptor: branch);
+                var zipStream = await _gitClient.GetTreeZipAsync(_repoId!.Value, item.ObjectId);
+                var fileStream = File.Create("/home/jan/Test/TestRepo.zip");
+                await zipStream.CopyToAsync(fileStream);
+                fileStream.Close();
                 //outputs["repository-path"] = repoPath;
             }
             catch

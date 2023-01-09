@@ -6,15 +6,15 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsCreateProject_v1 : INoxCliAddin
+public class AzDevopsEnsureProject_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/create-Project@v1",
+            Name = "azdevops/ensure-Project@v1",
             Author = "Jan Schutte",
-            Description = "Create an Azure Devops project",
+            Description = "Get a reference to a DevOps project, if it does not exist then create it.",
 
             Inputs =
             {
