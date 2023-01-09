@@ -44,23 +44,7 @@ app.Configure(config =>
 
     config.SetInterceptor(new OperatingSystemInterceptor());
 
-    config.AddBranch("new", cfg =>
-    {
-
-        cfg.SetDescription("Create new services, entities, loaders, api's, and more...");
-
-        cfg.AddCommand<NewServiceCommand>("service")
-            .WithDescription("Creates a new NOX service.")
-            .WithExample(new[] { "new service", $"--name SampleService" });
-
-    });
-
-    config.AddBranch("sync", cfg =>
-    {
-        cfg.SetDescription("Synchronize your project with version control and remote environments");
-        cfg.AddNoxCommands();
-
-    });
+    config.AddNoxCommands();
 
     config.AddCommand<VersionCommand>("version")
         .WithDescription("Displays the current NOX cli version.")

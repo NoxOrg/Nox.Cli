@@ -1,0 +1,13 @@
+# Manifest.cli.nox.yaml
+
+secrets:
+  provider: azure-keyvault
+  url: https://we-key-Nox-02.vault.azure.net/
+
+branches: 
+  - name: new
+    description: Create new services, entities, loaders, api's, and more
+  - name: sync
+    description: Synchronize your project with version control and remote environments
+  - name: version    
+    descrition: Displays the current NOX cli version

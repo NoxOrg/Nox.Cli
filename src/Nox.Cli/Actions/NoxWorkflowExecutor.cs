@@ -1,24 +1,15 @@
 ﻿
 using Microsoft.Extensions.Configuration;
-using Nox.Cli.Actions.Configuration;
+using Nox.Cli.Configuration;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace Nox.Cli.Actions;
 
 public class NoxWorkflowExecutor
 {
-    public async static Task<bool> Execute(string workflowYaml, IConfiguration appConfig, INoxConfiguration noxConfig, IAnsiConsole console)
+    public async static Task<bool> Execute(WorkflowConfiguration workflow, IConfiguration appConfig, INoxConfiguration noxConfig, IAnsiConsole console)
     {
-
-        var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(HyphenatedNamingConvention.Instance)
-            .Build();
-
-        var workflow = deserializer.Deserialize<WorkflowConfiguration>(workflowYaml);
-
         console.WriteLine();
         console.WriteLine($"Validating...");
         console.MarkupLine($"[green3]Workflow: {workflow.Name.EscapeMarkup()}[/]");
@@ -77,6 +68,9 @@ public class NoxWorkflowExecutor
         }
 
         await Task.WhenAll( processedActions.Select(p => p.ActionProvider.EndAsync(ctx) ) );
+
+        console.WriteLine();
+        console.MarkupLine($"[bold mediumpurple3_1]Done.[/]");
 
         return true;
     }

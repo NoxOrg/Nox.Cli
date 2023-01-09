@@ -49,6 +49,8 @@ public static class ObjectExtensions
             var enumerable = obj as IEnumerable;
             if (enumerable != null)
             {
+                propertyAction(path, obj);
+
                 var index = 0;
                 foreach (var item in enumerable)
                 {
