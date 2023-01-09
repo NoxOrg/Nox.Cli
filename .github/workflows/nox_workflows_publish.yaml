@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - .goo/workflows/**
+      - .nox/workflows/**
       - .github/workflows/nox_workflows_publish.yaml
 
 jobs:
