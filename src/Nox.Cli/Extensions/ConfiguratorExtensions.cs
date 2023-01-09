@@ -130,7 +130,7 @@ internal static class ConfiguratorExtensions
     {
         var client = new RestClient($"https://noxorg.dev/workflows/{tid}/");
 
-        var request = new RestRequest("files") { Method = Method.Get };
+        var request = new RestRequest() { Method = Method.Get };
 
         request.AddHeader("Accept", "application/json");
 
