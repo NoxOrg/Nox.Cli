@@ -57,8 +57,15 @@ public class FileReplaceStrings_v1 : INoxCliAddin
             try
             {
                 var fullPath = Path.GetFullPath(_path);
-                
-                ctx.SetState(ActionState.Success);
+                if (!System.IO.File.Exists(fullPath))
+                {
+                    ctx.SetErrorMessage($"File {fullPath} does not exist.");                    
+                }
+                else
+                {
+                    
+                    ctx.SetState(ActionState.Success);    
+                }
             }
             catch (Exception ex)
             {
