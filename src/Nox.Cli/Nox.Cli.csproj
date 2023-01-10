@@ -52,6 +52,7 @@
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.AzDevOps\Nox.Cli.Plugin.AzDevOps.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.AzureAd\Nox.Cli.Plugin.AzureAd.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugin.Core\Nox.Cli.Plugin.Core.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.File\Nox.Cli.Plugin.File.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Network\Nox.Cli.Plugin.Network.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Postgres\Nox.Cli.Plugin.Postgres.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Powershell\Nox.Cli.Plugin.Powershell.csproj" />
