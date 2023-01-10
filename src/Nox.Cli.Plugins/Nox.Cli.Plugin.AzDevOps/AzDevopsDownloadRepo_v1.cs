@@ -76,7 +76,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
             try
             {
                 var repoId = Guid.NewGuid();
-                var repoPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "nox", "repositories");
+                var repoPath = Path.Combine(Path.GetTempPath(), "nox", "repositories");
                 var zipFilePath = await DownloadRepo(repoId, repoPath);
                 if (!string.IsNullOrEmpty(zipFilePath))
                 {
@@ -128,20 +128,34 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
     {
         var extractFolder = Path.Combine(destinationRoot, repoId.ToString());
         if (Directory.Exists(extractFolder)) Directory.Delete(extractFolder);
-        //ZipFile.ExtractToDirectory(zipFilePath, extractFolder);
         var THRESHOLD_ENTRIES = 10000;
         var THRESHOLD_SIZE = 10 * 1024 * 1024; // 10 MB
         double THRESHOLD_RATIO = 10;
         var totalSizeArchive = 0;
         var totalEntryArchive = 0;
 
+        var destinationDirectoryFullPath = Path.GetFullPath(extractFolder);
         using var zipToOpen = new FileStream(zipFilePath, FileMode.Open);
         using var archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read);
         foreach (var entry in archive.Entries)
         {
             totalEntryArchive ++;
+            
+            if (entry.Length == 0) continue;
+            
+            var destinationPath = Path.Combine(destinationDirectoryFullPath, entry.FullName);
+            var destinationFullPath = Path.GetFullPath(destinationPath);
+            if (!destinationFullPath.StartsWith(destinationDirectoryFullPath))
+            {
+                throw new NoxCliException("Attempting to extract archive entry outside destination directory");
+            }
 
-            using (var st = entry.Open())
+            
+            var destinationDirectory = Path.GetDirectoryName(destinationFullPath);
+            Directory.CreateDirectory(destinationDirectory!);
+
+            using (var outputStream = File.Open(destinationFullPath, FileMode.CreateNew))
+            using (var inputStream = entry.Open())
             {
                 var buffer = new byte[1024];
                 var totalSizeEntry = 0;
@@ -149,17 +163,20 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
 
                 do
                 {
-                    numBytesRead = st.Read(buffer, 0, 1024);
+                    numBytesRead = inputStream.Read(buffer, 0, 1024);
                     totalSizeEntry += numBytesRead;
                     totalSizeArchive += numBytesRead;
-                    double compressionRatio = totalSizeEntry / entry.CompressedLength;
+                    double compressionRatio = (double)totalSizeEntry / entry.CompressedLength;
 
                     if(compressionRatio > THRESHOLD_RATIO)
                     {
                         throw new NoxCliException("Ratio between compressed and uncompressed data is highly suspicious, looks like a Zip Bomb Attack");
                     }
+                    outputStream.Write(buffer);
                 }
                 while (numBytesRead > 0);
+                outputStream.Flush();
+                outputStream.Close();
             }
 
             if(totalSizeArchive > THRESHOLD_SIZE) {
@@ -169,14 +186,6 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
             if(totalEntryArchive > THRESHOLD_ENTRIES) {
                 throw new NoxCliException("Too many entries in this archive, can lead to inodes exhaustion of the system");
             }
-            var destinationDirectoryFullPath = Path.GetFullPath(destinationRoot);
-            var destinationPath = Path.Combine(destinationDirectoryFullPath, entry.FullName);
-            var destinationFullPath = Path.GetFullPath(destinationPath);
-            if (!destinationFullPath.StartsWith(destinationDirectoryFullPath))
-            {
-                throw new NoxCliException("Attempting to extract archive entry outside destination directory");
-            }
-            entry.ExtractToFile(destinationFullPath); // OK
         }
         
         return extractFolder;
