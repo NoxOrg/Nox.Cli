@@ -1,5 +1,6 @@
 namespace Nox.Cli.Abstractions.Exceptions;
 
+[Serializable]
 public class NoxCliException: Exception, INoxCliException
 {
     public NoxCliException(string message): base(message)
