@@ -166,7 +166,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
                     numBytesRead = inputStream.Read(buffer, 0, 1024);
                     totalSizeEntry += numBytesRead;
                     totalSizeArchive += numBytesRead;
-                    double compressionRatio = (double)totalSizeEntry / entry.CompressedLength;
+                    var compressionRatio = (double)totalSizeEntry / entry.CompressedLength;
 
                     if(compressionRatio > THRESHOLD_RATIO)
                     {

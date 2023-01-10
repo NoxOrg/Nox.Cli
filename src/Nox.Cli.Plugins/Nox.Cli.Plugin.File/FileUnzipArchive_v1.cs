@@ -1,16 +1,16 @@
 using Nox.Cli.Actions;
 
-namespace Nox.Cli.Plugins.AzDevops;
+namespace Nox.Cli.Plugin.File;
 
-public class AzDevopsPurgeRepoCache_v1 : INoxCliAddin
+public class FileUnzipArchive_v1: INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/purge-repo-cache@v1",
+            Name = "file/purge-folder@v1",
             Author = "Jan Schutte",
-            Description = "Purge the Nox local repository cache.",
+            Description = "Delete all files and folders inside a folder.",
 
         };
     }
@@ -53,4 +53,3 @@ public class AzDevopsPurgeRepoCache_v1 : INoxCliAddin
         return Task.CompletedTask;
     }
 }
-
