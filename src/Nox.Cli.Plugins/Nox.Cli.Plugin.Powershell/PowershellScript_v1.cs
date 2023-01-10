@@ -1,13 +1,9 @@
-﻿using Nox.Cli.Actions;
-using System.Collections.ObjectModel;
-using System.Linq;
+﻿using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Actions;
 using System.Management.Automation;
-using System.Management.Automation.Runspaces;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
-namespace Nox.Cli.Plugins.Network;
+
+namespace Nox.Cli.Plugins.Powershell;
 
 public class PowershellScript_v1 : INoxCliAddin
 {
@@ -50,7 +46,7 @@ public class PowershellScript_v1 : INoxCliAddin
     {
         _pwsh = PowerShell.Create();
 
-        _script = (string)inputs["script"];
+        _script = inputs.Value<string>("script")!;
 
         return Task.CompletedTask;
 
