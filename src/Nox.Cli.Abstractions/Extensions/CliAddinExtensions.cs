@@ -30,7 +30,7 @@ public static class CliAddinExtensions
 
                     foreach (var item in objDic)
                     {
-                        stringDic.Add(item.Key.ToString(), item.Value.ToString());
+                        stringDic.Add(item.Key.ToString()!, item.Value.ToString()!);
                     }
 
                     result = (T)Convert.ChangeType(stringDic, typeof(T));    
@@ -84,7 +84,7 @@ public static class CliAddinExtensions
 
                     foreach (var item in objDic)
                     {
-                        stringDic.Add(item.Key.ToString(), item.Value.ToString());
+                        stringDic.Add(item.Key.ToString()!, item.Value.ToString()!);
                     }
 
                     result = (T)Convert.ChangeType(stringDic, typeof(T));    
