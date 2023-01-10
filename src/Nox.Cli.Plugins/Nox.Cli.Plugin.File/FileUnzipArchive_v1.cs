@@ -17,7 +17,7 @@ public class FileUnzipArchive_v1: INoxCliAddin
             
             Inputs =
             {
-                ["zip-archive-path"] = new NoxActionInput {
+                ["archive-path"] = new NoxActionInput {
                     Id = "zip-archive-path",
                     Description = "The path to the zip archive to be unzipped.",
                     Default = string.Empty,
@@ -42,13 +42,13 @@ public class FileUnzipArchive_v1: INoxCliAddin
         };
     }
 
-    private string? _zipArchivePath;
+    private string? _archivePath;
     private string _destinationPath;
     private bool? _deleteArchive;
 
     public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
-        _zipArchivePath = inputs.Value<string>("zip-archive-path");
+        _archivePath = inputs.Value<string>("archive-path");
         _destinationPath = inputs.Value<string>("destination-path");
         _deleteArchive = inputs.ValueOrDefault<bool>("delete-archive", this);
         return Task.CompletedTask;
@@ -62,7 +62,7 @@ public class FileUnzipArchive_v1: INoxCliAddin
 
         try
         {
-            if (string.IsNullOrEmpty(_zipArchivePath) || string.IsNullOrEmpty(_zipArchivePath))
+            if (string.IsNullOrEmpty(_archivePath) || string.IsNullOrEmpty(_archivePath))
             {
                 ctx.SetErrorMessage("The File unzip-archive action was not initialized");
             }
@@ -70,8 +70,8 @@ public class FileUnzipArchive_v1: INoxCliAddin
             {
                 try
                 {
-                    var zipArchiveFullPath = Path.GetFullPath(_zipArchivePath);
-                    UnzipFile(_zipArchivePath, _destinationPath);
+                    var zipArchiveFullPath = Path.GetFullPath(_archivePath);
+                    UnzipFile(_archivePath, _destinationPath);
                     
                     if (_deleteArchive.Value)
                     {
