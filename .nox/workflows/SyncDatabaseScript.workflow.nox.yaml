@@ -22,7 +22,7 @@ jobs:
           host: ${{ secrets.NOX_PG_SERVER }}
         display:
           success: Found the database server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
-          error: The database server is not accesable. Are you connected to the VPN? 
+          error: The database server is not accessible. Are you connected to the VPN? ${{ steps.locate-server.inputs.host }}
 
       - name: Connect to the database server
         id: connect-server

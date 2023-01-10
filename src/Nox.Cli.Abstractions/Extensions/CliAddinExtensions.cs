@@ -23,24 +23,21 @@ public static class CliAddinExtensions
         {
             if (typeof(T).IsClass)
             {
-                if (typeof(T).IsAssignableTo(typeof(IConvertible)))
+                if (typeof(T).IsAssignableTo(typeof(IDictionary<string, string>)))
                 {
-                    result = (T)Convert.ChangeType(value, typeof(T));    
+                    var objDic = (Dictionary<object, object>)value;
+                    var stringDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (var item in objDic)
+                    {
+                        stringDic.Add(item.Key.ToString(), item.Value.ToString());
+                    }
+
+                    result = (T)Convert.ChangeType(stringDic, typeof(T));    
                 }
                 else
                 {
-                    if (typeof(T).IsAssignableTo(typeof(IDictionary<string, string>)))
-                    {
-                        var objDic = (Dictionary<object, object>)value;
-                        var stringDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-                        foreach (var item in objDic)
-                        {
-                            stringDic.Add(item.Key.ToString(), item.Value.ToString());
-                        }
-
-                        result = (T)Convert.ChangeType(stringDic, typeof(T));    
-                    }
+                    result = (T)Convert.ChangeType(value, typeof(T)); 
                 }
             }
             else
@@ -74,7 +71,25 @@ public static class CliAddinExtensions
         var value = inputs[key];
         try
         {
-            result = (T)Convert.ChangeType(value, typeof(T));
+            if (typeof(T).IsAssignableTo(typeof(IConvertible)))
+            {
+                result = (T)Convert.ChangeType(value, typeof(T));    
+            }
+            else
+            {
+                if (typeof(T).IsAssignableTo(typeof(IDictionary<string, string>)))
+                {
+                    var objDic = (Dictionary<object, object>)value;
+                    var stringDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (var item in objDic)
+                    {
+                        stringDic.Add(item.Key.ToString(), item.Value.ToString());
+                    }
+
+                    result = (T)Convert.ChangeType(stringDic, typeof(T));    
+                }
+            }
         }
         catch
         {

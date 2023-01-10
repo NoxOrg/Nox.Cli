@@ -97,7 +97,7 @@ public class FileReplaceStrings_v1 : INoxCliAddin
             pattern += replacement.Key;
         }
 
-        var regex = new Regex(pattern);
+        var regex = new Regex(pattern, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
         var eval = new MatchEvaluator(match =>
         {
             if (replacements.ContainsKey(match.Value))
