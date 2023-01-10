@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions.Extensions;
 using Nox.Cli.Actions;
 
@@ -24,7 +25,7 @@ public class FileReplaceStrings_v1 : INoxCliAddin
                 
                 ["replacements"] = new NoxActionInput {
                     Id = "replacements",
-                    Description = "Dictionary<string, string> containing a list of strings to replace and their replacement values.",
+                    Description = "List containing a strings to replace and their replacement values.",
                     Default = new Dictionary<string, string>(),
                     IsRequired = true
                 },
@@ -33,7 +34,7 @@ public class FileReplaceStrings_v1 : INoxCliAddin
     }
 
     private string? _path;
-    private Dictionary<string, string> _replacements;
+    private Dictionary<string, string>? _replacements;
 
     public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
@@ -63,7 +64,9 @@ public class FileReplaceStrings_v1 : INoxCliAddin
                 }
                 else
                 {
-                    
+                    var source = System.IO.File.ReadAllText(fullPath);
+                    var result = Replace(source, _replacements);
+                    System.IO.File.WriteAllText(fullPath, result);
                     ctx.SetState(ActionState.Success);    
                 }
             }
@@ -79,6 +82,33 @@ public class FileReplaceStrings_v1 : INoxCliAddin
     public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
+    }
+
+    private string Replace(string source, Dictionary<string, string> replacements)
+    {
+        var pattern = "";
+        foreach (var replacement in replacements)
+        {
+            if (!string.IsNullOrEmpty(pattern))
+            {
+                pattern += "|";
+            }
+
+            pattern += replacement.Key;
+        }
+
+        var regex = new Regex(pattern);
+        var eval = new MatchEvaluator(match =>
+        {
+            if (replacements.ContainsKey(match.Value))
+            {
+                var item = replacements[match.Value];
+                return item;    
+            }
+
+            return "";
+        });
+        return regex.Replace(source, eval);
     }
 }
 
