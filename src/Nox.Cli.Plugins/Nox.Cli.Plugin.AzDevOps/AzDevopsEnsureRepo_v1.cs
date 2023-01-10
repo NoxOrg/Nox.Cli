@@ -1,3 +1,4 @@
+using Microsoft.TeamFoundation.Core.WebApi;
 using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
@@ -23,10 +24,10 @@ public class AzDevopsEnsureRepo_v1 : INoxCliAddin
                     Default = new VssConnection(new Uri("https://localhost"), null),
                     IsRequired = true
                 },
-                ["project-name"] = new NoxActionInput { 
-                    Id = "project-name", 
-                    Description = "The DevOps project name",
-                    Default = string.Empty,
+                ["project-id"] = new NoxActionInput { 
+                    Id = "project-id", 
+                    Description = "The DevOps project Identifier",
+                    Default = Guid.Empty,
                     IsRequired = true
                 },
                 ["repository-name"] = new NoxActionInput { 
@@ -34,6 +35,12 @@ public class AzDevopsEnsureRepo_v1 : INoxCliAddin
                     Description = "The DevOps repository name",
                     Default = string.Empty,
                     IsRequired = true
+                },
+                ["default-branch"] = new NoxActionInput { 
+                    Id = "default-branch", 
+                    Description = "The default branch for this DevOps repository",
+                    Default = "main",
+                    IsRequired = false
                 },
             },
 
@@ -49,13 +56,15 @@ public class AzDevopsEnsureRepo_v1 : INoxCliAddin
 
     private GitHttpClient? _repoClient;
     private string? _repoName;
-    private string? _projectName;
+    private Guid? _projectId;
+    private string? _defaultBranch;
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
-        _projectName = inputs.Value<string>("project-name");
+        _projectId = inputs.Value<Guid>("project-id");
         _repoName = inputs.Value<string>("repository-name");
+        _defaultBranch = inputs.ValueOrDefault<string>("default-branch", this);
         _repoClient = await connection!.GetClientAsync<GitHttpClient>();
     }
 
@@ -65,7 +74,7 @@ public class AzDevopsEnsureRepo_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_repoClient == null || string.IsNullOrEmpty(_repoName) || string.IsNullOrEmpty(_projectName))
+        if (_repoClient == null || string.IsNullOrEmpty(_repoName) || _projectId == null || _projectId == Guid.Empty)
         {
             ctx.SetErrorMessage("The devops create-repo action was not initialized");
         }
@@ -73,7 +82,7 @@ public class AzDevopsEnsureRepo_v1 : INoxCliAddin
         {
             try
             {
-                var repo = await _repoClient.GetRepositoryAsync(_projectName, _repoName);
+                var repo = await _repoClient.GetRepositoryAsync(_projectId!.Value, _repoName);
                 outputs["repository-id"] = repo!.Id;
                 ctx.SetState(ActionState.Success);
             }
@@ -107,15 +116,19 @@ public class AzDevopsEnsureRepo_v1 : INoxCliAddin
     
     private async Task<GitRepository?> CreateRepositoryAsync(INoxWorkflowContext ctx)
     {
-        var repoCreateParameters = new GitRepository()
+        var repo = new GitRepository
         {
-            Name = _repoName,
+            DefaultBranch = _defaultBranch!,
+            Name = _repoName!,
+            ProjectReference = new TeamProjectReference
+            {
+                Id = _projectId!.Value
+            }
         };
 
-        GitRepository repo = null!;
         try
         {
-            repo = await _repoClient!.CreateRepositoryAsync(repoCreateParameters, _projectName);
+            repo = await _repoClient!.CreateRepositoryAsync(repo);
             return repo;
         }
         catch (Exception ex)

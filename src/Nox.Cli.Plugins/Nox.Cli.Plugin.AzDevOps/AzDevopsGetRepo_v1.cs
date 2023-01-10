@@ -23,10 +23,10 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
                     Default = new VssConnection(new Uri("https://localhost"), null),
                     IsRequired = true
                 },
-                ["project-name"] = new NoxActionInput { 
-                    Id = "project-name", 
-                    Description = "The DevOps project name",
-                    Default = string.Empty,
+                ["project-id"] = new NoxActionInput { 
+                    Id = "project-id", 
+                    Description = "The DevOps project Identifier",
+                    Default = Guid.Empty,
                     IsRequired = true
                 },
                 ["repository-name"] = new NoxActionInput { 
@@ -49,12 +49,12 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
 
     private GitHttpClient? _repoClient;
     private string? _repoName;
-    private string? _projectName;
+    private Guid? _projectId;
 
     public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
-        _projectName = inputs.Value<string>("project-name");
+        _projectId = inputs.Value<Guid>("project-id");
         _repoName = inputs.Value<string>("repository-name");
         _repoClient = await connection!.GetClientAsync<GitHttpClient>();
     }
@@ -65,7 +65,7 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_repoClient == null || string.IsNullOrEmpty(_repoName) || string.IsNullOrEmpty(_projectName))
+        if (_repoClient == null || string.IsNullOrEmpty(_repoName) || _projectId == null || _projectId == Guid.Empty)
         {
             ctx.SetErrorMessage("The devops fetch-repo action was not initialized");
         }
@@ -73,7 +73,7 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
         {
             try
             {
-                var repo = await _repoClient.GetRepositoryAsync(_projectName, _repoName);
+                var repo = await _repoClient.GetRepositoryAsync(_projectId!.Value, _repoName);
                 outputs["repository-id"] = repo.Id;
                 ctx.SetState(ActionState.Success);
             }
