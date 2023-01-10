@@ -20,16 +20,25 @@ public class FilePurgeFolder_v1 : INoxCliAddin
                     Description = "The path to the folder to purge",
                     Default = string.Empty,
                     IsRequired = true
-                }
+                },
+                
+                ["include-root"] = new NoxActionInput {
+                    Id = "include-root",
+                    Description = "Indicate whether the root of the path must also be deleted.",
+                    Default = false,
+                    IsRequired = false
+                },
             }
         };
     }
 
     private string? _path;
+    private bool? _includeRoot;
     
     public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
     {
         _path = inputs.Value<string>("path");
+        _includeRoot = inputs.ValueOrDefault<bool>("include-root", this);
         return Task.CompletedTask;
     }
 
@@ -47,6 +56,7 @@ public class FilePurgeFolder_v1 : INoxCliAddin
         {
             try
             {
+                var fullPath = Path.GetFullPath(_path);
                 var di = new DirectoryInfo(_path);
 
                 foreach (var file in di.GetFiles())
@@ -57,6 +67,11 @@ public class FilePurgeFolder_v1 : INoxCliAddin
                 foreach (var dir in di.GetDirectories())
                 {
                     dir.Delete(true);
+                }
+
+                if (_includeRoot!.Value)
+                {
+                    Directory.Delete(fullPath);
                 }
 
                 ctx.SetState(ActionState.Success);
