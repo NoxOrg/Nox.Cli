@@ -71,13 +71,20 @@ public class FileUnzipArchive_v1: INoxCliAddin
                 try
                 {
                     var zipArchiveFullPath = Path.GetFullPath(_archivePath);
-                    UnzipFile(_archivePath, _destinationPath);
-                    
-                    if (_deleteArchive!.Value)
+                    if (!System.IO.File.Exists(zipArchiveFullPath))
                     {
-                        System.IO.File.Delete(zipArchiveFullPath);
+                        ctx.SetErrorMessage($"Archive {zipArchiveFullPath} does not exist!");
                     }
-                    ctx.SetState(ActionState.Success);
+                    else
+                    {
+                        UnzipFile(_archivePath, _destinationPath);
+                    
+                        if (_deleteArchive!.Value)
+                        {
+                            System.IO.File.Delete(zipArchiveFullPath);
+                        }
+                        ctx.SetState(ActionState.Success);    
+                    }
                 }
                 catch (Exception ex)
                 {
