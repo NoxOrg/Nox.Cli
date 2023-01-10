@@ -2,7 +2,7 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "sync tfuz",
+      "commandLineArgs": "new service",
       "workingDirectory": "$(ProjectDir)"
     }
   }

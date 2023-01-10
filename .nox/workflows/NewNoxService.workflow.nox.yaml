@@ -1,0 +1,21 @@
+# NOX New Service Command
+
+name: Creates a new NOX service
+
+cli:
+  branch: new
+  command: service
+  description: Creates a new NOX service
+  examples:
+    - ["new service", "--path <designFolder>"]
+
+jobs:
+  new-service:
+    steps:
+      - name: Create a new service definition
+        id: add-new-service
+        uses: yamlmaker/build@v1
+        with:
+          schema-url: https://noxorg.dev/schemas/NoxConfiguration.json
+          output-path: ./src/${{ config.Name }}/Design
+          prompt-for: all
