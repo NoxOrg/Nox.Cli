@@ -57,7 +57,7 @@ public class ConsoleWriter : IConsoleWriter
 
     public void WriteRuler(string message)
     {
-        _console.Write(new Rule($"[bold mediumpurple3_1]{message.EscapeMarkup()}[/]") { Alignment = Justify.Left });
+        _console.Write(new Rule($"[bold mediumpurple3_1]{message.EscapeMarkup()}[/]") { Justification = Justify.Left });
     }
 
 }
