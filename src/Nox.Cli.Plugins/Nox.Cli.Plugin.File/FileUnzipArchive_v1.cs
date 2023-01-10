@@ -43,7 +43,7 @@ public class FileUnzipArchive_v1: INoxCliAddin
     }
 
     private string? _archivePath;
-    private string _destinationPath;
+    private string? _destinationPath;
     private bool? _deleteArchive;
 
     public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
@@ -73,7 +73,7 @@ public class FileUnzipArchive_v1: INoxCliAddin
                     var zipArchiveFullPath = Path.GetFullPath(_archivePath);
                     UnzipFile(_archivePath, _destinationPath);
                     
-                    if (_deleteArchive.Value)
+                    if (_deleteArchive!.Value)
                     {
                         System.IO.File.Delete(zipArchiveFullPath);
                     }
