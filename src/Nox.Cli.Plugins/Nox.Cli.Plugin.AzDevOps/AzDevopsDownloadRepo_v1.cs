@@ -152,7 +152,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
 
             
             var destinationDirectory = Path.GetDirectoryName(destinationFullPath);
-            Directory.CreateDirectory(destinationDirectory);
+            Directory.CreateDirectory(destinationDirectory!);
 
             using (var outputStream = File.Open(destinationFullPath, FileMode.CreateNew))
             using (var inputStream = entry.Open())
