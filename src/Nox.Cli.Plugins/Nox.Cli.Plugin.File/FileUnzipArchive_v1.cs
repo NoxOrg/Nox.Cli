@@ -62,7 +62,7 @@ public class FileUnzipArchive_v1: INoxCliAddin
 
         try
         {
-            if (string.IsNullOrEmpty(_archivePath) || string.IsNullOrEmpty(_archivePath))
+            if (string.IsNullOrEmpty(_archivePath) || string.IsNullOrEmpty(_destinationPath))
             {
                 ctx.SetErrorMessage("The File unzip-archive action was not initialized");
             }
