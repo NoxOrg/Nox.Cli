@@ -38,10 +38,10 @@ jobs:
         uses: azdevops/get-project@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
-          project-name: Nox.JanTest
+          project-name: Nox.CLiTest
         display:
-          success: Got the DevOps project
-          error: There was a problem getting the project (${{ steps.get-project.error-message }})            
+          success: Got the Nox.CliTest project
+          error: There was a problem getting the Nox.CliTest project (${{ steps.get-project.error-message }})            
 
       - name: Ensure the repo exists
         id: ensure-repo
@@ -60,7 +60,7 @@ jobs:
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
           repository-id: ${{ steps.ensure-repo.outputs.repository-id }}
-          commit-path: /home/jan/Test/TestRepo
+          source-path: /tmp/nox/repositories/1747205d-4d84-49de-ae9a-489dce0bd477
         display:
           success: Push a Folder success
           error: Push a folder failed. (${{ steps.push.error-message }})

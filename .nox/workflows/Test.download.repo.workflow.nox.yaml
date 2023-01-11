@@ -1,6 +1,6 @@
 # NOX Test Clone Command
 
-name: Test repo clone
+name: Test Download Repo
 
 cli:
   branch: test
@@ -34,12 +34,22 @@ jobs:
           success: Connected to the DevOps server
           error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
 
+      - name: Get the project
+        id: get-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: Heimdall.Microservices
+        display:
+          success: Got the Heimdall.Microservices project
+          error: There was a problem getting the Heimdall.Microservices project (${{ steps.get-project.error-message }})  
+
       - name: Get the repo
         id: get-repo
         uses: azdevops/get-repo@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
-          project-name: Heimdall.Microservices
+          project-id: ${{ steps.get-project.outputs.project-id }}
           repository-name: App.Helmchart
         display:
           success: Successfully got the App.HelmChart repo
@@ -53,5 +63,5 @@ jobs:
           repository-id: ${{ steps.get-repo.outputs.repository-id }}
           branch-name: main
         display:
-          success: Successfully downloaded branch ${{ steps.download-repo.inputs.branch-name }} to ${{ steps.download-repo.outputs.local-repository-path }}
+          success: Successfully downloaded branch 'main' to ${{ steps.download-repo.outputs.local-repository-path }}
           error: There was a problem downloading the repository (${{ steps.download-repo.error-message }})
