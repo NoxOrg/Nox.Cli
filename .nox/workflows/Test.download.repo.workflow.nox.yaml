@@ -42,10 +42,10 @@ jobs:
           project-name: Heimdall.Microservices
           repository-name: App.Helmchart
         display:
-          success: Sucessfully got the App.HelmChart repo
+          success: Successfully got the App.HelmChart repo
           error: There was a problem getting the App.HelmChart repository (${{ steps.get-repo.error-message }})
 
-      - name: Clone the heimdall helm chart repo
+      - name: Download the heimdall helm chart repo
         id: download-repo
         uses: azdevops/download-repo@v1
         with:
@@ -54,4 +54,4 @@ jobs:
           branch-name: main
         display:
           success: Successfully downloaded branch ${{ steps.download-repo.inputs.branch-name }} to ${{ steps.download-repo.outputs.local-repository-path }}
-          error: There was a problem cloning the repository (${{ steps.download-repo.error-message }})
+          error: There was a problem downloading the repository (${{ steps.download-repo.error-message }})
