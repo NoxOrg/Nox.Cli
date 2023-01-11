@@ -1,18 +1,18 @@
-# NOX Version Control Sync Command
+# NOX Heimdall Helm Chart Sync Command
 
-name: Synchronise NOX definition with version control
+name: Synchronise NOX definition with Heimdall Helm Chart
 
 cli:
   branch: sync
-  command: version-control
-  command-alias: vc
-  description: Synchronises NOX team definition with your version control service.
+  command: helm-chart
+  command-alias: hc
+  description: Synchronises NOX definition with Heimdall Helm Chart.
   examples:
-    - ["sync versionControl", "--path <designFolder>"]
-    - ["sync vc", "--path <designFolder>"]
+    - ["sync helm-chart", "--path <designFolder>"]
+    - ["sync hc", "--path <designFolder>"]
 
 jobs:
-  sync-versionControl:  
+  sync-heimdall-helm-chart:  
     steps:
 
       - name: Locate the DevOps server
@@ -34,27 +34,26 @@ jobs:
           success: Connected to the DevOps server
           error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
 
-      - name: Ensure the Team project exists
-        id: ensure-project
-        uses: azdevops/ensure-project@v1
+      - name: Get the Team project
+        id: get-project
+        uses: azdevops/get-project@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
           project-name: ${{ config.versionControl.project }}
-          project-description: ${{ config.description }}
         display:
-          success: Created the DevOps project
-          error: There was a problem creating the project (${{ steps.ensure-project.error-message }})
+          success: Got the DevOps project
+          error: There was a problem getting the project (${{ steps.ensure-project.error-message }})
 
-      - name: Ensure the Repository exists
+      - name: Create the Repository
         id: ensure-repo
         uses: azdevops/ensure-repo@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
-          project-id: ${{ steps.ensure-project.outputs.project-id }}
+          project-name: ${{ config.versionControl.project }}
           repository-name: ${{ config.versionControl.repository }}
         display:
-          success: Ensured that the DevOps repository exists
-          error: There was a problem ensuring that the repository exists. (${{ steps.ensure-repo.error-message }})
+          success: Created the DevOps repository
+          error: There was a problem creating the repository (${{ steps.ensure-repo.error-message }})
           
       - name: Add team members to the project
         id: add-team-members
