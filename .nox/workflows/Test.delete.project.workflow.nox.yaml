@@ -1,0 +1,56 @@
+# NOX Test Delete Project command
+
+name: Test Delete Project
+
+cli:
+  branch: test
+  command: delete-project
+  command-alias: dp
+  description: Test Delete Project
+  examples:
+    - ["sync delete-project", "--path <designFolder>"]
+    - ["sync dp", "--path <designFolder>"]
+ 
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Locate the DevOps server
+        id: locate-server
+        uses: network/ping@v1
+        with:
+          host: ${{ config.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accesable. Are you connected to the Internet? 
+
+      - name: Connect to the DevOps server
+        id: connect-server
+        uses: azdevops/connect@v1
+        with:
+          server: ${{ config.versionControl.server }}
+          personal-access-token: ${{ secrets.AZURE_DEVOPS_PAT }}
+        display:
+          success: Connected to the DevOps server
+          error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
+
+      - name: Get the project
+        id: get-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: Nox.JanTest
+        display:
+          success: Got the DevOps project
+          error: There was a problem getting the project (${{ steps.get-project.error-message }})          
+
+      - name: Delete the project
+        id: delete-project
+        uses: azdevops/delete-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-id: ${{ steps.get-project.outputs.project-id }}
+          hard-delete: true
+        display:
+          success: Sucessfully deleted the project
+          error: There was a problem deleting the project (${{ steps.delete-project.error-message }})

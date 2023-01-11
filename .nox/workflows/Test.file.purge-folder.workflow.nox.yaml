@@ -1,0 +1,25 @@
+# NOX Test Clone Command
+
+name: Test file purge-folder
+cli:
+  branch: test
+  command: purge-folder
+  command-alias: pf
+  description: Test File Purge Folder
+  examples:
+    - ["sync purge-folder", "--path <designFolder>"]
+    - ["sync pf", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Purge a folder
+        id: purge
+        uses: file/purge-folder@v1
+        with:
+          path: /home/jan/Test/CsvToParquet
+          include-root: true
+        display:
+          success: Purge Folder success
+          error: Purge Folder failed. (${{ steps.purge.error-message }})

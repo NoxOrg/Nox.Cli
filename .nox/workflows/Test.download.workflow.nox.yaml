@@ -1,0 +1,57 @@
+# NOX Test Clone Command
+
+name: Test repo clone
+
+cli:
+  branch: test
+  command: download-repo
+  command-alias: dr
+  description: Test Download a repo to a folder
+  examples:
+    - ["sync download-repo", "--path <designFolder>"]
+    - ["sync dr", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Locate the DevOps server
+        id: locate-server
+        uses: network/ping@v1
+        with:
+          host: ${{ config.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accesable. Are you connected to the Internet? 
+
+      - name: Connect to the DevOps server
+        id: connect-server
+        uses: azdevops/connect@v1
+        with:
+          server: ${{ config.versionControl.server }}
+          personal-access-token: ${{ secrets.AZURE_DEVOPS_PAT }}
+        display:
+          success: Connected to the DevOps server
+          error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
+
+      - name: Get the repo
+        id: get-repo
+        uses: azdevops/get-repo@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: Heimdall.Microservices
+          repository-name: App.Helmchart
+        display:
+          success: Sucessfully got the App.HelmChart repo
+          error: There was a problem getting the App.HelmChart repository (${{ steps.get-repo.error-message }})
+
+      - name: Clone the heimdall helm chart repo
+        id: download-repo
+        uses: azdevops/download-repo@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          repository-id: ${{ steps.get-repo.outputs.repository-id }}
+          branch-name: main
+        display:
+          success: Successfully downloaded branch ${{ steps.download-repo.inputs.branch-name }} to ${{ steps.download-repo.outputs.local-repository-path }}
+          error: There was a problem cloning the repository (${{ steps.download-repo.error-message }})

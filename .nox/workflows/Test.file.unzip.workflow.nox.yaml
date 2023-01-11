@@ -1,0 +1,26 @@
+# NOX Test Clone Command
+
+name: Test file unzip
+cli:
+  branch: test
+  command: file-unzip
+  command-alias: fuz
+  description: Test File Unzip
+  examples:
+    - ["sync file-unzip", "--path <designFolder>"]
+    - ["sync fuz", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Unzip a File
+        id: unzip
+        uses: file/unzip-archive@v1
+        with:
+          archive-path: /home/jan/Test/TestRepo.zip
+          destination-path: /home/jan/Test/TestRepo
+          delete-archive: false
+        display:
+          success: File unzip success ${{ steps.unzip.inputs.destination-path }}
+          error: File unzip failed. (${{ steps.unzip.error-message }}) ${{ steps.unzip.inputs.delete-archive }}
