@@ -67,7 +67,7 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
 
         if (_repoClient == null || string.IsNullOrEmpty(_repoName) || _projectId == null || _projectId == Guid.Empty)
         {
-            ctx.SetErrorMessage("The devops fetch-repo action was not initialized");
+            ctx.SetErrorMessage("The devops get-repo action was not initialized");
         }
         else
         {

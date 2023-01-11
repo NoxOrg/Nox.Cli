@@ -131,7 +131,8 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
     {
         if (string.IsNullOrEmpty(root)) root = path;
         var result = new List<GitChange>();
-        result.AddRange(GetFileChanges(path, root));
+        var fileChanges = GetFileChanges(path, root);
+        if (fileChanges.Any()) result.AddRange(GetFileChanges(path, root));
         
         foreach (var dir in Directory.GetDirectories(path))
         {
@@ -140,7 +141,7 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
         return result;
     }
 
-    private List<GitChange>? GetFileChanges(string path, string root)
+    private List<GitChange> GetFileChanges(string path, string root)
     {
         var result = new List<GitChange>();
         var files = Directory.GetFiles(path);
@@ -154,7 +155,7 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
                     ChangeType = VersionControlChangeType.Add,
                     Item = new GitItem
                     {
-                        Path = $"/{_branchName}{relativePath}/{Path.GetFileName(file)}"
+                        Path = $"{relativePath}/{Path.GetFileName(file)}"
                     },
                     NewContent = new ItemContent
                     {
