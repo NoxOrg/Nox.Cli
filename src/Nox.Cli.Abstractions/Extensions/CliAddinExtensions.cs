@@ -23,13 +23,27 @@ public static class CliAddinExtensions
         {
             if (typeof(T).IsClass)
             {
-                result = (T)Convert.ChangeType(value, typeof(T));
+                if (typeof(T).IsAssignableTo(typeof(IDictionary<string, string>)))
+                {
+                    var objDic = (Dictionary<object, object>)value;
+                    var stringDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (var item in objDic)
+                    {
+                        stringDic.Add(item.Key.ToString()!, item.Value.ToString()!);
+                    }
+
+                    result = (T)Convert.ChangeType(stringDic, typeof(T));
+                }
+                else
+                {
+                    result = (T)Convert.ChangeType(value, typeof(T));
+                }
             }
             else
             {
-                result = (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFrom(value.ToString()!)!;    
+                result = (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFrom(value.ToString()!)!;
             }
-            
         }
         catch
         {
@@ -53,15 +67,6 @@ public static class CliAddinExtensions
         }
         
         if (!inputs.ContainsKey(key)) return result;
-        var value = inputs[key];
-        try
-        {
-            result = (T)Convert.ChangeType(value, typeof(T));
-        }
-        catch
-        {
-            //Ignore exception result is already defaulted;
-        }
-        return result;
+        return inputs.Value<T>(key);
     }
 }

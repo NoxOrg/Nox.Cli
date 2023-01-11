@@ -57,24 +57,31 @@ public class FilePurgeFolder_v1 : INoxCliAddin
             try
             {
                 var fullPath = Path.GetFullPath(_path);
-                var di = new DirectoryInfo(_path);
-
-                foreach (var file in di.GetFiles())
+                if (!Directory.Exists(fullPath))
                 {
-                    file.Delete();
+                    ctx.SetErrorMessage($"Directory {fullPath} does not exist!");
                 }
-
-                foreach (var dir in di.GetDirectories())
+                else
                 {
-                    dir.Delete(true);
-                }
+                    var di = new DirectoryInfo(_path);
 
-                if (_includeRoot!.Value)
-                {
-                    Directory.Delete(fullPath);
-                }
+                    foreach (var file in di.GetFiles())
+                    {
+                        file.Delete();
+                    }
 
-                ctx.SetState(ActionState.Success);
+                    foreach (var dir in di.GetDirectories())
+                    {
+                        dir.Delete(true);
+                    }
+
+                    if (_includeRoot!.Value)
+                    {
+                        Directory.Delete(fullPath);
+                    }
+
+                    ctx.SetState(ActionState.Success);
+                }
             }
             catch (Exception ex)
             {

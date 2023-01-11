@@ -69,7 +69,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
 
         if (_gitClient == null || _repoId == null || _repoId == Guid.Empty || string.IsNullOrEmpty(_branchName))
         {
-            ctx.SetErrorMessage("The devops clone-repo action was not initialized");
+            ctx.SetErrorMessage("The devops download-repo action was not initialized");
         }
         else
         {

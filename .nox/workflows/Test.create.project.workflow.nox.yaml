@@ -1,0 +1,57 @@
+# NOX Test CReate Project Command
+
+name: Test create project
+
+cli:
+  branch: test
+  command: create-project
+  command-alias: cp
+  description: Test Create Project
+  examples:
+    - ["sync test-create-project", "--path <designFolder>"]
+    - ["sync cp", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Locate the DevOps server
+        id: locate-server
+        uses: network/ping@v1
+        with:
+          host: ${{ config.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accesable. Are you connected to the Internet? 
+
+      - name: Connect to the DevOps server
+        id: connect-server
+        uses: azdevops/connect@v1
+        with:
+          server: ${{ config.versionControl.server }}
+          personal-access-token: ${{ secrets.AZURE_DEVOPS_PAT }}
+        display:
+          success: Connected to the DevOps server
+          error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
+
+      - name: Ensure that the project exists
+        id: ensure-project
+        uses: azdevops/ensure-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: Nox.CliTest
+          project-description: Nox - CLI test project
+        display:
+          success: Created the DevOps project
+          error: There was a problem creating the project (${{ steps.ensure-project.error-message }})    
+
+      - name: Add Jan to the team
+        id: add-jan
+        uses: azdevops/add-team-member@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: Nox.CliTest
+          user-name: jan.schutte@iwgplc.com
+        display:
+          success: Successfully added Jan to the Nox.CliTest project
+          error: There was a problem adding Jan (${{ steps.add-admin.error-message }})         
