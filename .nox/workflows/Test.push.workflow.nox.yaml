@@ -51,8 +51,8 @@ jobs:
           project-id: ${{ steps.get-project.outputs.project-id }}
           repository-name: App.Helmchart
         display:
-          success: Successfully got the App.HelmChart repo
-          error: There was a problem getting the App.HelmChart repository (${{ steps.get-repo.error-message }})
+          success: Successfully ensured that the App.HelmChart repo exists
+          error: There was a problem ensuring that the App.HelmChart repository exists. (${{ steps.get-repo.error-message }})
 
       - name: Push a Folder
         id: push

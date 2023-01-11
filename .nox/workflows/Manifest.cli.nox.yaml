@@ -11,3 +11,5 @@ branches:
     description: Synchronize your project with version control and remote environments
   - name: version    
     descrition: Displays the current NOX cli version
+  - name: test
+    description: Test commands
