@@ -45,6 +45,17 @@ jobs:
           success: Created the DevOps project
           error: There was a problem creating the project (${{ steps.ensure-project.error-message }})
 
+      - name: Add team members to the project
+        id: add-team-members
+        uses: azdevops/add-team-members@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: ${{ config.versionControl.project }}
+          team-members: ${{ config.team.developers }}
+        display:
+          success: Added team members to the DevOps project
+          error: There was a problem adding team members to the project (${{ steps.ensure-repo.error-message }})           
+
       - name: Ensure the Repository exists
         id: ensure-repo
         uses: azdevops/ensure-repo@v1
@@ -55,14 +66,4 @@ jobs:
         display:
           success: Ensured that the DevOps repository exists
           error: There was a problem ensuring that the repository exists. (${{ steps.ensure-repo.error-message }})
-          
-      - name: Add team members to the project
-        id: add-team-members
-        uses: azdevops/add-team-members@v1
-        with:
-          connection: ${{ steps.connect-server.outputs.connection }}
-          project-name: ${{ config.versionControl.project }}
-          team-members: ${{ config.team.developers }}
-        display:
-          success: Added team members to the DevOps project
-          error: There was a problem adding team members to the project (${{ steps.ensure-repo.error-message }})          
+

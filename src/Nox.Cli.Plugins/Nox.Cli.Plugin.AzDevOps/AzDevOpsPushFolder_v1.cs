@@ -78,7 +78,7 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
 
         if (_gitClient == null || _repoId == null || _repoId == Guid.Empty || string.IsNullOrEmpty(_sourcePath) || string.IsNullOrEmpty(_branchName))
         {
-            ctx.SetErrorMessage("The devops commit-folder action was not initialized");
+            ctx.SetErrorMessage("The devops push-folder action was not initialized");
         }
         else
         {
