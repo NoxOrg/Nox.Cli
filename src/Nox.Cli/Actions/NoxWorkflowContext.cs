@@ -330,6 +330,18 @@ public class NoxWorkflowContext : INoxWorkflowContext
                         inputValueList[index] = ReplaceVariables((string)inputValueList[i]);
                     }
                 }
+            } 
+            else if (input.Default is Dictionary<object, object> inputValueDictionary)
+            {
+                for (var i = 0; i < inputValueDictionary.Count; i++)
+                {
+                    var item = inputValueDictionary.ElementAt(i);
+                    
+                    if (item.Value is string itemValueString)
+                    {
+                        inputValueDictionary[item.Key] = ReplaceVariables(itemValueString);
+                    }
+                }
             }
         }
 
