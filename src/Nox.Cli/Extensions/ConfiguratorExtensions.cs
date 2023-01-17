@@ -200,7 +200,12 @@ internal static class ConfiguratorExtensions
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine($"[bold mediumpurple3_1]Checking your credentials...[/]");
 
-        var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
+        // var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
+        
+        var credential = new ChainedTokenCredential(
+            new AzureCliCredential(),
+            new InteractiveBrowserCredential()
+        );
         
         if(credential == null) return null;
 
@@ -213,10 +218,18 @@ internal static class ConfiguratorExtensions
         if (handler.ReadToken(token.Token) is not JwtSecurityToken jsonToken) return null;
 
         var upn = jsonToken.Claims.FirstOrDefault(c => c.Type == "upn");
-        if(upn == null) return null;
+        if (upn == null)
+        {
+            AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} User principal name (UPN) not detected. Continuing without login.");
+            return null;
+        }
 
         var tid = jsonToken.Claims.FirstOrDefault(c => c.Type == "tid");
-        if(tid == null) return null;
+        if (tid == null)
+        {
+            AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} Tenant Id (TId) not detected. Continuing without login.");
+            return null;
+        }
 
         var ret = new NoxCliCache(cacheFile) 
         { 
