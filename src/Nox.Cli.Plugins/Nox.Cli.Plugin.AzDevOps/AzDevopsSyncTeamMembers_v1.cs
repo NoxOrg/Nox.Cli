@@ -6,7 +6,7 @@ using Nox.Core.Configuration;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
+public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {

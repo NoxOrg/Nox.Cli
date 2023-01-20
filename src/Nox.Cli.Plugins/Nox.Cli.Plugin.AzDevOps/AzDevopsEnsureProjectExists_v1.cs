@@ -6,7 +6,7 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsEnsureProject_v1 : INoxCliAddin
+public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
@@ -46,6 +46,10 @@ public class AzDevopsEnsureProject_v1 : INoxCliAddin
                     Id = "project-id",
                     Description = "The Id of the Azure devops project",
                 },
+                ["success-message"] = new NoxActionOutput {
+                    Id = "success-message",
+                    Description = "A message specifying if the project was found or created",
+                },
             }
         };
     }
@@ -82,7 +86,10 @@ public class AzDevopsEnsureProject_v1 : INoxCliAddin
             try
             {
                 var project = await _projectClient.GetProject(_projectName);
+                
                 outputs["project-id"] = project.Id;
+                outputs["success-message"] = $"Found existing project {_projectName} ({project.Id})";
+
                 ctx.SetState(ActionState.Success);
             }
             catch
@@ -93,7 +100,9 @@ public class AzDevopsEnsureProject_v1 : INoxCliAddin
                     var project = await CreateProjectAsync(ctx);
                     if (project != null)
                     {
-                        outputs["project"] = project;
+                        outputs["project-id"] = project.Id;
+                        outputs["success-message"] = $"Succesfully created project {_projectName} ({project.Id})";
+
                         ctx.SetState(ActionState.Success);
                     }
                 }

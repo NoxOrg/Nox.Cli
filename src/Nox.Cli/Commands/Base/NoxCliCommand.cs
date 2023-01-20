@@ -29,13 +29,13 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
         _configuration = configuration;
     }
 
-    public async override Task<int> ExecuteAsync(CommandContext context, TSettings settings)
+    public override Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
         if (_noxConfiguration.Team is null
             || _noxConfiguration.Team.Developers is null
             || _noxConfiguration.Team.Developers.Count == 0)
         {
-            throw new Exception($"The nox definition contains no 'Developers' in the 'Team' section.");
+            throw new Exception($"The nox definition contains no 'Developers' in the 'Team' section. This section is required.");
         }
 
         _console.WriteLine();
@@ -49,16 +49,6 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
         _consoleWriter.WriteInfo($"Project:");
         _console.WriteLine(_noxConfiguration.Name);
 
-        _console.WriteLine();
-        _consoleWriter.WriteInfo("Development Team:");
-
-        foreach (var developer in _noxConfiguration.Team.Developers)
-        {
-            _console.WriteLine($"{developer.UserName}");
-        }
-
-        await Task.Delay(1);
-
-        return 0;
+        return Task.FromResult(0);
     }
 }
