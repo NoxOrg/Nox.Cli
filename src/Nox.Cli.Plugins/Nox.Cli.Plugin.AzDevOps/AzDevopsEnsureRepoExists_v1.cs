@@ -6,7 +6,7 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsEnsureRepo_v1 : INoxCliAddin
+public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
@@ -50,6 +50,10 @@ public class AzDevopsEnsureRepo_v1 : INoxCliAddin
                     Id = "repository-id",
                     Description = "The Azure devops repository id",
                 },
+                ["success-message"] = new NoxActionOutput {
+                    Id = "success-message",
+                    Description = "A message specifying if the repo was found or created",
+                },
             }
         };
     }
@@ -82,9 +86,13 @@ public class AzDevopsEnsureRepo_v1 : INoxCliAddin
         {
             try
             {
-                var repo = await _repoClient.GetRepositoryAsync(_projectId!.Value, _repoName);
-                outputs["repository-id"] = repo!.Id;
-                ctx.SetState(ActionState.Success);
+                var repo = await _repoClient.GetRepositoryAsync(_projectId.Value, _repoName);
+                if(repo != null)
+                {
+                    outputs["repository-id"] = repo.Id;
+                    outputs["success-message"] = $"Found existing repo {_repoName} ({repo.Id})";
+                    ctx.SetState(ActionState.Success);
+                }
             }
             catch
             {
@@ -94,7 +102,8 @@ public class AzDevopsEnsureRepo_v1 : INoxCliAddin
                     var repo = await CreateRepositoryAsync(ctx);
                     if (repo != null)
                     {
-                        outputs["repository-id"] = repo!.Id;
+                        outputs["repository-id"] = repo.Id;
+                        outputs["success-message"] = $"Created repo {_repoName} ({repo.Id})";
                         ctx.SetState(ActionState.Success);
                     }
                 }

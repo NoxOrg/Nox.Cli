@@ -111,7 +111,7 @@ public class PostgresExecuteScalar_v1 : INoxCliAddin
 
     public Task EndAsync(INoxWorkflowContext ctx)
     {
-        return Task.FromResult(true);
+        return Task.CompletedTask;
     }
 }
 

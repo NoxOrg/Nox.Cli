@@ -14,7 +14,7 @@ public class AzDevopsAddTeamMember_v1 : INoxCliAddin
         {
             Name = "azdevops/add-team-member@v1",
             Author = "Jan Schutte",
-            Description = "Add a team member to DevOps project",
+            Description = "Add a team member to a DevOps project",
 
             Inputs =
             {
