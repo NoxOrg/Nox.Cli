@@ -123,19 +123,19 @@ internal static class ConfiguratorExtensions
             {
                 var overriddenPath = fileInfo.DirectoryName;
                 var overriddenFile = fileInfo.Name;
-                if (overriddenPath != null && !overriddenFiles.Contains($"[{overriddenPath}]"))
+                var pathMarkup = $"[underline]{overriddenPath.EscapeMarkup()}[/]";
+                if (overriddenPath != null && !overriddenFiles.Contains(pathMarkup))
                 {
-                    overriddenFiles.Add($"[{overriddenPath}]");
+                    overriddenFiles.Add(pathMarkup);
                 }
-                overriddenFiles.Add(overriddenFile[..^18]);
+                overriddenFiles.Add(overriddenFile[..^18].EscapeMarkup());
             }
 
             yamlFiles[fileInfo.Name] = yaml;
         }
-        if(overriddenFiles.Count> 0)
+        if (overriddenFiles.Count > 0)
         {
-            AnsiConsole.MarkupLine($"[bold yellow]Warning: Local workflows overrides remote workflow(s) with the same name[/]");
-            AnsiConsole.MarkupLine($"[bold yellow]{string.Join(',', overriddenFiles.ToArray()).EscapeMarkup()}[/]");
+            AnsiConsole.MarkupLine($"[bold yellow]Warning: Local workflows {string.Join(',', overriddenFiles.Skip(1).ToArray())} in local folder {overriddenFiles.First()} overrides remote workflow(s) with the same name[/]");
         }
 
     }
