@@ -15,12 +15,16 @@ public class NoxWorkflowExecutor
         IConfiguration appConfig, INoxConfiguration noxConfig, IAnsiConsole console
     )
     {
+        var workflowDescription = $"[seagreen1]Executing workflow: {workflow.Name.EscapeMarkup()}[/]";
         console.WriteLine();
-        console.MarkupLine($"[green3]Executing workflow: {workflow.Name.EscapeMarkup()}[/]");
+        console.MarkupLine(workflowDescription);
 
         var watch = System.Diagnostics.Stopwatch.StartNew();
-        
-        var ctx = new NoxWorkflowContext(workflow, noxConfig, appConfig);
+
+        var ctx = console.Status()
+            .Spinner(Spinner.Known.Clock)
+            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, noxConfig, appConfig));
+
 
         while (ctx.CurrentAction != null)
         {
@@ -29,10 +33,8 @@ public class NoxWorkflowExecutor
             var formattedTaskDescription = $"[bold mediumpurple3_1]{taskDescription}[/]";
 
             var success = await console.Status().Spinner(Spinner.Known.Clock)
-                .StartAsync(formattedTaskDescription, async ctxSpinner =>
-                {
-                    return await ProcessTask(console, ctx, formattedTaskDescription);
-                });
+                .StartAsync(formattedTaskDescription, async _ =>
+                    await ProcessTask(console, ctx, formattedTaskDescription));
 
             if (!success) break;
 
@@ -45,7 +47,7 @@ public class NoxWorkflowExecutor
 
         console.WriteLine();
 
-        console.MarkupLine($"[bold green3]Success! ({watch.Elapsed:hh\\:mm\\:ss})[/]");
+        console.MarkupLine($"[seagreen1]Success! ({watch.Elapsed:hh\\:mm\\:ss})[/]");
 
         return true;
     }
@@ -61,7 +63,7 @@ public class NoxWorkflowExecutor
         {
             console.WriteLine();
             console.MarkupLine(formattedTaskDescription);
-            console.MarkupLine($"{Emoji.Known.ThumbsUp} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} failed");
+            console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} is false");
             return true;
         }
 
@@ -82,12 +84,12 @@ public class NoxWorkflowExecutor
         {
             if (ctx.CurrentAction.ContinueOnError)
             {
-                console.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} {ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}");
+                console.MarkupLine($"{Emoji.Known.GreenCircle} {ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}");
             }
             else
             {
                 ctx.SetErrorMessage(ctx.CurrentAction, ctx.CurrentAction.ErrorMessage);
-                console.MarkupLine($"{Emoji.Known.CryingFace} [bold indianred1]{ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}[/]");
+                console.MarkupLine($"{Emoji.Known.RedCircle} [indianred1]{ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}[/]");
                 return false;
             }
         }
@@ -95,7 +97,7 @@ public class NoxWorkflowExecutor
         {
             if (!string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.Success))
             {
-                console.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} {ctx.CurrentAction.Display.Success.EscapeMarkup()}");
+                console.MarkupLine($"{Emoji.Known.GreenCircle} {ctx.CurrentAction.Display.Success.EscapeMarkup()}");
             }
         }
 
