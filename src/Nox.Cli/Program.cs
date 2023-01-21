@@ -16,8 +16,10 @@ using Nox.Cli.Helpers;
 if ((args.Length > 0 && !args[0].Equals("version")) || args.Length == 0)
 {
     var installedVersion = VersionChecker.GetInstalledNoxCliVersion();
-    AnsiConsole.MarkupLine(@$"[bold]Nox.Cli[/] version {installedVersion}");
-    AnsiConsole.MarkupLine(@$"[gray]Github: https://github.com/NoxOrg/Nox.Cli[/]");
+
+    AnsiConsole.MarkupLine(@$"[bold]_  _ ____ _  _[/]");
+    AnsiConsole.MarkupLine(@$"[bold]|\ | |  |  \/ [/] [gray]version {installedVersion}[/]");
+    AnsiConsole.MarkupLine(@$"[bold]| \| |__| _/\_[/] [gray]Github: https://github.com/NoxOrg/Nox.Cli[/]");
     AnsiConsole.MarkupLine(@$"");
 }
 

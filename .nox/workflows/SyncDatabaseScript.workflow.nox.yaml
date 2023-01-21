@@ -15,7 +15,7 @@ jobs:
   sync-database:
     steps:
 
-      - name: Locate the database server
+      - name: Locating the database server
         id: locate-server
         uses: network/ping@v1
         with:
@@ -24,7 +24,7 @@ jobs:
           success: Found the database server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
           error: The database server is not accesable. Are you connected to the VPN? 
 
-      - name: Connect to the database server
+      - name: Connecting to the database server
         id: connect-server
         uses: postgres/connect@v1
         with:
@@ -37,7 +37,7 @@ jobs:
           success: Connected to the database server
           error: There was a problem connecting to the database. (${{ steps.connect-server.error-message }})
 
-      - name: Check the database version
+      - name: Checking the database version
         id: check-version
         uses: postgres/execute-scalar@v1
         with:
@@ -47,23 +47,23 @@ jobs:
           success: ${{ steps.check-version.outputs.result }}
           error: There was a problem with the version check (${{ steps.check-version.error-message }})
 
-      - name: Sanitized the database name to avoid Sql injection
+      - name: Sanitizing the database name to avoid Sql injection
         id: get-dbname
         uses: postgres/sanitize-sql-string@v1
         with:
           input-string: NOX_${{ config.Database.Name }}
         display:
-          success: Database name is ${{ steps.get-dbname.outputs.result }}
+          success: The database name is ${{ steps.get-dbname.outputs.result }}
 
-      - name: Create variable for database name
+      - name: Storing the database name in a variable
         id: add-var-dbname
         uses: core/add-variables@v1
         with:
           db-name: ${{ steps.get-dbname.outputs.result }}
         display:
-          success: Added variable 
+          success: Variable 'db-name' set to '${{ vars.db-name }}'
 
-      - name: Check that the database does not exist
+      - name: Checking that the project database does not exist
         id: db-not-exist
         uses: postgres/execute-scalar@v1
         with:
@@ -74,11 +74,11 @@ jobs:
           that: '"${{ steps.db-not-exist.outputs.result }}" != "${{ vars.db-name }}"' 
           #that: ${{ steps.db-not-exist.outputs.result }} != ${{ vars.db-name }}
         display:
-          success: Database not found
-          error: Database already exists
+          success: The database does not exist yet
+          error: The database already exists
         continue-on-error: true
 
-      - name: Create database 
+      - name: Creating the project database 
         id: create-db
         #if: ${{ steps.db-not-exist.was-valid }}
         if: '"${{ steps.db-not-exist.outputs.result }}" != "${{ vars.db-name }}"'
@@ -87,10 +87,10 @@ jobs:
           connection: ${{ steps.connect-server.outputs.connection }}
           sql: CREATE DATABASE "${{ vars.db-name }}";
         display:  
-          success: Database created 
+          success: The database was succesfully created 
           error: Failed to create the database (${{ steps.create-db.error-message }})
 
-      - name: Connect to project database
+      - name: Connecting to the project database
         id: connect-db
         uses: postgres/connect@v1
         with:
@@ -100,10 +100,10 @@ jobs:
           password: ${{ secrets.NOX_PG_ADMIN_PASSWORD }}
           database: ${{ vars.db-name }}
         display:
-          success: Connected to the database server
-          error: There was a problem connecting to the database. (${{ steps.connect-db.error-message }})
+          success: Connected to the project database
+          error: There was a problem connecting to the project database. (${{ steps.connect-db.error-message }})
 
-      - name: Add variables for role, admin and password
+      - name: Creating variables for the database role, admin and password
         id: add-other-vars
         uses: core/add-variables@v1
         with:
@@ -112,9 +112,9 @@ jobs:
           db-password: ${{ vars.db-name }}_$123
           #db-password: ${{ env.SOME_VARIABLE }}_$123          
         display:
-          success: Done!
+          success: Variables created succesfully
 
-      - name: Create admin user and role if needed and assign to admin user
+      - name: Creating admin user and role if needed and assign to admin user
         id: create-role
         uses: postgres/execute-nonquery@v1
         with:
@@ -156,5 +156,5 @@ jobs:
             ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${{vars.db-role}};
             ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO ${{vars.db-role}};     
         display:  
-          success: Admin user and role created and assigned
+          success: The admin user and role was created and assigned
           error: Failed to create user and role (${{ steps.create-role.error-message }})
