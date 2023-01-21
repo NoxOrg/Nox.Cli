@@ -47,7 +47,7 @@ public class ConsoleWriter : IConsoleWriter
 
     public void WriteHelpText(string message)
     {
-        _console.MarkupLine($"[green3]{message.EscapeMarkup()}[/]");
+        _console.MarkupLine($"[bold green3]{message.EscapeMarkup()}[/]");
     }
 
     public void WriteLogMessage(string message)

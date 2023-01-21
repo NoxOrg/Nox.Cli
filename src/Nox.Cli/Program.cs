@@ -16,12 +16,9 @@ using Nox.Cli.Helpers;
 if ((args.Length > 0 && !args[0].Equals("version")) || args.Length == 0)
 {
     var installedVersion = VersionChecker.GetInstalledNoxCliVersion();
-    AnsiConsole.MarkupLine(@$"[bold red3] _ __   _____  __ [/]");
-    AnsiConsole.MarkupLine(@$"[bold red3]| '_ \ / _ \ \/ / [/] Nox.Cli version {installedVersion}");
-    AnsiConsole.MarkupLine(@$"[bold red3]| | | | (_) >  <  [/] [gray]Github: https://github.com/NoxOrg/Nox.Cli[/]");
-    AnsiConsole.MarkupLine(@$"[bold red3]|_| |_|\___/_/\_\ [/]");
-    AnsiConsole.MarkupLine(@$"[bold red3]                  [/]");
-    AnsiConsole.MarkupLine(@$"Starting...");
+    AnsiConsole.MarkupLine(@$"[bold]Nox.Cli[/] version {installedVersion}");
+    AnsiConsole.MarkupLine(@$"[gray]Github: https://github.com/NoxOrg/Nox.Cli[/]");
+    AnsiConsole.MarkupLine(@$"");
 }
 
 var services = new ServiceCollection();
@@ -76,8 +73,8 @@ catch (Exception e)
                 Parenthesis = new Style().Foreground(Color.Cornsilk1),
                 Method = new Style().Foreground(Color.Red),
                 ParameterName = new Style().Foreground(Color.Cornsilk1),
-                ParameterType = new Style().Foreground(Color.Red),
-                Path = new Style().Foreground(Color.Red),
+                ParameterType = new Style().Foreground(Color.IndianRed),
+                Path = new Style().Foreground(Color.IndianRed),
                 LineNumber = new Style().Foreground(Color.Cornsilk1),
             }
         });

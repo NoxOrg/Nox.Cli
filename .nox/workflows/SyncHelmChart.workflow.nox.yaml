@@ -78,7 +78,7 @@ jobs:
 
       - name: Ensure the Project Helm Chart Repository exists
         id: ensure-nox-helm-chart-repo
-        uses: azdevops/ensure-repo@v1
+        uses: azdevops/ensure-repo-exists@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
           project-id: ${{ steps.get-nox-project.outputs.project-id }}

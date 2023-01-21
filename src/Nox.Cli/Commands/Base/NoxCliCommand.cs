@@ -42,7 +42,7 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
         _consoleWriter.WriteHelpText("Reading: Project Definition...");
 
         _console.WriteLine();
-        _consoleWriter.WriteInfo($"Path:");
+        _consoleWriter.WriteInfo($"Design folder:");
         _console.WriteLine(_configuration["NoxCli:DesignFolder"]!);
 
         _console.WriteLine();
