@@ -10,7 +10,7 @@ branches:
   - name: sync
     description: Synchronize your project with version control and remote environments
   - name: version    
-    descrition: Displays the current NOX cli version
+    description: Displays the current NOX cli version
     
 remote-task-proxy:
   url: https://iwg-taskexecutor.azure.com
