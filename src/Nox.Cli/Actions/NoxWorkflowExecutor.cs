@@ -42,7 +42,7 @@ public class NoxWorkflowExecutor
 
         console.WriteLine();
 
-        console.MarkupLine($"[green3]Success! ({watch.Elapsed:hh\\:mm\\:ss})[/]");
+        console.MarkupLine($"[bold green3]Success! ({watch.Elapsed:hh\\:mm\\:ss})[/]");
 
         return true;
     }
