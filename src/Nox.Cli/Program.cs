@@ -21,7 +21,6 @@ if ((args.Length > 0 && !args[0].Equals("version")) || args.Length == 0)
     AnsiConsole.MarkupLine(@$"[bold red3]| | | | (_) >  <  [/] [gray]Github: https://github.com/NoxOrg/Nox.Cli[/]");
     AnsiConsole.MarkupLine(@$"[bold red3]|_| |_|\___/_/\_\ [/]");
     AnsiConsole.MarkupLine(@$"[bold red3]                  [/]");
-    AnsiConsole.MarkupLine(@$"Starting...");
 }
 
 var services = new ServiceCollection();

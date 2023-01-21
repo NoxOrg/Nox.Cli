@@ -10,6 +10,7 @@ using System.Text.Json;
 using Spectre.Console;
 using Nox.Cli.Services.Caching;
 using Nox.Cli.Configuration;
+using System.Linq;
 
 namespace Nox.Cli;
 
@@ -110,20 +111,33 @@ internal static class ConfiguratorExtensions
     {
         var files = FindWorkflows();
 
+        var overriddenFiles = new List<string>(files.Length);
+
         foreach (var file in files)
         {
             var yaml = File.ReadAllText(file);
 
-            var fileName = (new FileInfo(file)).Name;
+            var fileInfo = new FileInfo(file);
 
-            if (yamlFiles.ContainsKey(fileName))
+            if (yamlFiles.ContainsKey(fileInfo.Name))
             {
-                AnsiConsole.WriteLine();
-                AnsiConsole.MarkupLine($"[bold yellow]Warning: Local {file} overrides remote file with the same name[/]");
+                var overriddenPath = fileInfo.DirectoryName;
+                var overriddenFile = fileInfo.Name;
+                if (overriddenPath != null && !overriddenFiles.Contains($"[{overriddenPath}]"))
+                {
+                    overriddenFiles.Add($"[{overriddenPath}]");
+                }
+                overriddenFiles.Add(overriddenFile[..^18]);
             }
 
-            yamlFiles[fileName] = yaml;
+            yamlFiles[fileInfo.Name] = yaml;
         }
+        if(overriddenFiles.Count> 0)
+        {
+            AnsiConsole.MarkupLine($"[bold yellow]Warning: Local workflows overrides remote workflow(s) with the same name[/]");
+            AnsiConsole.MarkupLine($"[bold yellow]{string.Join(',', overriddenFiles.ToArray()).EscapeMarkup()}[/]");
+        }
+
     }
 
     private static void GetOnlineWorkflows(Dictionary<string, string> yamlFiles, string tid, string cachePath, NoxCliCache cache)
