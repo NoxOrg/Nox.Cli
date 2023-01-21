@@ -8,7 +8,12 @@ namespace Nox.Cli.Actions;
 
 public class NoxWorkflowExecutor
 {
-    public async static Task<bool> Execute(WorkflowConfiguration workflow, IConfiguration appConfig, INoxConfiguration noxConfig, IAnsiConsole console)
+
+    private static readonly List<NoxAction> processedActions = new();
+
+    public async static Task<bool> Execute(WorkflowConfiguration workflow,
+        IConfiguration appConfig, INoxConfiguration noxConfig, IAnsiConsole console
+    )
     {
         console.WriteLine();
         console.MarkupLine($"[green3]Executing workflow: {workflow.Name.EscapeMarkup()}[/]");
@@ -16,8 +21,6 @@ public class NoxWorkflowExecutor
         var watch = System.Diagnostics.Stopwatch.StartNew();
         
         var ctx = new NoxWorkflowContext(workflow, noxConfig, appConfig);
-
-        List<NoxAction> processedActions = new();
 
         while (ctx.CurrentAction != null)
         {
@@ -28,7 +31,7 @@ public class NoxWorkflowExecutor
             var success = await console.Status().Spinner(Spinner.Known.Clock)
                 .StartAsync(formattedTaskDescription, async ctxSpinner =>
                 {
-                    return await ProcessTask(console, ctx, processedActions, formattedTaskDescription);
+                    return await ProcessTask(console, ctx, formattedTaskDescription);
                 });
 
             if (!success) break;
@@ -47,8 +50,7 @@ public class NoxWorkflowExecutor
         return true;
     }
 
-    private static async Task<bool> ProcessTask(IAnsiConsole console, 
-        NoxWorkflowContext ctx, List<NoxAction> processedActions, 
+    private static async Task<bool> ProcessTask(IAnsiConsole console, NoxWorkflowContext ctx, 
         string formattedTaskDescription)
     {
         if (ctx.CurrentAction == null) return false;
@@ -74,7 +76,6 @@ public class NoxWorkflowExecutor
         processedActions.Add(ctx.CurrentAction);
 
         console.WriteLine();
-
         console.MarkupLine(formattedTaskDescription);
 
         if (ctx.CurrentAction.State == ActionState.Error)
