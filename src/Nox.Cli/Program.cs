@@ -13,7 +13,11 @@ using Nox.Cli.Services;
 using Nox.Cli.Commands;
 using Nox.Cli.Helpers;
 
-if ((args.Length > 0 && !args[0].Equals("version")) || args.Length == 0)
+var isLoggingOut = (args.Length > 0 && args[0].ToLower().Equals("logout")); 
+
+var isGettingVersion = (args.Length > 0 && args[0].ToLower().Equals("version"));
+
+if (!isGettingVersion || args.Length == 0)
 {
     var installedVersion = VersionChecker.GetInstalledNoxCliVersion();
 
@@ -43,11 +47,16 @@ app.Configure(config =>
 
     config.SetInterceptor(new OperatingSystemInterceptor());
 
-    config.AddNoxCommands();
+    if(!isGettingVersion && !isLoggingOut)
+    {
+        config.AddNoxCommands();
+    }
+
+    config.AddCommand<LogoutCommand>("logout")
+    .WithDescription("Logs out the NOX cli and clears the cache.");
 
     config.AddCommand<VersionCommand>("version")
-        .WithDescription("Displays the current NOX cli version.")
-        .WithExample(new[] { "version" });
+        .WithDescription("Displays the current NOX cli version.");
     
 });
 

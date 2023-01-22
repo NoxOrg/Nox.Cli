@@ -168,8 +168,8 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
                         if (_fileOptions != null && _fileOptions.ContainsKey("filename"))
                         {
-                            _sbYaml.Insert(0,$"# {Path.GetFileName(_fileOptions["filename"])}\r\n");
-                            _sbYaml.Insert(0,$"#\r\n");
+                            _sbYaml.Insert(0,$"# {Path.GetFileName(_fileOptions["filename"])}{Environment.NewLine}");
+                            _sbYaml.Insert(0,$"#{Environment.NewLine}");
 
                             var contents = _sbYaml.ToString();
 
