@@ -264,6 +264,11 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
             if (_excludedProperties != null && _excludedProperties.Any(f => newFullKey.StartsWith(f, StringComparison.OrdinalIgnoreCase)))
             {
+                if (_defaults != null && _defaults.Any(d => newFullKey.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _sbYaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {_defaults[newFullKey]}");
+                    _responses[newFullKey] = _defaults[newFullKey];
+                }
                 continue;
             }
 
