@@ -168,8 +168,8 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
                         if (_fileOptions != null && _fileOptions.ContainsKey("filename"))
                         {
-                            _sbYaml.Insert(0,$"# {Path.GetFileName(_fileOptions["filename"])}\r\n");
-                            _sbYaml.Insert(0,$"#\r\n");
+                            _sbYaml.Insert(0,$"# {Path.GetFileName(_fileOptions["filename"])}{Environment.NewLine}");
+                            _sbYaml.Insert(0,$"#{Environment.NewLine}");
 
                             var contents = _sbYaml.ToString();
 
@@ -264,6 +264,11 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
             if (_excludedProperties != null && _excludedProperties.Any(f => newFullKey.StartsWith(f, StringComparison.OrdinalIgnoreCase)))
             {
+                if (_defaults != null && _defaults.Any(d => newFullKey.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _sbYaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {_defaults[newFullKey]}");
+                    _responses[newFullKey] = _defaults[newFullKey];
+                }
                 continue;
             }
 

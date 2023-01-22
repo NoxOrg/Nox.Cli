@@ -45,11 +45,24 @@ jobs:
         uses: console/prompt-schema@v1
         with:
           schema-url: https://noxorg.dev/schemas/NoxConfiguration.json
-          include-prompts: ["description","versionControl","team"]
-          exclude-prompts: ["team.developers[0].mobilePhoneNumber"]
+          include-prompts: ["description","database","versionControl","team"]
+          exclude-prompts: 
+            - team.developers[0].mobilePhoneNumber
+            - database.provider
+            - database.options
+            - database.connectionString
+            - database.connectionStringVariable
+            - versionControl.provider
           defaults:
             name: ${{ steps.add-new-service.outputs.name }}
             description: The ${{ steps.add-new-service.outputs.name }} service
+            database.name: ${{ steps.add-new-service.outputs.name }}Db
+            database.server: "localhost"
+            database.provider: "postgres"
+            database.port: 5432
+            database.user: sa
+            database.password: Developer*123
+            versionControl.provider: azureDevOps
             versionControl.server: https://dev.azure.com/iwgplc
             versionControl.project: Nox.${{ steps.add-new-service.outputs.name }}
             versionControl.repository: ${{ steps.add-new-service.outputs.name }}.Api.V1

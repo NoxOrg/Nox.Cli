@@ -19,6 +19,7 @@ internal static class ConfiguratorExtensions
 {
     public static string CachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "nox");
     public static string CacheFile => Path.Combine(CachePath, "NoxCliCache.json");
+    public static string WorkflowsCachePath => Path.Combine(CachePath, "workflows");
 
     public static IConfigurator AddNoxCommands(this IConfigurator cliConfig)
     {
@@ -164,7 +165,7 @@ internal static class ConfiguratorExtensions
 
         // Read and cache the entries
 
-        var workflowCachePath = Path.Combine(cachePath!, "workflows");
+        var workflowCachePath = WorkflowsCachePath;
 
         Directory.CreateDirectory(workflowCachePath);
 
