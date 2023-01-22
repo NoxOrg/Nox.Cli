@@ -316,6 +316,16 @@ public class NoxWorkflowContext : INoxWorkflowContext
         ResolveAllVariables(action);
 
     }
+
+    public IDictionary<string, object> GetUnresolvedInputVariables(NoxAction action)
+    {
+        var unresolvedVars = action.Inputs
+            .Where(i => _variableRegex.Match(i.Value.Default.ToString()!).Success)
+            .ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
+
+        return unresolvedVars;
+    }
+
     public void SetErrorMessage(NoxAction action, string errorMessage)
     {
         var varKey = $"steps.{action.Id}.error-message";

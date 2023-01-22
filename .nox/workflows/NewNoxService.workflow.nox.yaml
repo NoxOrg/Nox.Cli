@@ -5,7 +5,8 @@ name: Creates a new NOX service
 cli:
   branch: new
   command: service
-  description: Create a new NOX app/service
+  command-alias: sv
+  description: "|sv - Creates a new NOX app/service"
   examples:
     - ["new service", "--path <designFolder>"]
 

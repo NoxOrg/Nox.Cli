@@ -6,7 +6,7 @@ cli:
   branch: sync
   command: database
   command-alias: db
-  description: Synchronises NOX definition with your hosted database.
+  description: "|db - Ensures hosted database and roles exist for your NOX definition."
   examples:
     - ["sync database", "--path <designFolder>"]
     - ["sync db", "--path <designFolder>"]

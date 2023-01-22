@@ -6,7 +6,7 @@ cli:
   branch: sync
   command: helm-chart
   command-alias: hc
-  description: Synchronises NOX definition with Heimdall Helm Chart.
+  description: "|hc - Creates or updates your Heimdall Helm Chart with NOX definition."
   examples:
     - ["sync helm-chart", "--path <designFolder>"]
     - ["sync hc", "--path <designFolder>"]
