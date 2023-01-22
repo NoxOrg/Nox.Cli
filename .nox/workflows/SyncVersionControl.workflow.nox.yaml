@@ -6,7 +6,7 @@ cli:
   branch: sync
   command: version-control
   command-alias: vc
-  description: Synchronises NOX team definition with your version control service.
+  description: "|vc - Sets up or synchronizes a repository on Azure Devops for your NOX team."
   examples:
     - ["sync versionControl", "--path <designFolder>"]
     - ["sync vc", "--path <designFolder>"]
