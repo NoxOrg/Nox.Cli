@@ -25,6 +25,7 @@ public class NoxWorkflowExecutor
             .Spinner(Spinner.Known.Clock)
             .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, noxConfig, appConfig));
 
+        bool success = true;
 
         while (ctx.CurrentAction != null)
         {
@@ -32,9 +33,21 @@ public class NoxWorkflowExecutor
 
             var formattedTaskDescription = $"[bold mediumpurple3_1]{taskDescription}[/]";
 
-            var success = await console.Status().Spinner(Spinner.Known.Clock)
-                .StartAsync(formattedTaskDescription, async _ =>
-                    await ProcessTask(console, ctx, formattedTaskDescription));
+            var requiresConsole = ctx.CurrentAction.ActionProvider.Discover().RequiresConsole;
+
+            if(requiresConsole)
+            {
+                console.WriteLine();
+                console.MarkupLine(formattedTaskDescription);
+                success = await ProcessTask(console, ctx);
+            }
+            else // show spinner
+            {
+                success = await console.Status().Spinner(Spinner.Known.Clock)
+                    .StartAsync(formattedTaskDescription, async _ =>
+                        await ProcessTask(console, ctx, formattedTaskDescription)
+                    );
+            }
 
             if (!success) break;
 
@@ -46,14 +59,22 @@ public class NoxWorkflowExecutor
         watch.Stop();
 
         console.WriteLine();
+        
+        if (success)
+        {
+            console.MarkupLine($"[seagreen1]Success! ({watch.Elapsed:hh\\:mm\\:ss})[/]");
+        }
+        else
+        {
+            console.MarkupLine($"[indianred1]Workflow halted with an error. ({watch.Elapsed:hh\\:mm\\:ss})[/]");
+        }
 
-        console.MarkupLine($"[seagreen1]Success! ({watch.Elapsed:hh\\:mm\\:ss})[/]");
+        return success;
 
-        return true;
     }
 
     private static async Task<bool> ProcessTask(IAnsiConsole console, NoxWorkflowContext ctx, 
-        string formattedTaskDescription)
+        string? formattedTaskDescription = null)
     {
         if (ctx.CurrentAction == null) return false;
 
@@ -61,8 +82,11 @@ public class NoxWorkflowExecutor
 
         if (!ctx.CurrentAction.EvaluateIf())
         {
-            console.WriteLine();
-            console.MarkupLine(formattedTaskDescription);
+            if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
+            {
+                console.WriteLine();
+                console.MarkupLine(formattedTaskDescription);
+            }
             console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} is false");
             return true;
         }
@@ -77,8 +101,11 @@ public class NoxWorkflowExecutor
 
         processedActions.Add(ctx.CurrentAction);
 
-        console.WriteLine();
-        console.MarkupLine(formattedTaskDescription);
+        if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
+        {
+            console.WriteLine();
+            console.MarkupLine(formattedTaskDescription);
+        }
 
         if (ctx.CurrentAction.State == ActionState.Error)
         {

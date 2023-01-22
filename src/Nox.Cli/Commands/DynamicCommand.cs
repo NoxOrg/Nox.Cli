@@ -7,12 +7,11 @@ using Nox.Cli.Configuration;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using System.IO.Abstractions;
 
 public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
 {
     public DynamicCommand(IAnsiConsole console, IConsoleWriter consoleWriter, 
-        INoxConfiguration noxConfiguration, IConfiguration configuration, IFileSystem fileSystem) 
+        INoxConfiguration noxConfiguration, IConfiguration configuration) 
         : base(console, consoleWriter, noxConfiguration, configuration) {}
 
     public class Settings : CommandSettings

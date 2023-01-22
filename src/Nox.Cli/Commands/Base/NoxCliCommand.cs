@@ -1,14 +1,7 @@
 ﻿namespace Nox.Cli.Commands;
 
-using System.IO.Abstractions;
 using Helpers;
 using Microsoft.Extensions.Configuration;
-using Microsoft.TeamFoundation.Core.WebApi;
-using Microsoft.TeamFoundation.SourceControl.WebApi;
-using Microsoft.VisualStudio.Services.Common;
-using Microsoft.VisualStudio.Services.Graph.Client;
-using Microsoft.VisualStudio.Services.Operations;
-using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -31,6 +24,16 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
 
     public override Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
+
+        _console.WriteLine();
+        _consoleWriter.WriteInfo($"Design folder:");
+        _console.WriteLine(_configuration["NoxCli:DesignFolder"]!);
+
+        if (string.IsNullOrEmpty(_noxConfiguration.Name))
+        {
+            return Task.FromResult(0);
+        }
+
         if (_noxConfiguration.Team is null
             || _noxConfiguration.Team.Developers is null
             || _noxConfiguration.Team.Developers.Count == 0)
@@ -40,10 +43,6 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
 
         _console.WriteLine();
         _consoleWriter.WriteHelpText("Reading: Project definition...");
-
-        _console.WriteLine();
-        _consoleWriter.WriteInfo($"Design folder:");
-        _console.WriteLine(_configuration["NoxCli:DesignFolder"]!);
 
         _console.WriteLine();
         _consoleWriter.WriteInfo($"Project:");

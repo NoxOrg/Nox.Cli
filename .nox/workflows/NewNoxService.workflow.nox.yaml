@@ -5,17 +5,55 @@ name: Creates a new NOX service
 cli:
   branch: new
   command: service
-  description: Creates a new NOX service
+  description: Create a new NOX app/service
   examples:
     - ["new service", "--path <designFolder>"]
 
 jobs:
   new-service:
     steps:
-      - name: Create a new service definition
-        id: add-new-service
-        uses: yamlmaker/build@v1 # user input 
+      - name: Ensuring service definition doesn't exist
+        id: check-exists
+        uses: core/add-variables@v1
         with:
-          schema-url: https://noxorg.dev/schemas/NoxConfiguration.json ## hard code yaml?
-          output-path: ./src/${{ config.Name }}/Design   ## optional, json/yaml
-          prompt-for: all ## include or exclude fields
+          service-yaml-exists: ${{ config.name }} != ""
+        validate:
+          that: '"${{ config.name }}" == ""'
+        display:
+          error: A service definition '${{ config.name }}' already exists in this repo
+
+      - name: Create a new app/service
+        id: add-new-service
+        uses: console/prompt-schema@v1
+        with:
+          schema: |
+            {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the NOX service",
+                  "default": "MyNoxService"
+                }
+              }
+            }
+
+      - name: Specify the require app/service options
+        id: add-new-service-options
+        uses: console/prompt-schema@v1
+        with:
+          schema-url: https://noxorg.dev/schemas/NoxConfiguration.json
+          include-prompts: ["description","versionControl","team"]
+          exclude-prompts: ["team.developers[0].mobilePhoneNumber"]
+          defaults:
+            name: ${{ steps.add-new-service.outputs.name }}
+            description: The ${{ steps.add-new-service.outputs.name }} service
+            versionControl.server: https://dev.azure.com/iwgplc
+            versionControl.project: Nox.${{ steps.add-new-service.outputs.name }}
+            versionControl.repository: ${{ steps.add-new-service.outputs.name }}.Api.V1
+            team.developers[0].name: ${{ user.name }} 
+            team.developers[0].userName: ${{ user.upn }} 
+          output-file: 
+            filename: ${{ steps.add-new-service.outputs.name }}.service.nox.yaml

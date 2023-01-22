@@ -11,18 +11,22 @@ using Spectre.Console;
 using Nox.Cli.Services.Caching;
 using Nox.Cli.Configuration;
 using System.Linq;
+using Microsoft.Identity.Core.Cache;
 
 namespace Nox.Cli;
 
 internal static class ConfiguratorExtensions
 {
+    public static string CachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "nox");
+    public static string CacheFile => Path.Combine(CachePath, "NoxCliCache.json");
+
     public static IConfigurator AddNoxCommands(this IConfigurator cliConfig)
     {
-        var cachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "nox");
+        var cachePath = CachePath;
 
         Directory.CreateDirectory(cachePath);
 
-        var cacheFile = Path.Combine(cachePath, "NoxCliCache.json");
+        var cacheFile = CacheFile;
 
         NoxCliCache? cache = GetOrCreateCache(cacheFile);
 
@@ -211,11 +215,8 @@ internal static class ConfiguratorExtensions
 
     private static async Task<NoxCliCache?> GetCacheInfoFromAzureToken(string cacheFile)
     {
-        AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine($"[bold mediumpurple3_1]Checking your credentials...[/]");
 
-        // var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
-        
         var credential = new ChainedTokenCredential(
             new AzureCliCredential(),
             new InteractiveBrowserCredential()
@@ -245,8 +246,16 @@ internal static class ConfiguratorExtensions
             return null;
         }
 
+        var name = jsonToken.Claims.FirstOrDefault(c => c.Type == "name");
+        if (name == null)
+        {
+            AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} User name not detected. Continuing without login.");
+            return null;
+        }
+
         var ret = new NoxCliCache(cacheFile) 
         { 
+            Name = name.Value,
             Upn = upn.Value, 
             Tid = tid.Value, 
             Expires = new DateTimeOffset(DateTime.Now.AddDays(7)) 
@@ -255,6 +264,7 @@ internal static class ConfiguratorExtensions
         ret.Save();
 
         AnsiConsole.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} Logged in as {upn.Value} on tenant {tid.Value}");
+        AnsiConsole.WriteLine();
 
         return ret;
     }

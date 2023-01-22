@@ -25,15 +25,22 @@ public static class CliAddinExtensions
             {
                 if (typeof(T).IsAssignableTo(typeof(IDictionary<string, string>)))
                 {
-                    var objDic = (Dictionary<object, object>)value;
-                    var stringDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-                    foreach (var item in objDic)
-                    {
-                        stringDic.Add(item.Key.ToString()!, item.Value.ToString()!);
-                    }
-
-                    result = (T)Convert.ChangeType(stringDic, typeof(T));
+                    var newDictionary = ((IDictionary<object, object>)value).ToDictionary(
+                        kv => kv.Key.ToString()!, kv => kv.Value.ToString()!, StringComparer.OrdinalIgnoreCase
+                    );
+                    result = (T)Convert.ChangeType(newDictionary, typeof(T));
+                }
+                else if (typeof(T).IsAssignableTo(typeof(IDictionary<string, object>)))
+                {
+                    var newDictionary = ((IDictionary<object, object>)value).ToDictionary( 
+                        kv => kv.Key.ToString()!, kv => kv.Value, StringComparer.OrdinalIgnoreCase
+                    );
+                    result = (T)Convert.ChangeType(newDictionary, typeof(T));
+                }
+                else if (typeof(T).IsAssignableTo(typeof(IList<string>)))
+                {
+                    var stringList = ((IList<object>)value).Select(o=>o.ToString()).ToArray();
+                    result = (T)Convert.ChangeType(stringList, typeof(T));
                 }
                 else
                 {
