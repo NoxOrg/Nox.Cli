@@ -20,7 +20,7 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
                 {
                     Id = "aad-client",
                     Description = "The AAD client",
-                    Default = new GraphServiceClient("", null),
+                    Default = new GraphServiceClient(new HttpClient()),
                     IsRequired = true
                 },
                 
