@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Nox.Cli.Configuration;
+using Nox.Cli.Services.Caching;
 using Nox.Core.Configuration;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
@@ -62,7 +63,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
         var matches = _variableRegex.Matches(workflowString);
 
         var variables = matches.Select(m => m.Groups[1].Value)
-            .Distinct()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(e => e)
             .ToDictionary(e => e, e => new object(), StringComparer.OrdinalIgnoreCase);
 
@@ -86,6 +87,14 @@ public class NoxWorkflowContext : INoxWorkflowContext
             .ToArray();
 
         _noxConfig.WalkProperties( (name, value) => { if (configKeys.Contains(name, StringComparer.OrdinalIgnoreCase)) { variables[$"config.{name}"] = value ?? new object(); } });
+
+        var userKeys = variables.Select(kv => kv.Key)
+            .Where(e => e.StartsWith("user.", StringComparison.OrdinalIgnoreCase))
+            .Select(e => e[5..])
+            .ToArray();
+
+        var cache = NoxCliCache.Load(ConfiguratorExtensions.CacheFile);
+        cache.WalkProperties((name, value) => { if (userKeys.Contains(name, StringComparer.OrdinalIgnoreCase)) { variables[$"user.{name}"] = value ?? new object(); } });
 
         return variables;
     }
@@ -169,11 +178,16 @@ public class NoxWorkflowContext : INoxWorkflowContext
             {
                 sequence++;
 
+                if (string.IsNullOrWhiteSpace(step.Uses))
+                {
+                    throw new Exception($"Step {sequence} ({step.Name}) is missing a 'uses' property");
+                }
+
                 var actionType = ResolveActionProviderTypeFromUses(step.Uses);
 
                 if (actionType == null)
                 {
-                    throw new Exception($"Step {sequence} ({step.Name}) uses {step.Uses} which was not found.");
+                    throw new Exception($"Step {sequence} ({step.Name}) uses {step.Uses} which was not found");
                 }
 
                 var newAction = new NoxAction()

@@ -6,6 +6,21 @@ namespace Nox.Cli.Services.Caching;
 
 public class NoxCliCache : IChangeTracking
 {
+
+    private string _name = null!;
+    public string Name
+    {
+        get => _name;
+        set
+        {
+            if (_name != value)
+            {
+                _name = value;
+                IsChanged = true;
+            }
+        }
+    }
+
     private string _upn = null!;
     public string Upn
     {

@@ -3,7 +3,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nox.Core.Configuration;
+using Nox.Core.Constants;
 using Nox.Core.Exceptions;
+using Nox.Core.Interfaces.Configuration;
+using System.IO;
 
 public static class ServiceCollectionExtensions
 {
@@ -22,29 +25,36 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(configuration);
 
-        services.AddNoxConfiguration(designPath);
-
+        if (Directory.GetFiles(designPath, FileExtension.ServiceDefinition, SearchOption.TopDirectoryOnly).Length > 0)
+        {
+            services.AddNoxConfiguration(designPath);
+        }
+        else
+        {
+            services.AddSingleton<INoxConfiguration>(new NoxConfiguration());
+        }
         return services;
     }
 
     private static string ResolveDesignPath(string[] args, IConfiguration configuration)
     {
+        string? path = null;
+        
         for (var i = args.Length-1; i >= 0; i--)
         {
             if (args[i].Equals("--path", StringComparison.OrdinalIgnoreCase))
             {
                 if (i + 1 < args.Length)
                 {
-                    return args[i + 1];
+                    path = args[i + 1];
                 }
             }
         }
 
-        if (configuration["Nox:DefinitionRootPath"] is not null)
-        {
-            return configuration["Nox:DefinitionRootPath"]!;
-        }
+        path ??= configuration["Nox:DefinitionRootPath"];
 
-        return Directory.GetCurrentDirectory(); ;
+        path ??= Directory.GetCurrentDirectory();
+
+        return path;
     }
 }
