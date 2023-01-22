@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Configuration;
 using Nox.Cli.Configuration;
 using Nox.Core.Interfaces.Configuration;
@@ -79,6 +80,19 @@ public class NoxWorkflowExecutor
         if (ctx.CurrentAction == null) return false;
 
         var inputs = ctx.GetInputVariables(ctx.CurrentAction);
+
+        var unresolved = ctx.GetUnresolvedInputVariables(ctx.CurrentAction);
+
+        if (unresolved.Any())
+        {
+            console.WriteLine();
+            console.MarkupLine($"{Emoji.Known.RedCircle} Some variables are unresolved. Did you misspell or forget to define them? Is the service.nox.yaml available?");
+            foreach (var kv in unresolved)
+            {
+                console.MarkupLine($"  [bold mediumpurple3_1]{kv.Key}[/]: [indianred1]{kv.Value}[/]");
+            }
+            return false;
+        }
 
         if (!ctx.CurrentAction.EvaluateIf())
         {
