@@ -69,7 +69,7 @@ public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
         {
             try
             {
-                await AddTeamMembers();
+                await AddTeamMembers(ctx);
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
@@ -87,27 +87,51 @@ public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
         return Task.CompletedTask;
     }
 
-    private async Task AddTeamMembers()
+    private async Task AddTeamMembers(INoxWorkflowContext ctx)
     {
+        var tries = 0;
+
         List<GraphGroup> graphGroups = new();
-        
-        var groupsInGraph = await _graphClient!.ListGroupsAsync();
-    
-        while (groupsInGraph.ContinuationToken is not null)
+
+        GraphGroup? graphGroup = null;
+
+        while (tries++ <= 2)
         {
-            foreach (var group in groupsInGraph.GraphGroups)
+            var groupsInGraph = await _graphClient!.ListGroupsAsync();
+
+            while (groupsInGraph.ContinuationToken is not null)
             {
-                if (group.PrincipalName.StartsWith($"[{_projectName}]", StringComparison.OrdinalIgnoreCase))
+                foreach (var group in groupsInGraph.GraphGroups)
                 {
-                    graphGroups.Add(group);
+                    if (group.PrincipalName.StartsWith($"[{_projectName}]", StringComparison.OrdinalIgnoreCase))
+                    {
+                        graphGroups.Add(group);
+                    }
                 }
+                groupsInGraph = await _graphClient.ListGroupsAsync(continuationToken: groupsInGraph.ContinuationToken.FirstOrDefault());
             }
-            groupsInGraph = await _graphClient.ListGroupsAsync(continuationToken: groupsInGraph.ContinuationToken.FirstOrDefault());
+
+            graphGroup = graphGroups.FirstOrDefault(g => g.PrincipalName.Contains($"\\{_projectName} Team", StringComparison.OrdinalIgnoreCase));
+
+            if (graphGroup == null)
+            {
+                // try again;
+                await Task.Delay(3000);
+                continue;
+            }
+
+            break;
         }
-    
-        var graphGroup = graphGroups.FirstOrDefault( g => g.PrincipalName.Contains($"\\{_projectName} Team", StringComparison.OrdinalIgnoreCase));
-    
+
+        if (graphGroup == null || _graphClient == null)
+        {
+            ctx.SetState(ActionState.Error);
+            ctx.SetErrorMessage($"Unable to find group '\\{_projectName} Team' that should automatically have been created with the project");
+            return;
+        }
+ 
         var usersInGraph = _graphClient.ListUsersAsync(new string[] {"aad"}).Result;
+
         while (usersInGraph.ContinuationToken is not null)
         {
             foreach (var user in usersInGraph.GraphUsers.OrderBy(u => u.DisplayName))
@@ -116,14 +140,17 @@ public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
     
                 if (developer != null)
                 {
-                    var isUserInGroup = await _graphClient.CheckMembershipExistenceAsync(user.Descriptor, graphGroup!.Descriptor);
+                    var isUserInGroup = await _graphClient.CheckMembershipExistenceAsync(user.Descriptor, graphGroup.Descriptor);
                     if (!isUserInGroup)
                     {
-                        var membership = await _graphClient.AddMembershipAsync(user.Descriptor, graphGroup!.Descriptor);
+                        var membership = await _graphClient.AddMembershipAsync(user.Descriptor, graphGroup.Descriptor);
                     }
                 }
             }
             usersInGraph = await _graphClient.ListUsersAsync(new string[] {"aad"}, continuationToken: usersInGraph.ContinuationToken.FirstOrDefault());
         }
+
+        return;
+
     }
 }
