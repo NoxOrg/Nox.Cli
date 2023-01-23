@@ -34,6 +34,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     public NoxWorkflowContext(WorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig)
     {
+        WorkflowId = Guid.NewGuid();
         _appConfig = appConfig;
         _noxConfig = noxConfig;
         _workflow = workflow;
@@ -98,6 +99,8 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
         return variables;
     }
+
+    public Guid WorkflowId { get; init; }
 
     public void AddToVariables(string key, object value)
     {
