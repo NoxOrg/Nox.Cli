@@ -1,7 +1,7 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Nox.Cli.Shared.DTO.Health.Response;
+using Nox.Cli.Shared.DTO.Health;
 
 namespace Nox.Cli.Server.Controllers;
 
@@ -11,10 +11,10 @@ public class HealthController : Controller
 {
     [AllowAnonymous]
     [HttpGet("[action]")]
-    public ActionResult<HealthResponseDto> Echo()
+    public ActionResult<EchoHealthResponse> Echo()
     {
         var assm = Assembly.GetEntryAssembly();
-        var result = new HealthResponseDto
+        var result = new EchoHealthResponse
         {
             Version = assm!.GetName().Version!.ToString()
         };

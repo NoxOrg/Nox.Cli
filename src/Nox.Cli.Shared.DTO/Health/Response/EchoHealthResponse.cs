@@ -1,9 +1,6 @@
-using System.Diagnostics;
-using System.Reflection;
+namespace Nox.Cli.Shared.DTO.Health;
 
-namespace Nox.Cli.Shared.DTO.Health.Response;
-
-public class HealthResponseDto
+public class EchoHealthResponse
 {
     public string Name { get; } = "Nox Cli Server";
     public string Version { get; set; } = string.Empty;

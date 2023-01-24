@@ -34,5 +34,11 @@
         <Link>.dockerignore</Link>
       </Content>
     </ItemGroup>
+    
+    <ItemGroup>
+      <None Update="localhost.pfx">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
 
 </Project>
