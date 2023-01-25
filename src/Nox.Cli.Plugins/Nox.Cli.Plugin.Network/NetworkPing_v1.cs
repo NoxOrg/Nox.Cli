@@ -1,5 +1,5 @@
-﻿using Nox.Cli.Actions;
-using System.Net.NetworkInformation;
+﻿using System.Net.NetworkInformation;
+using Nox.Cli.Abstractions;
 
 namespace Nox.Cli.Plugins.Network;
 
@@ -38,7 +38,7 @@ public class NetworkPing_v1 : INoxCliAddin
 
     private string? _host;
 
-    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _host = (string)inputs["host"];
         if (Uri.IsWellFormedUriString(_host, UriKind.Absolute))

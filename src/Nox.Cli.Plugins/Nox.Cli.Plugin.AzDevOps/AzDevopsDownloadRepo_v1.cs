@@ -1,7 +1,7 @@
 using System.IO.Compression;
-using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
 
@@ -53,7 +53,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
     private Guid? _repoId;
     private string? _branchName;
 
-    public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
+    public async Task BeginAsync(IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _gitClient = await connection!.GetClientAsync<GitHttpClient>();

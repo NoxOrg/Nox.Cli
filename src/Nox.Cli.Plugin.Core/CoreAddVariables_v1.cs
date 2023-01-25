@@ -1,4 +1,4 @@
-﻿using Nox.Cli.Actions;
+﻿using Nox.Cli.Abstractions;
 
 namespace Nox.Cli.Plugins.Core;
 
@@ -38,7 +38,7 @@ public class CoreAddVariables_v1 : INoxCliAddin
 
     private IDictionary<string,object> _variables=null!;
 
-    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _variables = inputs;
         

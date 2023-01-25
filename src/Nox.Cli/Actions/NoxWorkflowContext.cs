@@ -6,6 +6,7 @@ using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Nox.Cli.Abstractions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -17,20 +18,20 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private readonly IConfiguration _appConfig;
     private readonly INoxConfiguration _noxConfig;
     private readonly WorkflowConfiguration _workflow;
-    private readonly IDictionary<string, NoxAction> _steps;
+    private readonly IDictionary<string, INoxAction> _steps;
     private readonly IDictionary<string, object> _vars;
 
     private int _currentActionSequence = 0;
 
-    private NoxAction? _previousAction;
-    private NoxAction? _currentAction;
-    private NoxAction? _nextAction;
+    private INoxAction? _previousAction;
+    private INoxAction? _currentAction;
+    private INoxAction? _nextAction;
 
     private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>secrets.[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    public NoxAction? CurrentAction => _currentAction;
+    public INoxAction? CurrentAction => _currentAction;
 
     public NoxWorkflowContext(WorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig)
     {
@@ -169,9 +170,9 @@ public class NoxWorkflowContext : INoxWorkflowContext
         return $"{{{{ {variable} }}}}";
     }
 
-    private Dictionary<string, NoxAction> ParseSteps()
+    private Dictionary<string, INoxAction> ParseSteps()
     {
-        var steps = new Dictionary<string, NoxAction>(StringComparer.OrdinalIgnoreCase);
+        var steps = new Dictionary<string, INoxAction>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var (jobKey, stepConfiguration) in _workflow.Jobs)
         {
@@ -298,14 +299,14 @@ public class NoxWorkflowContext : INoxWorkflowContext
     }
 
 
-    public IDictionary<string, object> GetInputVariables(NoxAction action)
+    public IDictionary<string, object> GetInputVariables(INoxAction action)
     {
         ResolveAllVariables(action);
 
         return action.Inputs.ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
     }
 
-    public void StoreOutputVariables(NoxAction action, IDictionary<string, object> outputs)
+    public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
     {
         foreach (var output in outputs)
         {
@@ -320,7 +321,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     }
 
-    public IDictionary<string, object> GetUnresolvedInputVariables(NoxAction action)
+    public IDictionary<string, object> GetUnresolvedInputVariables(INoxAction action)
     {
         var unresolvedVars = action.Inputs
             .Where(i => _variableRegex.Match(i.Value.Default.ToString()!).Success)
@@ -329,7 +330,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
         return unresolvedVars;
     }
 
-    public void SetErrorMessage(NoxAction action, string errorMessage)
+    public void SetErrorMessage(INoxAction action, string errorMessage)
     {
         var varKey = $"steps.{action.Id}.error-message";
 
@@ -339,7 +340,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     }
 
-    private void ResolveAllVariables(NoxAction action)
+    private void ResolveAllVariables(INoxAction action)
     {
         foreach (var (_, input) in action.Inputs)
         {

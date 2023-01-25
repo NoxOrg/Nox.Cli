@@ -1,4 +1,4 @@
-﻿using Nox.Cli.Actions;
+﻿using Nox.Cli.Abstractions;
 using Npgsql;
 
 namespace Nox.Cli.Plugins.Postgres;
@@ -35,7 +35,7 @@ public class PostgresSanitizeSqlString_v1 : INoxCliAddin
 
     private string _inputString = string.Empty;
 
-    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _inputString = (string)inputs["input-string"];
 

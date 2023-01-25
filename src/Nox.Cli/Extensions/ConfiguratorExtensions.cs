@@ -39,6 +39,10 @@ internal static class ConfiguratorExtensions
         }
 
         GetLocalWorkflows(yamlFiles);
+        
+#if DEBUG
+        GetLocalWorkflows(yamlFiles, "../../tests/workflows");        
+#endif
 
         var deserializer = new DeserializerBuilder()
             .WithNamingConvention(HyphenatedNamingConvention.Instance)
@@ -112,9 +116,9 @@ internal static class ConfiguratorExtensions
         return cache;
     }
 
-    private static void GetLocalWorkflows(Dictionary<string, string> yamlFiles)
+    private static void GetLocalWorkflows(Dictionary<string, string> yamlFiles, string searchPath = "")
     {
-        var files = FindWorkflows();
+        var files = FindWorkflows(searchPath);
 
         var overriddenFiles = new List<string>(files.Length);
 
@@ -270,9 +274,14 @@ internal static class ConfiguratorExtensions
         return ret;
     }
 
-    private static string[] FindWorkflows()
+    private static string[] FindWorkflows(string searchPath = "")
     {
         var path = new DirectoryInfo(Directory.GetCurrentDirectory());
+        
+        if (!string.IsNullOrEmpty(searchPath))
+        {
+            path = new DirectoryInfo(searchPath);
+        }
 
         var files = path.GetFiles(FileExtension.WorflowDefinition);
 

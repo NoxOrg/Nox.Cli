@@ -1,6 +1,6 @@
 using Microsoft.Graph;
-using Nox.Cli.Actions;
-using ActionState = Nox.Cli.Actions.ActionState;
+using Nox.Cli.Abstractions;
+using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -47,7 +47,7 @@ public class AzureAdAddGroupToGroup_v1 : INoxCliAddin
     private Group? _parentGroup;
     private GraphServiceClient? _aadClient;
 
-    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _aadClient = (GraphServiceClient)inputs["aad-client"];
         _childGroup = (Group)inputs["child-group"];

@@ -1,6 +1,5 @@
 ﻿
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Actions;
 using Nox.Cli.Plugin.YamlMaker.JsonSchema;
 using RestSharp;
 using Spectre.Console;
@@ -8,6 +7,7 @@ using System;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Nox.Cli.Abstractions;
 
 namespace Nox.Cli.Plugins.Console;
 
@@ -98,7 +98,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     private readonly Dictionary<string, object> _responses = new();
 
 
-    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
 
         var schemaUrl = inputs.Value<string>("schema-url");

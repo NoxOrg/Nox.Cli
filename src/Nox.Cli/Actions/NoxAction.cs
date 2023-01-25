@@ -1,8 +1,9 @@
 ﻿using CodingSeb.ExpressionEvaluator;
+using Nox.Cli.Abstractions;
 
 namespace Nox.Cli.Actions;
 
-public class NoxAction 
+public class NoxAction: INoxAction
 {
     public int Sequence { get; set; } = 0;
     public string Id { get; set; } = string.Empty;

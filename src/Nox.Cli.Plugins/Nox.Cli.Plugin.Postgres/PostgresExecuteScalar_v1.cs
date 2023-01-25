@@ -1,4 +1,4 @@
-﻿using Nox.Cli.Actions;
+﻿using Nox.Cli.Abstractions;
 using Npgsql;
 
 namespace Nox.Cli.Plugins.Postgres;
@@ -52,7 +52,7 @@ public class PostgresExecuteScalar_v1 : INoxCliAddin
 
     private List<object>? _parameters;
 
-    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _connection = (NpgsqlConnection)inputs["connection"];
 

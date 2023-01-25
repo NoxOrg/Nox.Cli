@@ -1,7 +1,7 @@
 using Microsoft.Graph;
-using Nox.Cli.Actions;
+using Nox.Cli.Abstractions;
 using Nox.Core.Configuration;
-using ActionState = Nox.Cli.Actions.ActionState;
+using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -50,7 +50,7 @@ public class AzureAdAddTeamMembersToGroup_v1 : INoxCliAddin
     private GraphServiceClient? _aadClient;
     private List<TeamMemberConfiguration>? _members;
 
-    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _group = (Group)inputs["group"];
         _aadClient = (GraphServiceClient)inputs["aad-client"];

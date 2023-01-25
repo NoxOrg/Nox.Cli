@@ -1,4 +1,4 @@
-﻿namespace Nox.Cli.Actions;
+﻿namespace Nox.Cli.Abstractions;
 
 public class NoxActionInput
 {

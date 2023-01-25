@@ -1,7 +1,7 @@
 using Microsoft.TeamFoundation.Core.WebApi;
-using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -63,7 +63,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
     private Guid? _projectId;
     private string? _defaultBranch;
 
-    public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
+    public async Task BeginAsync(IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectId = inputs.Value<Guid>("project-id");

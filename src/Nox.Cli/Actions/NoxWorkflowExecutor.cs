@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Configuration;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Configuration;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
@@ -10,7 +11,7 @@ namespace Nox.Cli.Actions;
 public class NoxWorkflowExecutor
 {
 
-    private static readonly List<NoxAction> processedActions = new();
+    private static readonly List<INoxAction> processedActions = new();
 
     public async static Task<bool> Execute(WorkflowConfiguration workflow,
         IConfiguration appConfig, INoxConfiguration noxConfig, IAnsiConsole console
@@ -105,7 +106,7 @@ public class NoxWorkflowExecutor
             return true;
         }
 
-        await ctx.CurrentAction.ActionProvider.BeginAsync(ctx, inputs);
+        await ctx.CurrentAction.ActionProvider.BeginAsync(inputs);
 
         var outputs = await ctx.CurrentAction.ActionProvider.ProcessAsync(ctx);
 

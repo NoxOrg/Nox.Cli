@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Actions;
 
 namespace Nox.Cli.Plugin.File;
 
@@ -36,7 +36,7 @@ public class FileReplaceStrings_v1 : INoxCliAddin
     private string? _path;
     private Dictionary<string, string>? _replacements;
 
-    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _path = inputs.Value<string>("path");
         _replacements = inputs.Value<Dictionary<string, string>>("replacements");
