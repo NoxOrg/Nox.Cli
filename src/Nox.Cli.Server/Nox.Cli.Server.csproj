@@ -28,6 +28,7 @@
     </ItemGroup>
     
     <ItemGroup>
+      <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Network\Nox.Cli.Plugin.Network.csproj" />
       <ProjectReference Include="..\Nox.Cli.Shared.DTO\Nox.Cli.Shared.DTO.csproj" />
     </ItemGroup>
     

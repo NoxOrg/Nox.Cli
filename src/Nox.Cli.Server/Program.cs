@@ -1,6 +1,7 @@
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
 using Nox.Cli.Server;
+using Nox.Cli.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,7 +47,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddMemoryCache();
-builder.Services.AddTransient<ITaskExecutor, TaskExecutor>();
+builder.Services.AddSingleton<ITaskExecutorFactory, TaskExecutorFactory>();
 
 var app = builder.Build();
 
