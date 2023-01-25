@@ -12,6 +12,7 @@ using Nox.Cli.Services.Caching;
 using Nox.Cli.Configuration;
 using System.Linq;
 using Microsoft.Identity.Core.Cache;
+using Nox.Cli.Abstractions;
 
 namespace Nox.Cli;
 
@@ -47,6 +48,7 @@ internal static class ConfiguratorExtensions
         var deserializer = new DeserializerBuilder()
             .WithNamingConvention(HyphenatedNamingConvention.Instance)
             .IgnoreUnmatchedProperties()
+            .WithTypeMapping<IActionConfiguration, ActionConfiguration>()
             .Build();
 
         var manifest = yamlFiles

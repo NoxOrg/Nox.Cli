@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Caching.Memory;
-using Nox.Cli.Actions;
+using Microsoft.OData.ModelBuilder;
+using Nox.Cli.Configuration;
 
 namespace Nox.Cli.Server.Tests;
 
@@ -11,10 +12,10 @@ public class TaskExecutorTests
         var cache = new MemoryCache(new MemoryCacheOptions());
         var executor = new TaskExecutor(cache);
         var wfId = Guid.NewGuid();
-        var action = new NoxAction
-        {
-            
-        };
-        await executor.ExecuteAsync(wfId, action);
+        var inputs = new Dictionary<string, object>();
+        var config = new Configuration.ActionConfiguration();
+        await executor.BeginAsync(wfId, config, inputs);
+        var result = await executor.ExecuteAsync();
+        
     }
 }

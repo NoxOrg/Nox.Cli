@@ -1,11 +1,10 @@
 using Nox.Cli.Abstractions;
+using Nox.Cli.Shared.DTO.Workflow;
 
 namespace Nox.Cli.Server;
 
 public interface ITaskExecutor
 {
-    Guid WorkflowId { get; }
-    INoxAction Action { get; }
-
-    Task ExecuteAsync(Guid workflowId, INoxAction action);
+    Task BeginAsync(Guid workflowId, IActionConfiguration configuration, IDictionary<string, object> inputs);
+    Task<ExecuteTaskResponse> ExecuteAsync();
 }
