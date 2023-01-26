@@ -36,19 +36,28 @@ public class NoxWorkflowExecutor
             var formattedTaskDescription = $"[bold mediumpurple3_1]{taskDescription}[/]";
 
             var requiresConsole = ctx.CurrentAction.ActionProvider.Discover().RequiresConsole;
-
-            if(requiresConsole)
+            
+            if (ctx.CurrentAction.RunAtServer == true)
             {
+                var serverTaskDescription = $"{formattedTaskDescription} [bold yellow] -> CLI SERVER[/]";
                 console.WriteLine();
-                console.MarkupLine(formattedTaskDescription);
-                success = await ProcessTask(console, ctx);
+                console.MarkupLine(serverTaskDescription);
             }
-            else // show spinner
+            else
             {
-                success = await console.Status().Spinner(Spinner.Known.Clock)
-                    .StartAsync(formattedTaskDescription, async _ =>
-                        await ProcessTask(console, ctx, formattedTaskDescription)
-                    );
+                if (requiresConsole)
+                {
+                    console.WriteLine();
+                    console.MarkupLine(formattedTaskDescription);
+                    success = await ProcessTask(console, ctx);
+                }
+                else // show spinner
+                {
+                    success = await console.Status().Spinner(Spinner.Known.Clock)
+                        .StartAsync(formattedTaskDescription, async _ =>
+                            await ProcessTask(console, ctx, formattedTaskDescription)
+                        );
+                }
             }
 
             if (!success) break;
@@ -56,12 +65,13 @@ public class NoxWorkflowExecutor
             ctx.NextStep();
         }
 
-        await Task.WhenAll( processedActions.Select(p => p.ActionProvider.EndAsync(ctx) ) );
+        await Task.WhenAll(processedActions.Where(p => p.RunAtServer == false).Select(p => p.ActionProvider.EndAsync(ctx)));
+
 
         watch.Stop();
 
         console.WriteLine();
-        
+
         if (success)
         {
             console.MarkupLine($"[seagreen1]Success! ({watch.Elapsed:hh\\:mm\\:ss})[/]");
@@ -72,7 +82,6 @@ public class NoxWorkflowExecutor
         }
 
         return success;
-
     }
 
     private static async Task<bool> ProcessTask(IAnsiConsole console, NoxWorkflowContext ctx, 
@@ -107,6 +116,7 @@ public class NoxWorkflowExecutor
         }
 
         await ctx.CurrentAction.ActionProvider.BeginAsync(inputs);
+        
 
         var outputs = await ctx.CurrentAction.ActionProvider.ProcessAsync(ctx);
 

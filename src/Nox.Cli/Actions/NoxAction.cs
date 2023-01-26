@@ -11,6 +11,7 @@ public class NoxAction: INoxAction
     public string Job { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Uses { get; set; } = string.Empty;
+    public bool? RunAtServer { get; set; } = false;
     public Dictionary<string, NoxActionInput> Inputs { get; set; } = new Dictionary<string, NoxActionInput>();
     public Dictionary<string, string>? Validate { get; set; } = new();
     public NoxActionDisplayMessage? Display { get; set; } = new();

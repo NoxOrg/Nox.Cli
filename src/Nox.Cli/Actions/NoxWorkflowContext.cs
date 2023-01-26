@@ -3,8 +3,6 @@ using Nox.Cli.Configuration;
 using Nox.Cli.Services.Caching;
 using Nox.Core.Configuration;
 using Nox.Core.Interfaces.Configuration;
-using Spectre.Console;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Helpers;
@@ -15,7 +13,6 @@ namespace Nox.Cli.Actions;
 
 public class NoxWorkflowContext : INoxWorkflowContext
 {
-
     private readonly IConfiguration _appConfig;
     private readonly INoxConfiguration _noxConfig;
     private readonly WorkflowConfiguration _workflow;
@@ -34,6 +31,8 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     public INoxAction? CurrentAction => _currentAction;
 
+    public string? ServerUrl => _workflow.ServerUrl;
+
     public NoxWorkflowContext(WorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig)
     {
         WorkflowId = Guid.NewGuid();
@@ -42,6 +41,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _workflow = workflow;
         _vars = InitializeVariables();
         _steps = ParseSteps();
+        ValidateSteps();
         _currentActionSequence = 0;
         NextStep();
     }
@@ -54,7 +54,70 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _nextAction = _steps.Select(kv => kv.Value).Where(a => a.Sequence == _currentActionSequence + 1).FirstOrDefault();
     }
 
+    public Guid WorkflowId { get; init; }
 
+    public void AddToVariables(string key, object value)
+    {
+        _vars[$"vars.{key}"] = value;
+    }
+
+    public void SetState(ActionState state)
+    {
+        if (_currentAction != null)
+        {
+            _currentAction.State = state;
+        }
+    }
+
+    public void SetErrorMessage(string errorMessage)
+    {
+        if (_currentAction != null)
+        {
+            _currentAction.ErrorMessage = errorMessage;
+        }
+    }
+    
+    public IDictionary<string, object> GetInputVariables(INoxAction action)
+    {
+        ResolveAllVariables(action);
+
+        return action.Inputs.ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
+    }
+
+    public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
+    {
+        foreach (var output in outputs)
+        {
+            var varKey = $"steps.{action.Id}.outputs.{output.Key}";
+            if (_vars.ContainsKey(varKey))
+            {
+                _vars[varKey] = output.Value;
+            }
+        }
+
+        ResolveAllVariables(action);
+
+    }
+
+    public IDictionary<string, object> GetUnresolvedInputVariables(INoxAction action)
+    {
+        var unresolvedVars = action.Inputs
+            .Where(i => _variableRegex.Match(i.Value.Default.ToString()!).Success)
+            .ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
+
+        return unresolvedVars;
+    }
+
+    public void SetErrorMessage(INoxAction action, string errorMessage)
+    {
+        var varKey = $"steps.{action.Id}.error-message";
+
+        _vars[varKey] = errorMessage;
+
+        ResolveAllVariables(action);
+
+    }
+    
     private Dictionary<string, object> InitializeVariables()
     {
         var serializer = new SerializerBuilder()
@@ -100,29 +163,6 @@ public class NoxWorkflowContext : INoxWorkflowContext
         cache.WalkProperties((name, value) => { if (userKeys.Contains(name, StringComparer.OrdinalIgnoreCase)) { variables[$"user.{name}"] = value ?? new object(); } });
 
         return variables;
-    }
-
-    public Guid WorkflowId { get; init; }
-
-    public void AddToVariables(string key, object value)
-    {
-        _vars[$"vars.{key}"] = value;
-    }
-
-    public void SetState(ActionState state)
-    {
-        if (_currentAction != null)
-        {
-            _currentAction.State = state;
-        }
-    }
-
-    public void SetErrorMessage(string errorMessage)
-    {
-        if (_currentAction != null)
-        {
-            _currentAction.ErrorMessage = errorMessage;
-        }
     }
 
     private object ReplaceVariables(string value)
@@ -205,6 +245,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
                     If = step.If,
                     Validate = step.Validate,
                     Display = step.Display,
+                    RunAtServer = step.RunAtServer,
                     ContinueOnError = step.ContinueOnError,
                 };
                 newAction.ActionProvider = (INoxCliAddin)Activator.CreateInstance(actionType)!;
@@ -241,6 +282,14 @@ public class NoxWorkflowContext : INoxWorkflowContext
         return steps;
     }
 
+    private void ValidateSteps()
+    {
+        if (_steps.Any(s => s.Value.RunAtServer == true) && string.IsNullOrEmpty(_workflow.ServerUrl))
+        {
+            throw new Exception("You have set one of the steps in the workflow to run at the cli server, but you have not set the server-url in the workflow yaml file.");
+        }
+    }
+
     private string MaskSecretsInDisplayText(string input)
     {
         var output = input;
@@ -255,47 +304,6 @@ public class NoxWorkflowContext : INoxWorkflowContext
             match = _secretsVariableRegex.Match(output);
         }
         return output;
-    }
-
-    public IDictionary<string, object> GetInputVariables(INoxAction action)
-    {
-        ResolveAllVariables(action);
-
-        return action.Inputs.ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
-    }
-
-    public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
-    {
-        foreach (var output in outputs)
-        {
-            var varKey = $"steps.{action.Id}.outputs.{output.Key}";
-            if (_vars.ContainsKey(varKey))
-            {
-                _vars[varKey] = output.Value;
-            }
-        }
-
-        ResolveAllVariables(action);
-
-    }
-
-    public IDictionary<string, object> GetUnresolvedInputVariables(INoxAction action)
-    {
-        var unresolvedVars = action.Inputs
-            .Where(i => _variableRegex.Match(i.Value.Default.ToString()!).Success)
-            .ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
-
-        return unresolvedVars;
-    }
-
-    public void SetErrorMessage(INoxAction action, string errorMessage)
-    {
-        var varKey = $"steps.{action.Id}.error-message";
-
-        _vars[varKey] = errorMessage;
-
-        ResolveAllVariables(action);
-
     }
 
     private void ResolveAllVariables(INoxAction action)

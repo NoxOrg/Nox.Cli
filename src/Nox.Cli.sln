@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Shared.DTO", "Nox.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Server.Tests", "Nox.Cli.Server.Tests\Nox.Cli.Server.Tests.csproj", "{B0A97144-20F8-4CD1-A8D2-653DC262BB94}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Server.Integration", "Nox.Cli.Server.Integration\Nox.Cli.Server.Integration.csproj", "{23FA13E2-E0C4-4172-BD19-760DF7B4AB0E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,6 +91,10 @@ Global
 		{B0A97144-20F8-4CD1-A8D2-653DC262BB94}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B0A97144-20F8-4CD1-A8D2-653DC262BB94}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B0A97144-20F8-4CD1-A8D2-653DC262BB94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23FA13E2-E0C4-4172-BD19-760DF7B4AB0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23FA13E2-E0C4-4172-BD19-760DF7B4AB0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23FA13E2-E0C4-4172-BD19-760DF7B4AB0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23FA13E2-E0C4-4172-BD19-760DF7B4AB0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
