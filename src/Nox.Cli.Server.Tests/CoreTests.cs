@@ -15,7 +15,7 @@ public class CoreTests
     public void Setup()
     {
         var cache = new MemoryCache(new MemoryCacheOptions());
-        TestExecutor = new TaskExecutor(cache);
+        TestExecutor = new TaskExecutor(TestWorkflowId, cache);
     }
     
     [Test]

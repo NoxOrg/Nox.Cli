@@ -6,10 +6,10 @@ namespace Nox.Cli.Server.Services;
 public class NoxServerWorkflowContext: INoxWorkflowContext
 {
     public Guid WorkflowId { get; init; }
-    private string _errorMessage;
+    private string? _errorMessage;
     private ActionState _state;
 
-    public string ErrorMessage => _errorMessage;
+    public string? ErrorMessage => _errorMessage;
     public ActionState State => _state;
 
     public void AddToVariables(string key, object value)

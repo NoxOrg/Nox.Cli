@@ -20,14 +20,16 @@ public class TaskController : Controller
     }
     
     
-    [HttpGet("[action]/{workflowId}")]
-    public ActionResult<ExecuteTaskResponse> GetState(Guid workflowId)
+    [HttpGet("[action]/{taskExecutorId}")]
+    public ActionResult<ExecuteTaskResponse> GetState(Guid taskExecutorId)
     {
+        var executor = _executorFactory.GetInstance(taskExecutorId);
         var result = new TaskStateResponse
         {
-            WorkflowId = workflowId,
-            //TODO change this to actual state
-            State = ActionState.Running
+            TaskExecutorId = taskExecutorId,
+            WorkflowId = executor.WorkflowId,
+            State = executor.State,
+            StateName = Enum.GetName(executor.State)
         };
         return Ok(result);
     }
@@ -35,7 +37,8 @@ public class TaskController : Controller
     [HttpPost("[action]")]
     public async Task<ActionResult<ExecuteTaskResponse>> Begin([FromBody] BeginTaskRequest request)
     {
-        var executor = _executorFactory.GetInstance();
+        var executor = _executorFactory.NewInstance(request.WorkflowId);
+        
         var result = await executor.BeginAsync(request.WorkflowId, request.ActionConfiguration!, request.Inputs!);
         return Ok(result);
     }

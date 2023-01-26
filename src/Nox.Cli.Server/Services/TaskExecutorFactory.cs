@@ -15,9 +15,8 @@ public class TaskExecutorFactory : ITaskExecutorFactory
         _cache = cache;
     }
 
-    public ITaskExecutor GetInstance(Guid? id = null)
+    public ITaskExecutor GetInstance(Guid id)
     {
-        if (id == null) return CreateNewInstance();
         var instance = _pool.FirstOrDefault(i => i.Id == id);
         if (instance == null)
         {
@@ -29,18 +28,16 @@ public class TaskExecutorFactory : ITaskExecutorFactory
         }
     }
 
+    public ITaskExecutor NewInstance(Guid workflowId)
+    {
+        var executor = new TaskExecutor(workflowId, _cache);
+        _pool.Add(executor);
+        return executor;
+    }
+
     public void DisposeInstance(Guid id)
     {
         var item = _pool.Single(i => i.Id == id);
         _pool.Remove(item);
     }
-
-
-    private ITaskExecutor CreateNewInstance()
-    {
-        var executor = new TaskExecutor(_cache);
-        _pool.Add(executor);
-        return executor;
-    }
-
 }

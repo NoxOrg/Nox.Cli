@@ -2,6 +2,7 @@ namespace Nox.Cli.Server.Services;
 
 public interface ITaskExecutorFactory
 {
-    ITaskExecutor GetInstance(Guid? id = null);
+    ITaskExecutor NewInstance(Guid workflowId);
+    ITaskExecutor GetInstance(Guid id);
     void DisposeInstance(Guid id);
 }

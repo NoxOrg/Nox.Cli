@@ -13,5 +13,6 @@ public class ActionConfiguration: IActionConfiguration
     public Dictionary<string, string>? Validate { get; set; }
     public NoxActionDisplayMessage? Display { get; set; }
     public bool ContinueOnError { get; set; } = false;
+    public bool RunAtServer { get; set; } = false;
 }
 

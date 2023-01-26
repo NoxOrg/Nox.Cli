@@ -10,4 +10,5 @@ public interface IActionConfiguration
     Dictionary<string, string>? Validate { get; set; }
     NoxActionDisplayMessage? Display { get; set; }
     bool ContinueOnError { get; set; }
+    bool RunAtServer { get; set; }
 }
