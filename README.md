@@ -26,16 +26,17 @@
 <br />
 <div align="center">
   <a href="https://github.com/noxorg/nox.cli">
-    <img src="docs/images/nox_logo_with_text.png" alt="Logo" width="150">
+    <img src="docs/images/NoxCli_logo.png" alt="Logo" width="150">
   </a>
 <!--
 <h3 align="center">Nox</h3>
 -->
   <p align="center">
+    <br />
     Command line tool for supporting Nox projects
     <br />
     <br />
-    <a href="https://github.com/noxorg/nox.cli"><strong>View the documentation »</strong></a>
+    <a href="https://noxorg.dev/"><strong>View the documentation »</strong></a>
     <br />
     <br />
     <a href="https://github.com/noxorg/nox.cli">View Demo</a>
@@ -46,6 +47,97 @@
   </p>
 </div>
     <br />
+
+<!-- ABOUT THE PROJECT -->
+## About The Project
+***
+Nox.Cli is a companion tool that supports the core [Nox library](https://github.com/NoxOrg/Nox). Its *raison d'être* is to build upon Nox's strong efficiency focus by extending that vision to the entire Enterprise Software Roadmap. This includes fast-tracking of DevOps functions like deployment to multiple environments, setting up CI/CD pipelines and configuring resource permissions. This is achieved by integrating seamlessly with existing enterprise assets and services like Helm charts, Azure KeyVault and Active Directory.
+
+<div align="center">
+    <img src="docs/images/nox-cli-simple-overview.png" alt="Overview" width="80%">
+</div>
+<br />
+
+### Main Features
+---
+
+- Accelerate and simplify the development and deployment of enterprise-grade microservices
+- Cross-platform implementation with support for Windows, Linux and MacOS
+- Easy to install and run on developer/engineer desktop or integrate directly into DevOps pipeline
+- Workflows use YAML-syntax and is based on GitHub Actions
+- Self-documentation of project workflow to fast-track productivity of all team members that work on a project
+- Open-source plugin-based architecture allows for using/customising existing actions or developing your own
+- Users are identified based on Azure Login or other interactive authorisation service
+- Input commands (workflows) can be project-specific or organisation-centric by way of a Tenant manifest maintained by DevOps
+- Both project and Tenant KeyVaults are supported
+- Can be used both for local development environment and DevOps pipeline
+- Central management and deployment of common organisational scripts
+- Automatically updates scripts and notifies developers of version updates
+- Support secure remote task execution**
+
+
+** Coming soon
+
+### Component Diagram
+
+<div align="center">
+    <img src="docs/images/Nox - CLI Diagram v2.png" alt="Overview" width="100%">
+</div>
+<br />
+
+
+
+
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- GETTING STARTED -->
+## Getting Started
+
+The section below will walk you though installation of the Nox.Cli tool as well as a sample project to illustrate how simple it is to create a basic microservice in a jiffy.
+***
+### Prerequisites
+---
+
+Make sure you have .NET 6 installed on your PC.
+```powershell
+PS> dotnet --version
+6.0.404
+```
+### Install the Nox.Cli tool
+---
+The Nox.Cli tool is hosted on nuget.org [here](https://www.nuget.org/packages/Nox.Cli) and additional installation options are detailed there. The recommended installation method is outlined below: -
+```powershell
+PS> dotnet tool install --global Nox.Cli --version 1.0.12
+
+PS> nox
+```
+The Nox.Cli tool is globally installed, and running it yeilds the following output: -
+
+<div align="center">
+    <img src="docs/images/nox-cli-install-clean.png" alt="Overview" width="100%">
+</div>
+
+Running Nox.Cli for the first time yields the following output: -
+
+<div align="center">
+    <img src="docs/images/nox-cli-run-check-credentials.png" alt="Overview" width="100%">
+</div>
+
+You may notice from the screenshot that if you are logged in to Azure it will automatically use these credentials. In the instance that you're not logged into Azure you will be redirected to Microsoft login screen in a browser: -
+
+<div align="center">
+    <img src="docs/images/windows-login-selection.png" alt="Overview">
+    <br/>
+    <br/>
+</div>
+
+## Building a Sample Microservice
+---
+
+We can now turn our attention to defining and deploying our first basic microservice.
+
+
 
 <!-- CONTRIBUTING -->
 ## Contributing
