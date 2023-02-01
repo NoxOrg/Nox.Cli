@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 using Nox.Cli.Configuration;
 using Nox.Cli.Services.Caching;
 using Nox.Core.Configuration;
@@ -89,7 +90,15 @@ public class NoxWorkflowContext : INoxWorkflowContext
             var varKey = $"steps.{action.Id}.outputs.{output.Key}";
             if (_vars.ContainsKey(varKey))
             {
-                _vars[varKey] = output.Value;
+                if (output.Value is JsonElement element)
+                {
+                    _vars[varKey] = GetJsonElementValue(element);
+                }
+                else
+                {
+                    _vars[varKey] = output.Value;    
+                }
+                
             }
         }
 
@@ -359,6 +368,34 @@ public class NoxWorkflowContext : INoxWorkflowContext
         {
             action.If = ReplaceVariables(action.If).ToString()!;
         }
+    }
+
+    private object GetJsonElementValue(JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.False:
+            case JsonValueKind.True:
+                return element.GetBoolean();
+                break;
+            case JsonValueKind.Array:
+                return element.EnumerateArray();
+                break;
+            case JsonValueKind.Null:
+                return null!;
+                break;
+            case JsonValueKind.Object:
+                return element;
+                break;
+            case JsonValueKind.Number:
+                return element.GetDouble();
+                break;
+            case JsonValueKind.Undefined:
+            case JsonValueKind.String:
+            default:
+                return element!.GetString()!;
+                break;
+        }   
     }
 }
 

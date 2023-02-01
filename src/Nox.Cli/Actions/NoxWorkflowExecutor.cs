@@ -203,14 +203,15 @@ public class NoxWorkflowExecutor
         
         var beginResult = await _serverIntegration!.BeginTask(ctx.WorkflowId, ctx.CurrentAction, inputs);
         var executeResponse = await _serverIntegration.ExecuteTask(beginResult.TaskExecutorId);
+        ctx.SetState(executeResponse.State);
         var outputs = executeResponse.Outputs;
 
         if (outputs != null) ctx.StoreOutputVariables(ctx.CurrentAction, outputs);
-
+        
         ctx.CurrentAction.EvaluateValidate();
 
         processedActions.Add(ctx.CurrentAction);
-
+        
         if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
         {
             console.WriteLine();
