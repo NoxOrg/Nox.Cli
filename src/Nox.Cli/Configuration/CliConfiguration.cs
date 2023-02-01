@@ -7,5 +7,7 @@ public class CliConfiguration
     public string? CommandAlias { get; set; }
     public string? Description { get; set; }
     public List<string[]>? Examples { get; set; }
+
+    public string ServerUrl { get; set; } = string.Empty;
 }
 

@@ -1,4 +1,7 @@
-﻿namespace Nox.Cli.Commands;
+﻿using Nox.Cli.Authentication;
+using Nox.Cli.Server.Integration;
+
+namespace Nox.Cli.Commands;
 
 using Helpers;
 using Microsoft.Extensions.Configuration;
@@ -10,9 +13,21 @@ using Spectre.Console.Cli;
 
 public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
 {
-    public DynamicCommand(IAnsiConsole console, IConsoleWriter consoleWriter, 
-        INoxConfiguration noxConfiguration, IConfiguration configuration) 
-        : base(console, consoleWriter, noxConfiguration, configuration) {}
+    private readonly IAuthenticator _authenticator;
+    private readonly INoxCliServerIntegration _serverIntegration;
+
+    public DynamicCommand(
+        IAnsiConsole console, 
+        IConsoleWriter consoleWriter,
+        INoxConfiguration noxConfiguration, 
+        IConfiguration configuration, 
+        IAuthenticator authenticator,
+        INoxCliServerIntegration serverIntegration)
+        : base(console, consoleWriter, noxConfiguration, configuration)
+    {
+        _authenticator = authenticator;
+        _serverIntegration = serverIntegration;
+    }
 
     public class Settings : CommandSettings
     {
@@ -26,7 +41,7 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
 
         var workflow = (WorkflowConfiguration)context.Data!;
 
-        return await NoxWorkflowExecutor.Execute(workflow, _configuration, _noxConfiguration, _console) ? 0 : 1;
+        return await NoxWorkflowExecutor.Execute(workflow, _configuration, _noxConfiguration, _console, _authenticator, _serverIntegration) ? 0 : 1;
     }
 
 }

@@ -1,6 +1,5 @@
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
-using Nox.Cli.Server;
 using Nox.Cli.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);

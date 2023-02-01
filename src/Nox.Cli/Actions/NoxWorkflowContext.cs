@@ -31,8 +31,6 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     public INoxAction? CurrentAction => _currentAction;
 
-    public string? ServerUrl => _workflow.ServerUrl;
-
     public NoxWorkflowContext(WorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig)
     {
         WorkflowId = Guid.NewGuid();
@@ -284,9 +282,9 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     private void ValidateSteps()
     {
-        if (_steps.Any(s => s.Value.RunAtServer == true) && string.IsNullOrEmpty(_workflow.ServerUrl))
+        if (_steps.Any(s => s.Value.RunAtServer == true) && string.IsNullOrEmpty(_workflow.Cli.ServerUrl))
         {
-            throw new Exception("You have set one of the steps in the workflow to run at the cli server, but you have not set the server-url in the workflow yaml file.");
+            throw new Exception("You have set one of the steps in the workflow to run on the cli server, but the server-url has not been defined in the Manifest.cli.nox.yaml file.");
         }
     }
 

@@ -6,4 +6,5 @@ public class ManifestConfiguration
 
     public List<BranchesConfiguration>? Branches { get; set; } = null;
 
+    public string ServerUrl { get; set; } = string.Empty;
 }

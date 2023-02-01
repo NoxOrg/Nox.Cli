@@ -4,9 +4,9 @@ namespace Nox.Cli.Server.Integration;
 
 public static class ServiceExtension
 {
-    public static IServiceCollection AddNoxCliServerIntegration(this IServiceCollection services, string serverUrl)
+    public static IServiceCollection AddNoxCliServerIntegration(this IServiceCollection services)
     {
-        services.AddSingleton<INoxCliServerIntegration>(impl => new NoxCliServerIntegration(serverUrl)); 
+        services.AddSingleton<INoxCliServerIntegration, NoxCliServerIntegration>(); 
         return services;
     }
     

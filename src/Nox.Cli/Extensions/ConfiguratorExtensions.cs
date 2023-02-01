@@ -3,16 +3,15 @@ using Nox.Cli.Commands;
 using Nox.Core.Constants;
 using RestSharp;
 using Spectre.Console.Cli;
-using System.IdentityModel.Tokens.Jwt;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Nox.Cli.Services.Caching;
 using Nox.Cli.Configuration;
-using System.Linq;
-using Microsoft.Identity.Core.Cache;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Authentication;
 
 namespace Nox.Cli;
 
@@ -22,15 +21,17 @@ internal static class ConfiguratorExtensions
     public static string CacheFile => Path.Combine(CachePath, "NoxCliCache.json");
     public static string WorkflowsCachePath => Path.Combine(CachePath, "workflows");
 
-    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig)
+    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceProvider serviceProvider)
     {
+        var authenticator = serviceProvider.GetRequiredService<IAuthenticator>();
+        
         var cachePath = CachePath;
 
         Directory.CreateDirectory(cachePath);
 
         var cacheFile = CacheFile;
 
-        NoxCliCache? cache = GetOrCreateCache(cacheFile);
+        var cache = GetOrCreateCache(cacheFile, authenticator);
 
         Dictionary<string,string> yamlFiles = new(StringComparer.OrdinalIgnoreCase);
 
@@ -55,7 +56,7 @@ internal static class ConfiguratorExtensions
             .Where(kv => kv.Key.EndsWith(".cli.nox.yaml")) // TODO: define in nox.core constants
             .Select(kv => deserializer.Deserialize<ManifestConfiguration>(kv.Value))
             .FirstOrDefault();
-
+        
         var workflowsByBranch = yamlFiles
             .Where(kv => kv.Key.EndsWith(FileExtension.WorflowDefinition.TrimStart('*')))
             .Select(kv => deserializer.Deserialize<WorkflowConfiguration>(kv.Value))
@@ -89,6 +90,7 @@ internal static class ConfiguratorExtensions
                     {
                         cmdConfigContinuation = cmdConfigContinuation.WithExample(example.ToArray());
                     };
+                    workflow.Cli.ServerUrl = manifest!.ServerUrl;
                 }
 
             });
@@ -97,7 +99,7 @@ internal static class ConfiguratorExtensions
         return cliConfig;
     }
 
-    private static NoxCliCache? GetOrCreateCache(string cacheFile)
+    private static NoxCliCache? GetOrCreateCache(string cacheFile, IAuthenticator authenticator)
     {
         NoxCliCache? cache;
 
@@ -113,7 +115,7 @@ internal static class ConfiguratorExtensions
             }
         }
 
-        cache = GetCacheInfoFromAzureToken(cacheFile).Result;        
+        cache = GetCacheInfoFromAzureToken(cacheFile, authenticator).Result;        
 
         return cache;
     }
@@ -164,6 +166,11 @@ internal static class ConfiguratorExtensions
 
         if (onlineFilesJson.Content == null) return;
 
+        if (onlineFilesJson.ResponseStatus == ResponseStatus.Error)
+        {
+            throw new Exception($"GetOnlineWorkflows:-> {onlineFilesJson.ErrorException?.Message}");
+        }
+        
         var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -220,41 +227,31 @@ internal static class ConfiguratorExtensions
 
     }
 
-    private static async Task<NoxCliCache?> GetCacheInfoFromAzureToken(string cacheFile)
+    private static async Task<NoxCliCache?> GetCacheInfoFromAzureToken(string cacheFile, IAuthenticator authenticator)
     {
         AnsiConsole.MarkupLine($"[bold mediumpurple3_1]Checking your credentials...[/]");
 
-        var credential = new ChainedTokenCredential(
-            new AzureCliCredential(),
-            new InteractiveBrowserCredential()
-        );
+        var accessToken = await authenticator.SignIn();
+
+        if (accessToken == null)
+        {
+            AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} Unable to login to Azure AD. Continuing without login.");
+            return null;
+        }
         
-        if(credential == null) return null;
-
-        string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
-
-        var token = await credential.GetTokenAsync(new Azure.Core.TokenRequestContext(scopes));
-
-        var handler = new JwtSecurityTokenHandler();
-
-        if (handler.ReadToken(token.Token) is not JwtSecurityToken jsonToken) return null;
-
-        var upn = jsonToken.Claims.FirstOrDefault(c => c.Type == "upn");
-        if (upn == null)
+        if (accessToken!.UserPrincipalName == null)
         {
             AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} User principal name (UPN) not detected. Continuing without login.");
             return null;
         }
 
-        var tid = jsonToken.Claims.FirstOrDefault(c => c.Type == "tid");
-        if (tid == null)
+        if (accessToken.TenantId == null)
         {
             AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} Tenant Id (TId) not detected. Continuing without login.");
             return null;
         }
 
-        var name = jsonToken.Claims.FirstOrDefault(c => c.Type == "name");
-        if (name == null)
+        if (accessToken.UserName == null)
         {
             AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} User name not detected. Continuing without login.");
             return null;
@@ -262,15 +259,15 @@ internal static class ConfiguratorExtensions
 
         var ret = new NoxCliCache(cacheFile) 
         { 
-            Name = name.Value,
-            Upn = upn.Value, 
-            Tid = tid.Value, 
+            Name = accessToken.UserName,
+            Upn = accessToken.UserPrincipalName, 
+            Tid = accessToken.TenantId, 
             Expires = new DateTimeOffset(DateTime.Now.AddDays(7)) 
         };
 
         ret.Save();
 
-        AnsiConsole.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} Logged in as {upn.Value} on tenant {tid.Value}");
+        AnsiConsole.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} Logged in as {accessToken.UserPrincipalName} on tenant {accessToken.TenantId}");
         AnsiConsole.WriteLine();
 
         return ret;

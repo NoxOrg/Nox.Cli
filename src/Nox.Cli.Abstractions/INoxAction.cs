@@ -8,6 +8,7 @@ public interface INoxAction
     string Job { get; set; }
     string Name { get; set; }
     string Uses { get; set; }
+    
     bool? RunAtServer { get; set; }
     Dictionary<string, NoxActionInput> Inputs { get; set; }
     Dictionary<string, string>? Validate { get; set; }
