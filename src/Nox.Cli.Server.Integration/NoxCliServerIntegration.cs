@@ -13,10 +13,15 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
 { 
     private readonly IAuthenticator _authenticator;
     private string? _serverUrl;
+    private readonly JsonSerializerOptions _serializerOptions;
     
     public NoxCliServerIntegration(IAuthenticator authenticator)
     {
         _authenticator = authenticator;
+        _serializerOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
     }
 
     public void SetServerUrl(string value)
@@ -36,7 +41,7 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
         // Get list of files on server
         var result = await client.ExecuteAsync(request);
         if (result.StatusCode != HttpStatusCode.OK) return null;
-        return JsonSerializer.Deserialize<EchoHealthResponse>(result.Content!)!;
+        return JsonSerializer.Deserialize<EchoHealthResponse>(result.Content!, _serializerOptions)!;
     }
 
     public async Task<BeginTaskResponse> BeginTask(Guid workflowId, INoxAction? action, IDictionary<string, object>? inputs)
@@ -73,7 +78,7 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
         {
             throw result.ErrorException!;
         }
-        return JsonSerializer.Deserialize<BeginTaskResponse>(result.Content!)!;
+        return JsonSerializer.Deserialize<BeginTaskResponse>(result.Content!, _serializerOptions)!;
     }
 
     public async Task<ExecuteTaskResponse> ExecuteTask(Guid taskExecutorId)
@@ -100,7 +105,7 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
             throw result.ErrorException!;
         }
 
-        return JsonSerializer.Deserialize<ExecuteTaskResponse>(result.Content!) ?? null!;
+        return JsonSerializer.Deserialize<ExecuteTaskResponse>(result.Content!, _serializerOptions) ?? null!;
     }
 
     public async Task<TaskStateResponse> GetTaskState(Guid taskExecutorId)
@@ -122,6 +127,6 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
         {
             throw result.ErrorException!;
         }
-        return JsonSerializer.Deserialize<TaskStateResponse>(result.Content!)!;
+        return JsonSerializer.Deserialize<TaskStateResponse>(result.Content!, _serializerOptions)!;
     }
 }

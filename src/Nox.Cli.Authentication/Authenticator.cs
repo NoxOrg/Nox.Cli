@@ -9,29 +9,45 @@ namespace Nox.Cli.Authentication;
 public class Authenticator: IAuthenticator
 {
     private IPublicClientApplication _application;
+    private readonly PersistedServerToken _serverToken;
 
-    public Authenticator()
+    public Authenticator(
+        PersistedServerToken serverToken)
     {
         _application = PublicClientApplicationBuilder
             .Create("750b96e1-e772-48f8-b6b3-84bac1961d9b")
             .WithRedirectUri("http://localhost")
             .WithTenantId("88155c28-f750-4013-91d3-8347ddb3daa7")
             .Build();
+        _serverToken = serverToken;
     }
 
     public async Task<string?> GetServerToken()
     {
+        string? result = null;
         try
         {
-            var apiAuthResult = await GetApiToken();
-            return apiAuthResult.AccessToken;
+            var persistedToken = await _serverToken.LoadAsync();
+            if (string.IsNullOrEmpty(persistedToken))
+            {
+                var apiAuthResult = await GetApiToken();
+                result = apiAuthResult.AccessToken;
+                _serverToken.SaveAsync(result);
+            }
+            else
+            {
+                result = persistedToken;
+            }
         }
         catch
         {
             await SignIn();
             var apiAuthResult = await GetApiToken();
-            return apiAuthResult.AccessToken;
+            result = apiAuthResult.AccessToken;
+            _serverToken.SaveAsync(result);
         }
+
+        return result;
     }
 
     public async Task<NoxUserIdentity?> SignIn()
