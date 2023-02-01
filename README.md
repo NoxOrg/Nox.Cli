@@ -112,7 +112,7 @@ PS> dotnet tool install --global Nox.Cli --version 1.0.12
 
 PS> nox
 ```
-The Nox.Cli tool is globally installed, and running it yeilds the following output: -
+Running the Nox.Cli tool installation with the global option yields the following output: -
 
 <div align="center">
     <img src="docs/images/nox-cli-install-clean.png" alt="Overview" width="100%">
@@ -194,7 +194,24 @@ Now we have defined the service but all we have is a simple YAML file. Not much 
 PS> Nox sync
 ```
 
+<div align="center">
+    <img src="docs/images/nox-cli-sync.png" alt="Overview">
+    <br/>
+</div>
 
+```powershell
+PS> Nox sync version-control
+```
+<div align="center">
+    <img src="docs/images/nox-cli-sync-version-control.png" alt="Overview">
+    <br/>
+</div>
+
+A cursory glance at your DevOps server will reveal your newly created project.
+<div align="center">
+    <img src="docs/images/dev-azure-com-projects.png" alt="Overview">
+    <br/>
+</div>
 
 <!-- CONTRIBUTING -->
 ## Contributing
