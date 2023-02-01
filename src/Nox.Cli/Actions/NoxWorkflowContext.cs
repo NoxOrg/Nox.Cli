@@ -6,6 +6,7 @@ using Nox.Core.Configuration;
 using Nox.Core.Interfaces.Configuration;
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -16,7 +17,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
 {
     private readonly IConfiguration _appConfig;
     private readonly INoxConfiguration _noxConfig;
-    private readonly WorkflowConfiguration _workflow;
+    private readonly IWorkflowConfiguration _workflow;
     private readonly IDictionary<string, INoxAction> _steps;
     private readonly IDictionary<string, object> _vars;
 
@@ -32,7 +33,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     public INoxAction? CurrentAction => _currentAction;
 
-    public NoxWorkflowContext(WorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig)
+    public NoxWorkflowContext(IWorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig)
     {
         WorkflowId = Guid.NewGuid();
         _appConfig = appConfig;
@@ -291,9 +292,9 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     private void ValidateSteps()
     {
-        if (_steps.Any(s => s.Value.RunAtServer == true) && string.IsNullOrEmpty(_workflow.Cli.ServerUrl))
+        if (_steps.Any(s => s.Value.RunAtServer == true) && _workflow.Cli.Server == null)
         {
-            throw new Exception("You have set one of the steps in the workflow to run on the cli server, but the server-url has not been defined in the Manifest.cli.nox.yaml file.");
+            throw new Exception("You have set one of the steps in the workflow to run on the cli server, but the server has not been defined in the Manifest.cli.nox.yaml file.");
         }
     }
 
@@ -377,24 +378,18 @@ public class NoxWorkflowContext : INoxWorkflowContext
             case JsonValueKind.False:
             case JsonValueKind.True:
                 return element.GetBoolean();
-                break;
             case JsonValueKind.Array:
                 return element.EnumerateArray();
-                break;
             case JsonValueKind.Null:
                 return null!;
-                break;
             case JsonValueKind.Object:
                 return element;
-                break;
             case JsonValueKind.Number:
                 return element.GetDouble();
-                break;
             case JsonValueKind.Undefined:
             case JsonValueKind.String:
             default:
                 return element!.GetString()!;
-                break;
         }   
     }
 }

@@ -1,4 +1,3 @@
-using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Nox.Cli.Authentication;

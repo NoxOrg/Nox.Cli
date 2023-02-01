@@ -7,7 +7,9 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 
 using Nox.Cli;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
+using Nox.Cli.Actions;
 using Nox.Cli.Authentication;
 using Nox.Cli.Interceptors;
 using Nox.Cli.Services;
@@ -33,6 +35,7 @@ var services = new ServiceCollection();
 
 services.AddSingleton<IFileSystem, FileSystem>();
 services.AddSingleton<IConsoleWriter, ConsoleWriter>();
+services.AddTransient<INoxWorkflowExecutor, NoxWorkflowExecutor>();
 services.AddNoxServerAuthentication();
 services.AddNoxCliServerIntegration();
 services.AddNoxCliServices(args);
@@ -55,6 +58,7 @@ app.Configure(config =>
     if(!isGettingVersion && !isLoggingOut)
     {
         config.AddNoxCommands(services.BuildServiceProvider());
+        
     }
 
     config.AddCommand<LogoutCommand>("logout")

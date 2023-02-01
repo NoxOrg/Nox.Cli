@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Microsoft.Extensions.Caching.Memory;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Helpers;

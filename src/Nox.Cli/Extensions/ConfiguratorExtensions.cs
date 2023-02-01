@@ -11,6 +11,7 @@ using Spectre.Console;
 using Nox.Cli.Services.Caching;
 using Nox.Cli.Configuration;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Authentication;
 
 namespace Nox.Cli;
@@ -23,6 +24,7 @@ internal static class ConfiguratorExtensions
 
     public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceProvider serviceProvider)
     {
+        var isServerDefined = false;
         var authenticator = serviceProvider.GetRequiredService<IAuthenticator>();
         
         var cachePath = CachePath;
@@ -50,12 +52,17 @@ internal static class ConfiguratorExtensions
             .WithNamingConvention(HyphenatedNamingConvention.Instance)
             .IgnoreUnmatchedProperties()
             .WithTypeMapping<IActionConfiguration, ActionConfiguration>()
+            .WithTypeMapping<ICliConfiguration, CliConfiguration>()
+            .WithTypeMapping<IStepConfiguration, StepConfiguration>()
             .Build();
 
         var manifest = yamlFiles
             .Where(kv => kv.Key.EndsWith(".cli.nox.yaml")) // TODO: define in nox.core constants
             .Select(kv => deserializer.Deserialize<ManifestConfiguration>(kv.Value))
             .FirstOrDefault();
+
+        isServerDefined = manifest is { Server: { } };
+        if (isServerDefined) authenticator.Configure(manifest!.Server!);
         
         var workflowsByBranch = yamlFiles
             .Where(kv => kv.Key.EndsWith(FileExtension.WorflowDefinition.TrimStart('*')))
@@ -90,7 +97,7 @@ internal static class ConfiguratorExtensions
                     {
                         cmdConfigContinuation = cmdConfigContinuation.WithExample(example.ToArray());
                     };
-                    workflow.Cli.ServerUrl = manifest!.ServerUrl;
+                    if (isServerDefined) workflow.Cli.Server = manifest!.Server!;
                 }
 
             });

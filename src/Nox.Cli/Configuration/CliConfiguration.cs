@@ -1,13 +1,14 @@
-﻿namespace Nox.Cli.Configuration;
+﻿using Nox.Cli.Abstractions.Configuration;
 
-public class CliConfiguration
+namespace Nox.Cli.Configuration;
+
+public class CliConfiguration: ICliConfiguration
 {
     public string Branch { get; set; } = string.Empty;
     public string Command { get; set; } = string.Empty;
     public string? CommandAlias { get; set; }
     public string? Description { get; set; }
     public List<string[]>? Examples { get; set; }
-
-    public string ServerUrl { get; set; } = string.Empty;
+    public IServerConfiguration Server { get; set; } = null!;
 }
 

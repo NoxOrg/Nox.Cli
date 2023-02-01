@@ -3,23 +3,30 @@ using Azure.Core;
 using Azure.Identity;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensibility;
+using Nox.Cli.Abstractions.Configuration;
 
 namespace Nox.Cli.Authentication;
 
 public class Authenticator: IAuthenticator
 {
-    private IPublicClientApplication _application;
+    private IPublicClientApplication? _application;
     private readonly PersistedServerToken _serverToken;
+    private string? _serverScope;
 
     public Authenticator(
         PersistedServerToken serverToken)
     {
-        _application = PublicClientApplicationBuilder
-            .Create("750b96e1-e772-48f8-b6b3-84bac1961d9b")
-            .WithRedirectUri("http://localhost")
-            .WithTenantId("88155c28-f750-4013-91d3-8347ddb3daa7")
-            .Build();
         _serverToken = serverToken;
+    }
+
+    public void Configure(IServerConfiguration config)
+    {
+        _application = PublicClientApplicationBuilder
+            .Create(config.ServerApplicationId)
+            .WithRedirectUri("http://localhost")
+            .WithTenantId(config.TenantId)
+            .Build();
+        _serverScope = $"api://{config.ServerApplicationId}/access_as_user";
     }
 
     public async Task<string?> GetServerToken()
@@ -31,8 +38,11 @@ public class Authenticator: IAuthenticator
             if (string.IsNullOrEmpty(persistedToken))
             {
                 var apiAuthResult = await GetApiToken();
-                result = apiAuthResult.AccessToken;
-                _serverToken.SaveAsync(result);
+                if (apiAuthResult != null)
+                {
+                    result = apiAuthResult.AccessToken;
+                    await _serverToken.SaveAsync(result);    
+                }
             }
             else
             {
@@ -43,8 +53,12 @@ public class Authenticator: IAuthenticator
         {
             await SignIn();
             var apiAuthResult = await GetApiToken();
-            result = apiAuthResult.AccessToken;
-            _serverToken.SaveAsync(result);
+            if (apiAuthResult != null)
+            {
+                result = apiAuthResult.AccessToken;
+                await _serverToken.SaveAsync(result);    
+            }
+            
         }
 
         return result;
@@ -53,7 +67,7 @@ public class Authenticator: IAuthenticator
     public async Task<NoxUserIdentity?> SignIn()
     {
         var result = new NoxUserIdentity();
-        AuthenticationResult authResult = null;
+        AuthenticationResult? authResult = null;
 
         var scopes = new[]
         {
@@ -62,16 +76,15 @@ public class Authenticator: IAuthenticator
 
         try
         {
-            var accounts = await _application.GetAccountsAsync();
+            var accounts = await _application!.GetAccountsAsync();
             // Attempt to get a token from the cache (or refresh it silently if needed)
-            authResult = await (_application as PublicClientApplication)
-                .AcquireTokenSilent(scopes, accounts.FirstOrDefault())
-                .ExecuteAsync();
+            authResult = await (_application as PublicClientApplication)?.AcquireTokenSilent(scopes, accounts.FirstOrDefault())
+                .ExecuteAsync()!;
         }
         catch (MsalUiRequiredException)
         {
-            authResult = await _application.AcquireTokenInteractive(scopes)
-                .WithExtraScopesToConsent(new[] { "api://750b96e1-e772-48f8-b6b3-84bac1961d9b/access_as_user" })
+            authResult = await _application!.AcquireTokenInteractive(scopes)
+                .WithExtraScopesToConsent(new[] { _serverScope })
                 .ExecuteAsync();
         }
 
@@ -90,8 +103,8 @@ public class Authenticator: IAuthenticator
 
     private async Task<AuthenticationResult?> GetApiToken()
     {
-        var accounts = await _application.GetAccountsAsync();
-        var authResult = await _application.AcquireTokenSilent(new[] { "api://750b96e1-e772-48f8-b6b3-84bac1961d9b/access_as_user" }, accounts.FirstOrDefault()).ExecuteAsync();
+        var accounts = await _application!.GetAccountsAsync();
+        var authResult = await _application.AcquireTokenSilent(new[] { _serverScope }, accounts.FirstOrDefault()).ExecuteAsync();
         return authResult;
     }
 }

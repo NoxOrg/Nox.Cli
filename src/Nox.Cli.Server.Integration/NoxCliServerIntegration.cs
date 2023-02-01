@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Authentication;
 using Nox.Cli.Shared.DTO.Health;
 using Nox.Cli.Shared.DTO.Workflow;
@@ -24,9 +25,10 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
         };
     }
 
-    public void SetServerUrl(string value)
+    public void ConfigureServer(IServerConfiguration value)
     {
-        _serverUrl = value;
+        _serverUrl = value.Url;
+        _authenticator.Configure(value);
     }
 
     public async Task<EchoHealthResponse?> EchoHealth()

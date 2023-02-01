@@ -1,4 +1,5 @@
-﻿using Nox.Cli.Authentication;
+﻿using Nox.Cli.Abstractions;
+using Nox.Cli.Authentication;
 using Nox.Cli.Server.Integration;
 
 namespace Nox.Cli.Commands;
@@ -13,19 +14,19 @@ using Spectre.Console.Cli;
 
 public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
 {
-    private readonly IAuthenticator _authenticator;
     private readonly INoxCliServerIntegration _serverIntegration;
+    private readonly INoxWorkflowExecutor _executor;
 
     public DynamicCommand(
+        INoxWorkflowExecutor executor,
         IAnsiConsole console, 
         IConsoleWriter consoleWriter,
         INoxConfiguration noxConfiguration, 
         IConfiguration configuration, 
-        IAuthenticator authenticator,
         INoxCliServerIntegration serverIntegration)
         : base(console, consoleWriter, noxConfiguration, configuration)
     {
-        _authenticator = authenticator;
+        _executor = executor;
         _serverIntegration = serverIntegration;
     }
 
@@ -35,13 +36,13 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
         public string DesignFolderPath { get; set; } = null!;
     }
 
-    public async override Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
         await base.ExecuteAsync(context, settings);
 
         var workflow = (WorkflowConfiguration)context.Data!;
 
-        return await NoxWorkflowExecutor.Execute(workflow, _configuration, _noxConfiguration, _console, _authenticator, _serverIntegration) ? 0 : 1;
+        return await _executor.Execute(workflow) ? 0 : 1;
     }
 
 }
