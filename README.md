@@ -121,10 +121,12 @@ The Nox.Cli tool is globally installed, and running it yeilds the following outp
 Running Nox.Cli for the first time yields the following output: -
 
 <div align="center">
-    <img src="docs/images/nox-cli-run-check-credentials.png" alt="Overview" width="100%">
+    <img src="docs/images/nox-cli-run-check-credentials-highlighted.png" alt="Overview" width="100%">
+    <br/>
+    <br/>
 </div>
 
-You may notice from the screenshot that if you are logged in to Azure it will automatically use these credentials. In the instance that you're not logged into Azure you will be redirected to Microsoft login screen in a browser: -
+> 💡 You may notice from the screenshot that if you are logged in to Azure it will automatically use these credentials. In the instance that you're not logged into Azure you will be redirected to Microsoft login screen in a browser: -
 
 <div align="center">
     <img src="docs/images/windows-login-selection.png" alt="Overview">
@@ -132,10 +134,65 @@ You may notice from the screenshot that if you are logged in to Azure it will au
     <br/>
 </div>
 
-## Building a Sample Microservice
+> 💡 The second important thing to note is that apart from the `--version` and `--logout` commands, the additional commands listed above are dynamically added from the workflows folder in your local repository or from an remote organisation script repository hosted at `https://noxorg.dev/workflows/{tenant.id}/index.php`
+
+## Building a Simple Microservice
 ---
 
-We can now turn our attention to defining and deploying our first basic microservice.
+
+We can now turn our attention to defining and deploying our first basic microservice. Let's build a simple currency service with all the expected CRUD endpoints to add & maintain the currencies of our choice.
+
+### Defining the Service
+
+Running the `Nox new` command outlines its usage options as seen below: -
+
+<div align="center">
+    <img src="docs/images/nox-cli-new.png" alt="Overview">
+    <br/>
+    <br/>
+</div>
+
+Let's create a folder for our project and run the `Nox new service` command from within the newly created folder: -
+
+```powershell
+PS> mkdir CurrencyConverter
+PS> cd .\CurrencyConverter\
+PS> Nox new service
+```
+A series of questions follows which will determine the initial configuration of the microservice. Upon completetion of the input, these options will be saved into the service configuration file called `{service.name}.service.nox.yaml`
+
+<div align="center">
+    <img src="docs/images/nox-cli-new-input.png" alt="Overview">
+    <br/>
+    <br/>
+</div>
+
+```powershell
+PS> ls
+```
+
+As we can see, the sercvice configuration file is now present in our default project directory. Opening this file in a code editor of your choice will reveal configuration options that echoes your input from the interactive step preceding this.
+
+<div align="center">
+    <img src="docs/images/nox-directory-service-yaml.png" alt="Overview">
+    <br/>
+    <br/>
+</div>
+
+The YAML file is registered with [schema.org](https://schema.org/) so we get linting and auto-completion to ensure accuracy and speed in configuring our service. The schema used to describe our sample project can be viewed [here](https://noxorg.dev/schemas/NoxConfiguration.json).
+
+<div align="center">
+    <img src="docs/images/vscode-service-yaml.png" alt="Overview">
+    <br/>
+</div>
+
+### Commissioning the Service
+
+Now we have defined the service but all we have is a simple YAML file. Not much by way of a functioning microservice. Well this is where the magic really starts. We'll largelly turn our attention to the `Nox sync` command to read our service configuration file and go and build our actual microservice with all the options that we've specified.
+
+```powershell
+PS> Nox sync
+```
 
 
 
@@ -152,32 +209,6 @@ Don't forget to give the project a star! Thanks again!
 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-### Hassle-free Development
----
-
-The Nox project uses the [goo](https://goo.dev/) cross-platform development to make building and testing code hassle free.
-
-```powershell
-git clone https://github.com/noxorg/nox.cli.git
-
-cd Nox
-
-.\.goo.ps1 init
-```
-This should guide you through the pre-requisites needed to productively build and change Nox.
-
-To view the project workflows, type:
-```
-.\.goo.ps1
-```
-and it'll display something like:
-
-![goo](docs/images/goo-goo.gif)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-You should then be able to simply type `goo` anywhere in your project folder structure to return you to the project root and display these options.
-
 
 <!-- LICENSE -->
 ## License
