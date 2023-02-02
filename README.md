@@ -213,6 +213,26 @@ A cursory glance at your DevOps server will reveal your newly created project.
     <br/>
 </div>
 
+```powershell
+PS> Nox sync azure-active-directory
+```
+<div align="center">
+    <img src="docs/images/nox-cli-sync-azure-active-directory.png" alt="Overview">
+    <br/>
+</div>
+
+You'll notice that your project group have now been created on Azure Active Directory.
+<div align="center">
+    <img src="docs/images/portal-azure-com-group-overview.png" alt="Overview">
+    <br/>
+</div>
+
+If you click on the Members link of the group you'll seet that the users are as per your earlier project configuration.
+<div align="center">
+    <img src="docs/images/portal-azure-com-group-members.png" alt="Overview">
+    <br/>
+</div>
+
 <!-- CONTRIBUTING -->
 ## Contributing
 ***
