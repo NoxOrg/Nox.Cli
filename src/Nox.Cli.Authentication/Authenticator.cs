@@ -34,14 +34,14 @@ public class Authenticator: IAuthenticator
         string? result = null;
         try
         {
-            var persistedToken = await _serverToken.LoadAsync();
+            var persistedToken = await _serverToken.LoadAsync(NoxTokenType.ServerToken);
             if (string.IsNullOrEmpty(persistedToken))
             {
                 var apiAuthResult = await GetApiToken();
                 if (apiAuthResult != null)
                 {
                     result = apiAuthResult.AccessToken;
-                    await _serverToken.SaveAsync(result);    
+                    await _serverToken.SaveAsync(result, NoxTokenType.ServerToken);    
                 }
             }
             else
@@ -56,7 +56,7 @@ public class Authenticator: IAuthenticator
             if (apiAuthResult != null)
             {
                 result = apiAuthResult.AccessToken;
-                await _serverToken.SaveAsync(result);    
+                await _serverToken.SaveAsync(result, NoxTokenType.ServerToken);    
             }
             
         }
@@ -88,11 +88,14 @@ public class Authenticator: IAuthenticator
                 .ExecuteAsync();
         }
 
+        if (authResult == null) return result;
+        var token = authResult.AccessToken;
+        
+        
         var nameClaim = authResult.ClaimsPrincipal.Claims.FirstOrDefault(c => c.Type == "name");
         string? username = null;
         if (nameClaim != null) username = nameClaim.Value;
-
-        if (authResult == null) return result;
+        
         result.UserPrincipalName = authResult.Account.Username;
         result.UserName = username;
         result.TenantId = authResult.TenantId;

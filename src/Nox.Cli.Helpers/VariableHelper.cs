@@ -15,7 +15,7 @@ public static class VariableHelper
             else //If in destination but source has a value then replace it
             {
                 var destVal = destination[key];
-                if (!sourceVar.Value.ToString().Contains("{{") &&  sourceVar.Value != destVal)
+                if (!sourceVar.Value!.ToString()!.Contains("{{") &&  sourceVar.Value != destVal)
                 {
                     destination.Remove(key);
                     destination.Add(sourceVar);
