@@ -1,12 +1,13 @@
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
+using Nox.Cli.Server.Cache;
 using Nox.Cli.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration);
-
+builder.Services.AddWorkflowCache();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -45,7 +46,6 @@ builder.Services.AddSwaggerGen(options =>
     }); 
 });
 
-builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ITaskExecutorFactory, TaskExecutorFactory>();
 
 var app = builder.Build();

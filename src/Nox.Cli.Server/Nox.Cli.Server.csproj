@@ -12,15 +12,23 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.12" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.12" />
-        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
         <PackageReference Include="Microsoft.Identity.Web" Version="1.16.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
         <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="7.0.6" />
     </ItemGroup>
     
     <ItemGroup>
-      <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Network\Nox.Cli.Plugin.Network.csproj" />
-      <ProjectReference Include="..\Nox.Cli.Shared.DTO\Nox.Cli.Shared.DTO.csproj" />
+        <ProjectReference Include="..\Nox.Cli.Helpers\Nox.Cli.Helpers.csproj" />
+        <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.AzDevOps\Nox.Cli.Plugin.AzDevOps.csproj" />
+        <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.AzureAd\Nox.Cli.Plugin.AzureAd.csproj" />
+        <ProjectReference Include="..\Nox.Cli.Plugin.Core\Nox.Cli.Plugin.Core.csproj" />
+        <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.File\Nox.Cli.Plugin.File.csproj" />
+        <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Network\Nox.Cli.Plugin.Network.csproj" />
+        <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Postgres\Nox.Cli.Plugin.Postgres.csproj" />
+        <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Powershell\Nox.Cli.Plugin.Powershell.csproj" />
+        <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Console\Nox.Cli.Plugin.Console.csproj" />
+        <ProjectReference Include="..\Nox.Cli.Server.Cache\Nox.Cli.Server.Cache.csproj" />
+        <ProjectReference Include="..\Nox.Cli.Shared.DTO\Nox.Cli.Shared.DTO.csproj" />
     </ItemGroup>
     
     <ItemGroup>
@@ -33,6 +41,10 @@
       <None Update="localhost.pfx">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Helpers" />
     </ItemGroup>
 
 </Project>

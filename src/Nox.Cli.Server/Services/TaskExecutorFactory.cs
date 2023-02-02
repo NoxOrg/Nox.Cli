@@ -1,15 +1,16 @@
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Caching.Memory;
+using Nox.Cli.Server.Cache;
 
 namespace Nox.Cli.Server.Services;
 
 public class TaskExecutorFactory : ITaskExecutorFactory
 {
     private readonly IList<ITaskExecutor> _pool;
-    private readonly IMemoryCache _cache;
+    private readonly IWorkflowCache _cache;
 
     public TaskExecutorFactory(
-        IMemoryCache cache)
+        IWorkflowCache cache)
     {
         _pool = new List<ITaskExecutor>();
         _cache = cache;

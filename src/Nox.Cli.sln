@@ -35,6 +35,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Server.Integration"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Authentication", "Nox.Cli.Authentication\Nox.Cli.Authentication.csproj", "{6438E836-2653-4B24-8DF5-C724D511D017}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Server.Cache", "Nox.Cli.Server.Cache\Nox.Cli.Server.Cache.csproj", "{B24E4B48-50EA-4EAB-A2A8-18D75DF16517}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Helpers", "Nox.Cli.Helpers\Nox.Cli.Helpers.csproj", "{926D6750-5BB4-419D-9458-576ACB030C39}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -101,6 +105,14 @@ Global
 		{6438E836-2653-4B24-8DF5-C724D511D017}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6438E836-2653-4B24-8DF5-C724D511D017}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6438E836-2653-4B24-8DF5-C724D511D017}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B24E4B48-50EA-4EAB-A2A8-18D75DF16517}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B24E4B48-50EA-4EAB-A2A8-18D75DF16517}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B24E4B48-50EA-4EAB-A2A8-18D75DF16517}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B24E4B48-50EA-4EAB-A2A8-18D75DF16517}.Release|Any CPU.Build.0 = Release|Any CPU
+		{926D6750-5BB4-419D-9458-576ACB030C39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{926D6750-5BB4-419D-9458-576ACB030C39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{926D6750-5BB4-419D-9458-576ACB030C39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{926D6750-5BB4-419D-9458-576ACB030C39}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

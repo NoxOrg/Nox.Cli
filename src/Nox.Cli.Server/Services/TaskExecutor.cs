@@ -1,14 +1,16 @@
 using System.Text.Json;
-using Microsoft.Extensions.Caching.Memory;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Helpers;
+using Nox.Cli.Server.Cache;
+using Nox.Cli.Server.Helpers;
 using Nox.Cli.Shared.DTO.Workflow;
 
 namespace Nox.Cli.Server.Services;
 
 public class TaskExecutor: ITaskExecutor
 {
-    private readonly IMemoryCache _cache;
+    private readonly IWorkflowCache _cache;
     private Guid _workflowId;
     private ActionState _state;
     private IActionConfiguration? _configuration;
@@ -17,7 +19,7 @@ public class TaskExecutor: ITaskExecutor
 
     public TaskExecutor(
         Guid workflowId,
-        IMemoryCache cache)
+        IWorkflowCache cache)
     {
         _workflowId = workflowId;
         _cache = cache;
@@ -31,12 +33,12 @@ public class TaskExecutor: ITaskExecutor
 
     public async Task<BeginTaskResponse> BeginAsync(Guid workflowId, IActionConfiguration configuration, IDictionary<string, object> inputs)
     {
-        var result = new BeginTaskResponse
-        {
-            TaskExecutorId = Id
-        };
+        var result = new BeginTaskResponse { TaskExecutorId = Id };
         _workflowId = workflowId;
+        var variables = _cache.GetWorkflow(_workflowId);
         _inputs = ParseInputs(inputs);
+        VariableHelper.CopyVariables(_inputs, variables);
+        _cache.SetWorkflow(_workflowId, variables);
         _configuration = configuration;
         //Resolve action
         var actionType = NoxWorkflowContextHelpers.ResolveActionProviderTypeFromUses(configuration.Uses);
@@ -50,7 +52,7 @@ public class TaskExecutor: ITaskExecutor
             try
             {
                 _addin = (INoxCliAddin)Activator.CreateInstance(actionType)!;
-                await _addin.BeginAsync(_inputs);
+                await _addin.BeginAsync(variables);
                 result.Success = true;
             }
             catch (Exception ex)
@@ -68,19 +70,13 @@ public class TaskExecutor: ITaskExecutor
         {
             WorkflowId = _workflowId,
         };
-        IDictionary<string, object>? variables;
-        if (_cache.TryGetValue(_workflowId, out IDictionary<string, object>? cachedVariables))
-        {
-            variables = cachedVariables;
-        }
-        else
-        {
-            variables = new Dictionary<string, object>();
-            _cache.Set(_workflowId, variables, DateTimeOffset.Now.AddMinutes(10));
-        }
-
+        var variables = _cache.GetWorkflow(_workflowId);
+        if (variables == null) throw new NoxCliException("Workflow not found in cache, cannot execute!");
         var context = new NoxServerWorkflowContext();
-        result.Outputs = await _addin!.ProcessAsync(context);
+        var outputs = await _addin!.ProcessAsync(context);
+        VariableHelper.CopyVariables(outputs, variables);
+        _cache.SetWorkflow(_workflowId, variables);
+        result.Outputs = VariableHelper.ExtractSimpleVariables(outputs);
         result.ErrorMessage = context.ErrorMessage;
         _state = context.State;
         result.State = context.State;

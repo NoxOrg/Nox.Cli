@@ -2,6 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.OData.ModelBuilder;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Configuration;
+using Nox.Cli.Server.Cache;
 using Nox.Cli.Server.Services;
 
 namespace Nox.Cli.Server.Tests;
@@ -14,8 +15,9 @@ public class CoreTests
     [OneTimeSetUp]
     public void Setup()
     {
-        var cache = new MemoryCache(new MemoryCacheOptions());
-        TestExecutor = new TaskExecutor(TestWorkflowId, cache);
+        var memCache = new MemoryCache(new MemoryCacheOptions());
+        var workflowCache = new WorkflowCache(memCache);
+        TestExecutor = new TaskExecutor(TestWorkflowId, workflowCache);
     }
     
     [Test]

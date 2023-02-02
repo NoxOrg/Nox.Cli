@@ -1,8 +1,8 @@
 ﻿using Nox.Cli.Authentication;
+using Nox.Cli.Helpers;
 
 namespace Nox.Cli.Commands;
 
-using Helpers;
 using Microsoft.Extensions.Configuration;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
