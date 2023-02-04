@@ -1,0 +1,59 @@
+# NOX Test Remote DevOps Command
+
+name: Test remote devops
+
+cli:
+  branch: test
+  command: remote-devops
+  command-alias: rd
+  description: Test Remote DevOps
+  examples:
+    - ["test remote-devops"]
+    - ["test rd"]
+
+jobs:
+  test:  
+    steps:
+      - name: Locate the DevOps server
+        id: locate-server
+        uses: network/ping@v1
+        with:
+          host: ${{ config.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accessible. Are you connected to the Internet? 
+        run-at-server: true
+
+      - name: Connect to the DevOps server
+        id: connect-server
+        uses: azdevops/connect@v1
+        with:
+          server: ${{ config.versionControl.server }}
+          personal-access-token: ${{ secrets.AZURE_DEVOPS_PAT }}
+        display:
+          success: Connected to the DevOps server
+          error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
+        run-at-server: true
+
+      - name: Get the project
+        id: get-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: Heimdall.Microservices
+        display:
+          success: Got the Heimdall.Microservices project
+          error: There was a problem getting the Heimdall.Microservices project (${{ steps.get-project.error-message }})  
+        run-at-server: true
+
+      - name: Get the repo
+        id: get-repo
+        uses: azdevops/get-repo@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-id: ${{ steps.get-project.outputs.project-id }}
+          repository-name: App.Helmchart
+        display:
+          success: Successfully got the App.HelmChart repo
+          error: There was a problem getting the App.HelmChart repository (${{ steps.get-repo.error-message }})        
+        run-at-server: true

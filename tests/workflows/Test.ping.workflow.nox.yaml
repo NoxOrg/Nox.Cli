@@ -1,0 +1,25 @@
+# NOX Test Ping Command
+
+name: Test ping
+
+cli:
+  branch: test
+  command: ping
+  command-alias: p
+  description: Test Ping
+  examples:
+    - ["sync ping"]
+    - ["sync p"]
+
+jobs:
+  test:  
+    steps:
+      - name: Locate the DevOps server
+        id: locate-server
+        uses: network/ping@v1
+        with:
+          host: ${{ config.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accessible. Are you connected to the Internet? 
+        run-at-server: true
