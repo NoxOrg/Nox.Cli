@@ -6,5 +6,5 @@ public class ManifestConfiguration
 
     public List<BranchesConfiguration>? Branches { get; set; } = null;
 
-    public ServerConfiguration? Server { get; set; } = null;
+    public ServerConfiguration? RemoteTaskProxy { get; set; } = null;
 }

@@ -61,8 +61,8 @@ internal static class ConfiguratorExtensions
             .Select(kv => deserializer.Deserialize<ManifestConfiguration>(kv.Value))
             .FirstOrDefault();
 
-        isServerDefined = manifest is { Server: { } };
-        if (isServerDefined) authenticator.Configure(manifest!.Server!);
+        isServerDefined = manifest is { RemoteTaskProxy: { } };
+        if (isServerDefined) authenticator.Configure(manifest!.RemoteTaskProxy!);
         
         var workflowsByBranch = yamlFiles
             .Where(kv => kv.Key.EndsWith(FileExtension.WorflowDefinition.TrimStart('*')))
@@ -97,7 +97,7 @@ internal static class ConfiguratorExtensions
                     {
                         cmdConfigContinuation = cmdConfigContinuation.WithExample(example.ToArray());
                     };
-                    if (isServerDefined) workflow.Cli.Server = manifest!.Server!;
+                    if (isServerDefined) workflow.Cli.Server = manifest!.RemoteTaskProxy!;
                 }
 
             });
