@@ -13,7 +13,7 @@ branches:
     description: Displays the current NOX cli version
     
 remote-task-proxy:
-  url: https://localhost:8000
+  url: http://localhost:8000
 #  auth: aad-credential
   server-application-id: 750b96e1-e772-48f8-b6b3-84bac1961d9b
   tenant-id: 88155c28-f750-4013-91d3-8347ddb3daa7
