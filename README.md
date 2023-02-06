@@ -233,6 +233,36 @@ If you click on the Members link of the group you'll seet that the users are as 
     <br/>
 </div>
 
+```powershell
+PS> Nox sync database
+```
+<div align="center">
+    <img src="docs/images/nox-cli-sync-database.png" alt="Overview">
+    <br/>
+</div>
+
+```powershell
+PS> Nox sync helm-chart
+```
+<div align="center">
+    <img src="docs/images/nox-cli-sync-helm-chart.png" alt="Overview">
+    <br/>
+</div>
+
+Having a look at your project on the DevOps server will reveal that the Helm Chart repo have been created.
+
+<div align="center">
+    <img src="docs/images/dev-azure-com-repos-helm-chart.png" alt="Overview">
+    <br/>
+</div>
+
+And selecting the `App.Helmchart` repo will show the relevant files.
+
+<div align="center">
+    <img src="docs/images/dev-azure-com-repos-helm-chart-detail.png" alt="Overview">
+    <br/>
+</div>
+
 <!-- CONTRIBUTING -->
 ## Contributing
 ***
