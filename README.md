@@ -174,10 +174,6 @@ A series of questions follows which will determine the initial configuration of 
     <br/>
 </div>
 
-```powershell
-PS> ls
-```
-
 As we can see, the sercvice configuration file is now present in our default project directory. Opening this file in a code editor of your choice will reveal configuration options that echoes your input from the interactive step preceding this.
 
 <div align="center">
@@ -198,7 +194,7 @@ The YAML file is registered with [schema.org](https://schema.org/) so we get lin
 Now we have defined the project attributes but all we have is a simple YAML file, but no environment as yet. Well this is where the magic really starts. We'll turn our attention to the `Nox sync` command and its various options to read our project configuration file and set up the project environment as per our input.
 
 ```powershell
-PS> Nox sync
+Nox sync
 ```
 
 <div align="center">
@@ -210,7 +206,7 @@ PS> Nox sync
 
 This step will go and check the specified DevOps server and create our version control repository if not already present.
 ```powershell
-PS> Nox sync version-control
+Nox sync version-control
 ```
 <div align="center">
     <img src="docs/images/nox-cli-sync-version-control.png" alt="Overview">
@@ -227,7 +223,7 @@ Subsequent to running this command a cursory glance at our DevOps server will re
 </div>
 
 ```powershell
-PS> Nox sync azure-active-directory
+Nox sync azure-active-directory
 ```
 <div align="center">
     <img src="docs/images/nox-cli-sync-azure-active-directory.png" alt="Overview">
@@ -250,7 +246,7 @@ If you click on the Members link of the group you'll seet that the users are as 
 </div>
 
 ```powershell
-PS> Nox sync database
+Nox sync database
 ```
 <div align="center">
     <img src="docs/images/nox-cli-sync-database.png" alt="Overview">
@@ -259,7 +255,7 @@ PS> Nox sync database
 </div>
 
 ```powershell
-PS> Nox sync helm-chart
+Nox sync helm-chart
 ```
 <div align="center">
     <img src="docs/images/nox-cli-sync-helm-chart.png" alt="Overview">
