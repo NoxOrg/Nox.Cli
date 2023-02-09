@@ -51,7 +51,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 ***
-Nox.Cli is a companion tool that supports the core [Nox library](https://github.com/NoxOrg/Nox). Its *raison d'être* is to build upon Nox's strong efficiency focus by extending that vision to the entire Enterprise Software Roadmap. This includes fast-tracking of DevOps functions like deployment to multiple environments, setting up CI/CD pipelines and configuring resource permissions. This is achieved by integrating seamlessly with existing enterprise assets and services like Helm charts, Azure KeyVault and Active Directory.
+Nox.Cli is a companion command-line tool that supports the core [Nox library](https://github.com/NoxOrg/Nox). Its *raison d'être* is to build upon Nox's strong efficiency focus by extending that vision to the entire Enterprise Software Roadmap. This includes fast-tracking of DevOps functions like deployment to multiple environments, setting up CI/CD pipelines and configuring resource permissions. This is achieved by integrating seamlessly with existing enterprise assets and services like Helm charts, Azure KeyVault and Active Directory.
+
+Nox.Cli is declarative in nature with the primary aim to describe a project or solution. It uses with a range of plugin technologies in the development, infrastructure and DevOps realms to rapidly configure and deploy a solution in the enterprise.
 
 <div align="center">
     <img src="docs/images/nox-cli-simple-overview.png" alt="Overview" width="80%">
@@ -61,7 +63,7 @@ Nox.Cli is a companion tool that supports the core [Nox library](https://github.
 ### Main Features
 ---
 
-- Accelerate and simplify the development and deployment of enterprise-grade microservices
+- Accelerate and simplify the development and deployment of enterprise-grade microservices**
 - Cross-platform implementation with support for Windows, Linux and MacOS
 - Easy to install and run on developer/engineer desktop or integrate directly into DevOps pipeline
 - Workflows use YAML-syntax and is based on GitHub Actions
@@ -73,10 +75,10 @@ Nox.Cli is a companion tool that supports the core [Nox library](https://github.
 - Can be used both for local development environment and DevOps pipeline
 - Central management and deployment of common organisational scripts
 - Automatically updates scripts and notifies developers of version updates
-- Support secure remote task execution**
+- Support secure remote task execution
 
 
-** Coming soon
+** In conjunction with the Nox .NET library
 
 ### Component Diagram
 
@@ -94,7 +96,7 @@ Nox.Cli is a companion tool that supports the core [Nox library](https://github.
 <!-- GETTING STARTED -->
 ## Getting Started
 
-The section below will walk you though installation of the Nox.Cli tool as well as a sample project to illustrate how simple it is to create a basic microservice in a jiffy.
+The section below will walk you though installation of the Nox.Cli tool as well as a sample project to illustrate how simple it is to set up set up the associated DevOps environment.
 ***
 ### Prerequisites
 ---
@@ -108,9 +110,7 @@ PS> dotnet --version
 ---
 The Nox.Cli tool is hosted on nuget.org [here](https://www.nuget.org/packages/Nox.Cli) and additional installation options are detailed there. The recommended installation method is outlined below: -
 ```powershell
-PS> dotnet tool install --global Nox.Cli --version 1.0.12
-
-PS> nox
+dotnet tool install --global Nox.Cli
 ```
 Running the Nox.Cli tool installation with the global option yields the following output: -
 
@@ -120,8 +120,12 @@ Running the Nox.Cli tool installation with the global option yields the followin
 
 Running Nox.Cli for the first time yields the following output: -
 
+```powershell
+Nox
+```
+
 <div align="center">
-    <img src="docs/images/nox-cli-run-check-credentials-highlighted.png" alt="Overview" width="100%">
+    <img src="docs/images/nox-cli-run-check-credentials.png" alt="Overview" width="100%">
     <br/>
     <br/>
 </div>
@@ -134,17 +138,20 @@ Running Nox.Cli for the first time yields the following output: -
     <br/>
 </div>
 
-> 💡 The second important thing to note is that apart from the `--version` and `--logout` commands, the additional commands listed above are dynamically added from the workflows folder in your local repository or from an remote organisation script repository hosted at `https://noxorg.dev/workflows/{tenant.id}/index.php`
+> 💡 The second important thing to note is that apart from the `--version` and `--logout` commands, the additional commands listed above are dynamically added from the workflows folder in your local repository or from a script repository which is linked to your organisation, hosted at `https://noxorg.dev/workflows/{tenant.id}/index.php`
 
-## Building a Simple Microservice
+## Sample Project: Setting up a Simple Environment
 ---
 
+The development project built for our [Nox](https://github.com/NoxOrg/Nox) sample was a [simple currency microservice](https://github.com/NoxOrg/Nox#creating-a-project) with all the expected CRUD endpoints to add & maintain the currencies of our choice. We're going to use the Nox.Cli companion tool to set up the entire DevOps environment that accompanies that project.
 
-We can now turn our attention to defining and deploying our first basic microservice. Let's build a simple currency service with all the expected CRUD endpoints to add & maintain the currencies of our choice.
-
-### Defining the Service
+### Defining the Project
 
 Running the `Nox new` command outlines its usage options as seen below: -
+
+```powershell
+Nox new
+```
 
 <div align="center">
     <img src="docs/images/nox-cli-new.png" alt="Overview">
@@ -155,11 +162,11 @@ Running the `Nox new` command outlines its usage options as seen below: -
 Let's create a folder for our project and run the `Nox new service` command from within the newly created folder: -
 
 ```powershell
-PS> mkdir CurrencyConverter
-PS> cd .\CurrencyConverter\
-PS> Nox new service
+mkdir CurrencyConverter
+cd .\CurrencyConverter\
+Nox new service
 ```
-A series of questions follows which will determine the initial configuration of the microservice. Upon completetion of the input, these options will be saved into the service configuration file called `{service.name}.service.nox.yaml`
+A series of questions follows which will determine the initial configuration of our project environment. Upon completetion of the input, these options will be saved into the project configuration file called `{service.name}.service.nox.yaml`
 
 <div align="center">
     <img src="docs/images/nox-cli-new-input.png" alt="Overview">
@@ -186,9 +193,9 @@ The YAML file is registered with [schema.org](https://schema.org/) so we get lin
     <br/>
 </div>
 
-### Commissioning the Service
+### Commissioning the Environment
 
-Now we have defined the service but all we have is a simple YAML file. Not much by way of a functioning microservice. Well this is where the magic really starts. We'll largelly turn our attention to the `Nox sync` command to read our service configuration file and go and build our actual microservice with all the options that we've specified.
+Now we have defined the project attributes but all we have is a simple YAML file, but no environment as yet. Well this is where the magic really starts. We'll turn our attention to the `Nox sync` command and its various options to read our project configuration file and set up the project environment as per our input.
 
 ```powershell
 PS> Nox sync
@@ -199,17 +206,23 @@ PS> Nox sync
     <br/>
 </div>
 
+#### Version Control
+
+This step will go and check the specified DevOps server and create our version control repository if not already present.
 ```powershell
 PS> Nox sync version-control
 ```
 <div align="center">
     <img src="docs/images/nox-cli-sync-version-control.png" alt="Overview">
     <br/>
+    <br/>
 </div>
 
-A cursory glance at your DevOps server will reveal your newly created project.
+Subsequent to running this command a cursory glance at our DevOps server will reveal the newly created project.
+
 <div align="center">
     <img src="docs/images/dev-azure-com-projects.png" alt="Overview">
+    <br/>
     <br/>
 </div>
 
@@ -219,17 +232,20 @@ PS> Nox sync azure-active-directory
 <div align="center">
     <img src="docs/images/nox-cli-sync-azure-active-directory.png" alt="Overview">
     <br/>
+    <br/>
 </div>
 
 You'll notice that your project group have now been created on Azure Active Directory.
 <div align="center">
     <img src="docs/images/portal-azure-com-group-overview.png" alt="Overview">
     <br/>
+    <br/>
 </div>
 
 If you click on the Members link of the group you'll seet that the users are as per your earlier project configuration.
 <div align="center">
     <img src="docs/images/portal-azure-com-group-members.png" alt="Overview">
+    <br/>
     <br/>
 </div>
 
@@ -239,6 +255,7 @@ PS> Nox sync database
 <div align="center">
     <img src="docs/images/nox-cli-sync-database.png" alt="Overview">
     <br/>
+    <br/>
 </div>
 
 ```powershell
@@ -247,12 +264,14 @@ PS> Nox sync helm-chart
 <div align="center">
     <img src="docs/images/nox-cli-sync-helm-chart.png" alt="Overview">
     <br/>
+    <br/>
 </div>
 
 Having a look at your project on the DevOps server will reveal that the Helm Chart repo have been created.
 
 <div align="center">
     <img src="docs/images/dev-azure-com-repos-helm-chart.png" alt="Overview">
+    <br/>
     <br/>
 </div>
 
@@ -262,6 +281,55 @@ And selecting the `App.Helmchart` repo will show the relevant files.
     <img src="docs/images/dev-azure-com-repos-helm-chart-detail.png" alt="Overview">
     <br/>
 </div>
+
+## Anatomy of a Manifest file
+
+The manifest file is tasked with propogating the enterprise–level configurations related to our project. It is hosted in a tenant-specific folder on the Nox website and would typically be maintained by the DevOps team.
+
+<div align="center">
+    <img src="docs/images/vscode-manifest-yaml.png" alt="Overview">
+    <br/>
+    <br/>
+</div>
+
+Firstly, the `secrets:` section is where we link to our secrets provider and vault url.
+
+The `branches:` section is where we specify the command 'categories'—for the lack of a more tech–propriate term.
+You'll recall from running the `Nox` command previously that it listed the `new`, `sync` and `version` commands as options. We'll disregard the `logout` command for now as it's baked into the tool. You will however see how these three commands have been propogated from the manfiest file.
+
+<div align="center">
+    <img src="docs/images/vscode-new-service.png" alt="Overview">
+    <br/>
+    <br/>
+</div>
+
+Reviewing the various workflow yaml files will show how commands and their aliases are linked to the branches, outlined above. In the `NewNoxService.workflow.nox.yaml` example above, we can see how the `service` command, the `sv` alias and `|sv - Creates a new NOX app/service` description is linked to the `new` branch.
+
+Further examination of the file will also reveal the various steps performed as part of the workflow.
+
+<div align="center">
+    <img src="docs/images/nox-cli-new-service-highlighted.png" alt="Overview">
+    <br/>
+    <br/>
+</div>
+
+Similarly, in the `SyncDatabaseScript.workflow.nox.yaml` example below, we can see how the `database` command, the `db` alias and `|db - Ensures hosted database and roles exist for your NOX definition` description is linked to the `sync` branch.
+
+<div align="center">
+    <img src="docs/images/vscode-sync-database.png" alt="Overview">
+    <br/>
+    <br/>
+</div>
+
+And the output when running the `Nox sync` command without any arguments reflect this: -
+
+<div align="center">
+    <img src="docs/images/nox-cli-sync-database-highlighted.png" alt="Overview">
+    <br/>
+    <br/>
+</div>
+
+Finally, the `remote-task-proxy:` section points to the url and authorisation–provide for the remote task executor which will conver in more detail later.
 
 <!-- CONTRIBUTING -->
 ## Contributing
