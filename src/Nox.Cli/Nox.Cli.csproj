@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Authentication.Azure\Nox.Cli.Authentication.Azure.csproj" />
     <ProjectReference Include="..\Nox.Cli.Authentication\Nox.Cli.Authentication.csproj" />
     <ProjectReference Include="..\Nox.Cli.Helpers\Nox.Cli.Helpers.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.AzDevOps\Nox.Cli.Plugin.AzDevOps.csproj" />
@@ -60,5 +61,18 @@
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Powershell\Nox.Cli.Plugin.Powershell.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Console\Nox.Cli.Plugin.Console.csproj" />
     <ProjectReference Include="..\Nox.Cli.Server.Integration\Nox.Cli.Server.Integration.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Validation\ValidationResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ValidationResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Validation\ValidationResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ValidationResources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

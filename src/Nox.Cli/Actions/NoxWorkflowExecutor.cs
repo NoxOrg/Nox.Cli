@@ -9,7 +9,7 @@ namespace Nox.Cli.Actions;
 
 public class NoxWorkflowExecutor: INoxWorkflowExecutor
 {
-    private readonly INoxCliServerIntegration? _serverIntegration;
+    private readonly INoxCliServerIntegration _serverIntegration;
     private readonly List<INoxAction> _processedActions = new();
     private readonly IAnsiConsole _console;
     private readonly INoxConfiguration _noxConfig;
@@ -27,11 +27,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         _appConfig = appConfig;
     }
     
-    public async Task<bool> Execute(
-        IWorkflowConfiguration workflow
-    )
+    public async Task<bool> Execute(IWorkflowConfiguration workflow)
     {
-        if (workflow.Cli.Server != null) _serverIntegration!.ConfigureServer(workflow.Cli.Server);
         var workflowDescription = $"[seagreen1]Executing workflow: {workflow.Name.EscapeMarkup()}[/]";
         _console.WriteLine();
         _console.MarkupLine(workflowDescription);
@@ -40,7 +37,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         var ctx = _console.Status()
             .Spinner(Spinner.Known.Clock)
-            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _appConfig));
+            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _appConfig, _serverIntegration));
 
         bool success = true;
 

@@ -9,6 +9,5 @@ public class CliConfiguration: ICliConfiguration
     public string? CommandAlias { get; set; }
     public string? Description { get; set; }
     public List<string[]>? Examples { get; set; }
-    public IServerConfiguration Server { get; set; } = null!;
 }
 

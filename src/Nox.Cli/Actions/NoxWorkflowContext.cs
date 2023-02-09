@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
+using Nox.Cli.Server.Integration;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -18,6 +19,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private readonly IConfiguration _appConfig;
     private readonly INoxConfiguration _noxConfig;
     private readonly IWorkflowConfiguration _workflow;
+    private readonly INoxCliServerIntegration _serverIntegration;
     private readonly IDictionary<string, INoxAction> _steps;
     private readonly IDictionary<string, object> _vars;
 
@@ -33,9 +35,10 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     public INoxAction? CurrentAction => _currentAction;
 
-    public NoxWorkflowContext(IWorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig)
+    public NoxWorkflowContext(IWorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig, INoxCliServerIntegration serverIntegration)
     {
         WorkflowId = Guid.NewGuid();
+        _serverIntegration = serverIntegration;
         _appConfig = appConfig;
         _noxConfig = noxConfig;
         _workflow = workflow;
@@ -292,10 +295,10 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     private void ValidateSteps()
     {
-        if (_steps.Any(s => s.Value.RunAtServer == true) && _workflow.Cli.Server == null)
-        {
-            throw new Exception("You have set one of the steps in the workflow to run on the cli server, but the server has not been defined in the Manifest.cli.nox.yaml file.");
-        }
+        // if (_steps.Any(s => s.Value.RunAtServer == true) && _serverIntegration == null || !_serverIntegration.IsConfigured)
+        // {
+        //     throw new Exception("You have set one of the steps in the workflow to run on the cli server, but the server has not been defined in the Manifest.cli.nox.yaml file.");
+        // }
     }
 
     private string MaskSecretsInDisplayText(string input)

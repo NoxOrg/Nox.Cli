@@ -13,28 +13,23 @@ namespace Nox.Cli.Server.Integration;
 public class NoxCliServerIntegration: INoxCliServerIntegration
 { 
     private readonly IAuthenticator _authenticator;
-    private string? _serverUrl;
+    private readonly IRemoteTaskExecutorConfiguration _remoteTaskExecutorConfiguration;
     private readonly JsonSerializerOptions _serializerOptions;
     
-    public NoxCliServerIntegration(IAuthenticator authenticator)
+    public NoxCliServerIntegration(IAuthenticator authenticator, IRemoteTaskExecutorConfiguration remoteTaskExecutorConfiguration)
     {
         _authenticator = authenticator;
+        _remoteTaskExecutorConfiguration = remoteTaskExecutorConfiguration;
         _serializerOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
     }
 
-    public void ConfigureServer(IServerConfiguration value)
-    {
-        _serverUrl = value.Url;
-        _authenticator.Configure(value);
-    }
-
     public async Task<EchoHealthResponse?> EchoHealth()
     {
-        if (string.IsNullOrEmpty(_serverUrl)) throw new Exception("NoxCliServerIntegration::EchoHealth -> ServerUrl not set");
-        var client = new RestClient($"{_serverUrl}/Health/v1/echo");
+        if (string.IsNullOrEmpty(_remoteTaskExecutorConfiguration.Url)) throw new Exception("NoxCliServerIntegration::EchoHealth -> ServerUrl not set");
+        var client = new RestClient($"{_remoteTaskExecutorConfiguration.Url}/Health/v1/echo");
 
         var request = new RestRequest() { Method = Method.Get };
 
@@ -48,8 +43,8 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
 
     public async Task<BeginTaskResponse> BeginTask(Guid workflowId, INoxAction? action, IDictionary<string, object>? inputs)
     {
-        if (string.IsNullOrEmpty(_serverUrl)) throw new Exception("NoxCliServerIntegration::BeginTask -> ServerUrl not set");
-        var client = new RestClient($"{_serverUrl}/Task/v1/Begin");
+        if (string.IsNullOrEmpty(_remoteTaskExecutorConfiguration.Url)) throw new Exception("NoxCliServerIntegration::BeginTask -> ServerUrl not set");
+        var client = new RestClient($"{_remoteTaskExecutorConfiguration.Url}/Task/v1/Begin");
 
         var request = new RestRequest() { Method = Method.Post };
         request.AddBody(JsonSerializer.Serialize(new BeginTaskRequest
@@ -85,8 +80,8 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
 
     public async Task<ExecuteTaskResponse> ExecuteTask(Guid taskExecutorId)
     {
-        if (string.IsNullOrEmpty(_serverUrl)) throw new Exception("NoxCliServerIntegration::ExecuteTask -> ServerUrl not set");
-        var client = new RestClient($"{_serverUrl}/Task/v1/Execute");
+        if (string.IsNullOrEmpty(_remoteTaskExecutorConfiguration.Url)) throw new Exception("NoxCliServerIntegration::ExecuteTask -> ServerUrl not set");
+        var client = new RestClient($"{_remoteTaskExecutorConfiguration.Url}/Task/v1/Execute");
 
         var request = new RestRequest() { Method = Method.Post };
         request.AddBody(JsonSerializer.Serialize(new ExecuteTaskRequest
@@ -112,8 +107,8 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
 
     public async Task<TaskStateResponse> GetTaskState(Guid taskExecutorId)
     {
-        if (string.IsNullOrEmpty(_serverUrl)) throw new Exception("NoxCliServerIntegration::GetTaskState -> ServerUrl not set");
-        var client = new RestClient($"{_serverUrl}/Task/v1/GetState/{taskExecutorId}");
+        if (string.IsNullOrEmpty(_remoteTaskExecutorConfiguration.Url)) throw new Exception("NoxCliServerIntegration::GetTaskState -> ServerUrl not set");
+        var client = new RestClient($"{_remoteTaskExecutorConfiguration.Url}/Task/v1/GetState/{taskExecutorId}");
 
         var request = new RestRequest() { Method = Method.Get };
 

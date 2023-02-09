@@ -1,10 +1,13 @@
-﻿namespace Nox.Cli.Configuration;
+﻿using Nox.Cli.Abstractions.Configuration;
 
-public class ManifestConfiguration
+namespace Nox.Cli.Configuration;
+
+public class ManifestConfiguration: IManifestConfiguration
 {
-    public SecretsConfiguration Secrets { get; set; } = new();
+    public List<ICliCommandConfiguration>? CliCommands { get; set; } = null;
+    public ICliAuthConfiguration? Authentication { get; set; }
 
-    public List<BranchesConfiguration>? Branches { get; set; } = null;
+    public ILocalTaskExecutorConfiguration? LocalTaskExecutor { get; set; } = null;
 
-    public ServerConfiguration? RemoteTaskProxy { get; set; } = null;
+    public IRemoteTaskExecutorConfiguration? RemoteTaskExecutor { get; set; } = null;
 }

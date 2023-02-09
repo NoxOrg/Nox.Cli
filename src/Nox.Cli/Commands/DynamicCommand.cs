@@ -14,7 +14,6 @@ using Spectre.Console.Cli;
 
 public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
 {
-    private readonly INoxCliServerIntegration _serverIntegration;
     private readonly INoxWorkflowExecutor _executor;
 
     public DynamicCommand(
@@ -22,12 +21,10 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
         IAnsiConsole console, 
         IConsoleWriter consoleWriter,
         INoxConfiguration noxConfiguration, 
-        IConfiguration configuration, 
-        INoxCliServerIntegration serverIntegration)
+        IConfiguration configuration)
         : base(console, consoleWriter, noxConfiguration, configuration)
     {
         _executor = executor;
-        _serverIntegration = serverIntegration;
     }
 
     public class Settings : CommandSettings

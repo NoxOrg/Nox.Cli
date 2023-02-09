@@ -7,5 +7,4 @@ public interface ICliConfiguration
     string? CommandAlias { get; set; }
     string? Description { get; set; }
     List<string[]>? Examples { get; set; }
-    IServerConfiguration Server { get; set; }
 }
