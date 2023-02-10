@@ -26,7 +26,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/noxorg/nox.cli">
-    <img src="docs/images/NoxCli_logo.png" alt="Logo" width="150">
+    <img src="docs/images/NoxCli_Logo_text-grey_black-bg.png" alt="Logo" width="150">
   </a>
 <!--
 <h3 align="center">Nox</h3>
