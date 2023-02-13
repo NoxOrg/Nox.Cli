@@ -1,0 +1,22 @@
+# Manifest.cli.nox.yaml
+
+cli-commands:
+  - name: new
+    description: Create new services, entities, loaders, api's, and more
+  - name: sync
+    description: Synchronize your project with version control and remote environments
+  - name: version
+    description: Displays the current NOX cli version
+
+authentication:
+  provider: azure
+  tenant-id: 88155c28-f750-4013-91d3-8347ddb3daa7
+
+local-task-executor:
+  secrets:
+    - provider: azure-keyvault
+      url: https://we-key-Nox-02.vault.azure.net/
+
+remote-task-executor:
+  url: http://localhost:8000
+  application-id: 750b96e1-e772-48f8-b6b3-84bac1961d9b

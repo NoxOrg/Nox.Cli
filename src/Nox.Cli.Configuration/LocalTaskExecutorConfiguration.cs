@@ -1,5 +1,4 @@
 ﻿using Nox.Cli.Abstractions.Configuration;
-using Nox.Core.Constants;
 
 namespace Nox.Cli.Configuration;
 

@@ -20,6 +20,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Nox.Cli.Authentication.Azure\Nox.Cli.Authentication.Azure.csproj" />
       <ProjectReference Include="..\Nox.Cli.Authentication\Nox.Cli.Authentication.csproj" />
+      <ProjectReference Include="..\Nox.Cli.Configuration\Nox.Cli.Configuration.csproj" />
       <ProjectReference Include="..\Nox.Cli\Nox.Cli.csproj" />
     </ItemGroup>
 

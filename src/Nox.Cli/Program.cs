@@ -15,7 +15,6 @@ using Nox.Cli.Authentication;
 using Nox.Cli.Interceptors;
 using Nox.Cli.Services;
 using Nox.Cli.Commands;
-using Nox.Cli.Configuration;
 using Nox.Cli.Helpers;
 using Nox.Cli.Server.Integration;
 

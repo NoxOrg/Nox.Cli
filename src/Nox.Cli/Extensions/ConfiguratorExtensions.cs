@@ -7,7 +7,6 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using System.Text.Json;
 using FluentValidation;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Nox.Cli.Services.Caching;
@@ -155,7 +154,6 @@ internal static class ConfiguratorExtensions
 
         return cache;
     }
-    
     
 
     private static void GetLocalWorkflows(Dictionary<string, string> yamlFiles, string searchPath = "")

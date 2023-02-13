@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Configuration;
 
 namespace Nox.Cli.Server.Tests;
 
@@ -15,7 +16,7 @@ public static class TestHelper
 
     public static IActionConfiguration GetPingConfig()
     {
-        return new Configuration.ActionConfiguration
+        return new ActionConfiguration
         {
             Id = "locate-server",
             Display = new NoxActionDisplayMessage
@@ -34,7 +35,7 @@ public static class TestHelper
     
     public static IActionConfiguration GetInvalidConfig()
     {
-        return new Configuration.ActionConfiguration
+        return new ActionConfiguration
         {
             Id = "invalid-task",
             Display = new NoxActionDisplayMessage
