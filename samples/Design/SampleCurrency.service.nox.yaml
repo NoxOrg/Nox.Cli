@@ -1,0 +1,51 @@
+#
+# Service definition
+#
+# yaml-language-server: $schema=https://raw.githubusercontent.com/NoxOrg/Nox/main/src/Nox.Core/Schemas/NoxConfiguration.json
+#
+
+#
+
+name: SampleCurrency
+
+description: A sample currency conversion microservice
+
+autoMigrations: false
+
+database:
+  name: SampleCurrencyDb
+  server: localhost
+  provider: postgres
+  options: Trusted_Connection=no;connection timeout=120;
+  user: sa  
+  password: Developer*123
+
+messagingProviders:
+
+  - name: AppServiceBus
+    provider: rabbitMQ
+    connectionString: rabbitmq://guest:guest@localhost/
+      
+dataSources:
+  - name: JsonSeedData
+    provider: json
+    options: Source=File;Path=../../docs/sample-data/;
+
+versionControl:
+  provider: azureDevOps
+  server: https://dev.azure.com/iwgplc
+  project: Nox.SampleCurrency
+  repository: SampleCurrency.Api.V1
+
+team:
+  developers:
+    - name: Dionisis Stoubos
+      userName: dionisis.stoubos@iwgplc.com
+      isAdmin: true
+    - name: Andre Sharpe
+      userName: andre.sharpe@iwgplc.com
+      mobilePhoneNumber: +41789461056
+      isAdmin: true
+    - name: Jan Schutte
+      userName: jan.schutte@iwgplc.com
+      isAdmin: true
