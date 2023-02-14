@@ -24,19 +24,16 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private INoxAction? _currentAction;
     private INoxAction? _nextAction;
 
-    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-    private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>secrets.[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>[(secrets)\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public INoxAction? CurrentAction => _currentAction;
 
-    public NoxWorkflowContext(IWorkflowConfiguration workflow, INoxConfiguration noxConfig, IConfiguration appConfig, INoxCliServerIntegration serverIntegration)
+    public NoxWorkflowContext(IWorkflowConfiguration workflow, IProjectConfiguration projectConfig, INoxCliServerIntegration serverIntegration, ILocalTaskExecutorConfiguration? lteConfig)
     {
         WorkflowId = Guid.NewGuid();
         _serverIntegration = serverIntegration;
         _workflow = workflow;
-        _varProvider = new VariableProvider(noxConfig, appConfig);
-        _varProvider.Initialize(workflow);
+        _varProvider = new VariableProvider(projectConfig, workflow, lteConfig);
         _steps = ParseSteps();
         ValidateSteps();
         _currentActionSequence = 0;
@@ -143,19 +140,6 @@ public class NoxWorkflowContext : INoxWorkflowContext
                     };
 
                     newAction.Inputs.Add(withKey, input);
-                }
-
-                if (newAction.Display != null)
-                {
-                    if (newAction.Display.Error != null)
-                    {
-                        newAction.Display.Error = MaskSecretsInDisplayText(newAction.Display.Error);
-                    }
-
-                    if (newAction.Display.Success != null)
-                    {
-                        newAction.Display.Success = MaskSecretsInDisplayText(newAction.Display.Success);
-                    }
                 }
 
                 steps[newAction.Id] = newAction;

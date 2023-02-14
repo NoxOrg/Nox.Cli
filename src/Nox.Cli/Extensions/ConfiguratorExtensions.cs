@@ -57,7 +57,7 @@ internal static class ConfiguratorExtensions
             .WithTypeMapping<IStepConfiguration, StepConfiguration>()
             .WithTypeMapping<ICliCommandConfiguration, CliCommandConfiguration>()
             .WithTypeMapping<ILocalTaskExecutorConfiguration, LocalTaskExecutorConfiguration>()
-            .WithTypeMapping<ISecretsConfiguration, SecretsConfiguration>()
+            .WithTypeMapping<ISecretConfiguration, SecretConfiguration>()
             .WithTypeMapping<ICliAuthConfiguration, CliAuthConfiguration>()
             .WithTypeMapping<IRemoteTaskExecutorConfiguration, RemoteTaskExecutorConfiguration>()
             .Build();
@@ -71,23 +71,21 @@ internal static class ConfiguratorExtensions
         {
             var authValidator = new CliAuthValidator();
             authValidator.ValidateAndThrow(manifest.Authentication);
-        }
-
-        if (manifest.RemoteTaskExecutor != null)
-        {
-            var rteValidator = new RemoteTaskExecutorValidator();
-            rteValidator.ValidateAndThrow(manifest.RemoteTaskExecutor);
-        }
-
-        if (manifest!.Authentication != null)
-        {
+            
             services.AddSingleton<ICliAuthConfiguration>(manifest!.Authentication);
             services.AddNoxServerAuthentication();
             services.AddAzureAuthentication();
         }
 
-        if (manifest!.RemoteTaskExecutor != null)
+        if (manifest.LocalTaskExecutor != null)
         {
+            services.AddSingleton<ILocalTaskExecutorConfiguration>(manifest!.LocalTaskExecutor);
+        }
+        
+        if (manifest.RemoteTaskExecutor != null)
+        {
+            var rteValidator = new RemoteTaskExecutorValidator();
+            rteValidator.ValidateAndThrow(manifest.RemoteTaskExecutor);
             services.AddSingleton<IRemoteTaskExecutorConfiguration>(manifest.RemoteTaskExecutor);
             services.AddSingleton<INoxCliServerIntegration, NoxCliServerIntegration>();
         }

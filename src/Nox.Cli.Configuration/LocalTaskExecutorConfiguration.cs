@@ -4,6 +4,6 @@ namespace Nox.Cli.Configuration;
 
 public class LocalTaskExecutorConfiguration: ILocalTaskExecutorConfiguration
 {
-    public List<ISecretsConfiguration>? Secrets { get; set; }
+    public List<ISecretConfiguration>? Secrets { get; set; }
 }
 

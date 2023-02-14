@@ -20,7 +20,7 @@ public class AuthenticatorTests
     }
 
     [Test]
-    public async Task Must_throw_if_authentication_not_configured()
+    public void Must_throw_if_authentication_not_configured()
     {
         var provider = _services.BuildServiceProvider();
         var auth = provider.GetRequiredService<IAuthenticator>();
@@ -36,6 +36,7 @@ public class AuthenticatorTests
         var auth = provider.GetRequiredService<IAuthenticator>();
         
         var noxUser = await auth.SignIn();
+        Assert.That(noxUser, Is.Not.Null);
         Assert.That(noxUser.TenantId, Is.Not.Empty);
         Assert.That(noxUser.UserPrincipalName, Is.Not.Empty);
     }
@@ -52,6 +53,7 @@ public class AuthenticatorTests
         var auth = provider.GetRequiredService<IAuthenticator>();
         
         var noxUser = await auth.SignIn();
+        Assert.That(noxUser, Is.Not.Null);
         Assert.That(noxUser.TenantId, Is.Not.Empty);
         Assert.That(noxUser.UserPrincipalName, Is.Not.Empty);
     }

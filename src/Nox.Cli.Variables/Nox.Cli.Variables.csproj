@@ -9,6 +9,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
       <ProjectReference Include="..\Nox.Cli.Helpers\Nox.Cli.Helpers.csproj" />
+      <ProjectReference Include="..\Nox.Cli.Secrets\Nox.Cli.Secrets.csproj" />
     </ItemGroup>
 
     <ItemGroup>
