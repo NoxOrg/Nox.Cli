@@ -20,7 +20,7 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
         INoxWorkflowExecutor executor,
         IAnsiConsole console, 
         IConsoleWriter consoleWriter,
-        INoxConfiguration noxConfiguration, 
+        IProjectConfiguration noxConfiguration, 
         IConfiguration configuration)
         : base(console, consoleWriter, noxConfiguration, configuration)
     {

@@ -12,11 +12,11 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
 {
     protected readonly IAnsiConsole _console;
     protected readonly IConsoleWriter _consoleWriter;
-    protected readonly INoxConfiguration _noxConfiguration;
+    protected readonly IProjectConfiguration _noxConfiguration;
     protected readonly IConfiguration _configuration;
 
     public NoxCliCommand(IAnsiConsole console, IConsoleWriter consoleWriter,
-        INoxConfiguration noxConfiguration, IConfiguration configuration)
+        IProjectConfiguration noxConfiguration, IConfiguration configuration)
     {
         _console = console;
         _consoleWriter = consoleWriter;

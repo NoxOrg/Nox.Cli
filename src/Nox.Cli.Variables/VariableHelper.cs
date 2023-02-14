@@ -1,4 +1,4 @@
-namespace Nox.Cli.Server.Helpers;
+namespace Nox.Cli.Variables;
 
 public static class VariableHelper
 {

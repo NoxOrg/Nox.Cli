@@ -33,6 +33,8 @@ public static class ManifestExtensions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
+        
+        if (onlineFiles == null) throw new Exception($"GetOnlineWorkflows:-> Unable to Deserialize online files");
 
         var manifestInfo = onlineFiles.Single(m => m.Name.StartsWith("Manifest"));
         request.Resource = manifestInfo.Name;
@@ -47,7 +49,7 @@ public static class ManifestExtensions
             .WithTypeMapping<IManifestConfiguration, ManifestConfiguration>()
             .WithTypeMapping<ICliCommandConfiguration, CliCommandConfiguration>()
             .WithTypeMapping<ILocalTaskExecutorConfiguration, LocalTaskExecutorConfiguration>()
-            .WithTypeMapping<ISecretsConfiguration, SecretsConfiguration>()
+            .WithTypeMapping<ISecretConfiguration, SecretConfiguration>()
             .WithTypeMapping<ICliAuthConfiguration, CliAuthConfiguration>()
             .WithTypeMapping<IRemoteTaskExecutorConfiguration, RemoteTaskExecutorConfiguration>()
             .Build();
