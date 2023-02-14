@@ -1,5 +1,6 @@
 ﻿using System.Net.NetworkInformation;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.Network;
 
@@ -18,7 +19,7 @@ public class NetworkPing_v1 : INoxCliAddin
                 ["host"] = new NoxActionInput {
                     Id = "host",
                     Description = "The hostname or IP address",
-                    Default = "localhost",
+                    Default = string.Empty,
                     IsRequired = true
                 },
             },
@@ -40,7 +41,7 @@ public class NetworkPing_v1 : INoxCliAddin
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _host = (string)inputs["host"];
+        _host = inputs.ValueOrDefault<string>("host", this);
         if (Uri.IsWellFormedUriString(_host, UriKind.Absolute))
         {
             var uri = new Uri(_host);

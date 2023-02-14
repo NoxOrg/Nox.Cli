@@ -63,6 +63,7 @@
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Powershell\Nox.Cli.Plugin.Powershell.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Console\Nox.Cli.Plugin.Console.csproj" />
     <ProjectReference Include="..\Nox.Cli.Server.Integration\Nox.Cli.Server.Integration.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Validation\ValidationResources.resx">

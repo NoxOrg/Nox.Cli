@@ -1,7 +1,5 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Configuration;
-using Nox.Cli.Configuration;
-using Nox.Cli.Services.Caching;
 using Nox.Core.Configuration;
 using Nox.Core.Interfaces.Configuration;
 using System.Text.RegularExpressions;
@@ -9,19 +7,16 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Server.Integration;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
+using Nox.Cli.Variables;
 
 namespace Nox.Cli.Actions;
 
 public class NoxWorkflowContext : INoxWorkflowContext
 {
-    private readonly IConfiguration _appConfig;
-    private readonly INoxConfiguration _noxConfig;
     private readonly IWorkflowConfiguration _workflow;
     private readonly INoxCliServerIntegration _serverIntegration;
     private readonly IDictionary<string, INoxAction> _steps;
-    private readonly IDictionary<string, object> _vars;
+    private readonly IVariableProvider _varProvider;
 
     private int _currentActionSequence = 0;
 
@@ -39,10 +34,9 @@ public class NoxWorkflowContext : INoxWorkflowContext
     {
         WorkflowId = Guid.NewGuid();
         _serverIntegration = serverIntegration;
-        _appConfig = appConfig;
-        _noxConfig = noxConfig;
         _workflow = workflow;
-        _vars = InitializeVariables();
+        _varProvider = new VariableProvider(noxConfig, appConfig);
+        _varProvider.Initialize(workflow);
         _steps = ParseSteps();
         ValidateSteps();
         _currentActionSequence = 0;
@@ -58,11 +52,6 @@ public class NoxWorkflowContext : INoxWorkflowContext
     }
 
     public Guid WorkflowId { get; init; }
-
-    public void AddToVariables(string key, object value)
-    {
-        _vars[$"vars.{key}"] = value;
-    }
 
     public void SetState(ActionState state)
     {
@@ -80,148 +69,32 @@ public class NoxWorkflowContext : INoxWorkflowContext
         }
     }
     
+    public void SetErrorMessage(INoxAction action, string errorMessage)
+    {
+        var varKey = $"steps.{action.Id}.error-message";
+        _varProvider.SetActionVariable(action, varKey, errorMessage);
+    }
+    
+    public void AddToVariables(string key, object value)
+    {
+        _varProvider.SetVariable($"vars.{key}", value);
+    }
+    
     public IDictionary<string, object> GetInputVariables(INoxAction action)
     {
-        ResolveAllVariables(action);
-
-        return action.Inputs.ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
+        return _varProvider.GetInputVariables(action);
     }
 
     public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
     {
-        foreach (var output in outputs)
-        {
-            var varKey = $"steps.{action.Id}.outputs.{output.Key}";
-            if (_vars.ContainsKey(varKey))
-            {
-                if (output.Value is JsonElement element)
-                {
-                    _vars[varKey] = GetJsonElementValue(element);
-                }
-                else
-                {
-                    _vars[varKey] = output.Value;    
-                }
-                
-            }
-        }
-
-        ResolveAllVariables(action);
-
+        _varProvider.StoreOutputVariables(action, outputs);
     }
 
     public IDictionary<string, object> GetUnresolvedInputVariables(INoxAction action)
     {
-        var unresolvedVars = action.Inputs
-            .Where(i => _variableRegex.Match(i.Value.Default.ToString()!).Success)
-            .ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
-
-        return unresolvedVars;
-    }
-
-    public void SetErrorMessage(INoxAction action, string errorMessage)
-    {
-        var varKey = $"steps.{action.Id}.error-message";
-
-        _vars[varKey] = errorMessage;
-
-        ResolveAllVariables(action);
-
+        return _varProvider.GetUnresolvedInputVariables(action);
     }
     
-    private Dictionary<string, object> InitializeVariables()
-    {
-        var serializer = new SerializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .Build();
-
-        var workflowString = serializer.Serialize(_workflow);
-
-        var matches = _variableRegex.Matches(workflowString);
-
-        var variables = matches.Select(m => m.Groups[1].Value)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(e => e)
-            .ToDictionary(e => e, e => new object(), StringComparer.OrdinalIgnoreCase);
-
-        var secretKeys = variables.Select(kv => kv.Key)
-            .Where(e => e.StartsWith("secrets.", StringComparison.OrdinalIgnoreCase))
-            .Select(e => e[8..])
-            .ToArray();
-
-        var secrets = ConfigurationHelper.GetNoxSecrets(_appConfig, secretKeys).Result;
-
-        if (secrets is null) return variables;
-
-        foreach (var kv in secrets)
-        {
-            variables[$"secrets.{kv.Key}"] = kv.Value;
-        }
-
-        var configKeys = variables.Select(kv => kv.Key)
-            .Where(e => e.StartsWith("config.", StringComparison.OrdinalIgnoreCase))
-            .Select(e => e[7..])
-            .ToArray();
-
-        _noxConfig.WalkProperties( (name, value) => { if (configKeys.Contains(name, StringComparer.OrdinalIgnoreCase)) { variables[$"config.{name}"] = value ?? new object(); } });
-
-        var userKeys = variables.Select(kv => kv.Key)
-            .Where(e => e.StartsWith("user.", StringComparison.OrdinalIgnoreCase))
-            .Select(e => e[5..])
-            .ToArray();
-
-        var cache = NoxCliCache.Load(ConfiguratorExtensions.CacheFile);
-        cache.WalkProperties((name, value) => { if (userKeys.Contains(name, StringComparer.OrdinalIgnoreCase)) { variables[$"user.{name}"] = value ?? new object(); } });
-
-        return variables;
-    }
-
-    private object ReplaceVariables(string value)
-    {
-        object result = value;
-
-        var match = _variableRegex.Match(result.ToString()!);
-
-        while (match.Success)
-        {
-            var fullPhrase = match.Groups[0].Value;
-
-            var variable = match.Groups["variable"].Value;
-
-            var resolvedValue = LookupVariableValue(variable);
-
-            if (resolvedValue == null || resolvedValue.GetType() == typeof(object))
-            {
-                break;
-            }
-            else if (resolvedValue.GetType().IsSimpleType())
-            {
-                result = result.ToString()!.Replace(fullPhrase, resolvedValue.ToString());
-            }
-            else
-            {
-                result = resolvedValue;
-                break;
-            }
-
-            match = _variableRegex.Match(result.ToString()!);
-        }
-
-        return result;
-    }
-
-    private object LookupVariableValue(string variable)
-    {
-        if (_vars.ContainsKey(variable))
-        {
-            if (_vars[variable] != null)
-            {
-                return _vars[variable];
-            }
-        }
-        return $"{{{{ {variable} }}}}";
-    }
-
     private Dictionary<string, INoxAction> ParseSteps()
     {
         var steps = new Dictionary<string, INoxAction>(StringComparer.OrdinalIgnoreCase);
@@ -308,92 +181,13 @@ public class NoxWorkflowContext : INoxWorkflowContext
         while (match.Success)
         {
             var variable = match.Groups["variable"].Value;
-            string resolvedValue = LookupVariableValue(variable)?.ToString() ?? "";
+            string resolvedValue = _varProvider.LookupValue(variable)?.ToString() ?? "";
             output = _secretsVariableRegex.Replace(input,
                 new string('*', Math.Min(20, resolvedValue.Length))
             );
             match = _secretsVariableRegex.Match(output);
         }
         return output;
-    }
-
-    private void ResolveAllVariables(INoxAction action)
-    {
-        foreach (var (_, input) in action.Inputs)
-        {
-            if (input.Default is string inputValueString)
-            {
-                input.Default = ReplaceVariables(inputValueString);
-            }
-            else if (input.Default is List<object> inputValueList)
-            {
-                for (var i = 0; i < inputValueList.Count; i++)
-                {
-                    if (inputValueList[i] is string inputValueArrayString)
-                    {
-                        var index = inputValueList.FindIndex(n => n.Equals(inputValueList[i]));
-                        inputValueList[index] = ReplaceVariables((string)inputValueList[i]);
-                    }
-                }
-            } 
-            else if (input.Default is Dictionary<object, object> inputValueDictionary)
-            {
-                for (var i = 0; i < inputValueDictionary.Count; i++)
-                {
-                    var item = inputValueDictionary.ElementAt(i);
-                    
-                    if (item.Value is string itemValueString)
-                    {
-                        inputValueDictionary[item.Key] = ReplaceVariables(itemValueString);
-                    }
-                }
-            }
-        }
-
-        if (action.Validate != null)
-        {
-            foreach(var (key, value) in action.Validate)
-            {
-                action.Validate[key] = ReplaceVariables(value).ToString()!;
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(action.Display?.Success))
-        {
-            action.Display.Success = ReplaceVariables(action.Display.Success).ToString()!;
-        }
-
-        if (!string.IsNullOrWhiteSpace(action.Display?.Error))
-        {
-            action.Display.Error = ReplaceVariables(action.Display.Error).ToString()!;
-        }
-
-        if (!string.IsNullOrWhiteSpace(action.If))
-        {
-            action.If = ReplaceVariables(action.If).ToString()!;
-        }
-    }
-
-    private object GetJsonElementValue(JsonElement element)
-    {
-        switch (element.ValueKind)
-        {
-            case JsonValueKind.False:
-            case JsonValueKind.True:
-                return element.GetBoolean();
-            case JsonValueKind.Array:
-                return element.EnumerateArray();
-            case JsonValueKind.Null:
-                return null!;
-            case JsonValueKind.Object:
-                return element;
-            case JsonValueKind.Number:
-                return element.GetDouble();
-            case JsonValueKind.Undefined:
-            case JsonValueKind.String:
-            default:
-                return element!.GetString()!;
-        }   
     }
 }
 

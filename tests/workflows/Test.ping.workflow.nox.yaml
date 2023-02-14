@@ -18,8 +18,7 @@ jobs:
         id: locate-server
         uses: network/ping@v1
         with:
-          host: ${{ config.versionControl.server }}
+          host: ${{ project.versionControl.server }}
         display:
           success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
           error: The DevOps server is not accessible. Are you connected to the Internet? 
-        run-at-server: true

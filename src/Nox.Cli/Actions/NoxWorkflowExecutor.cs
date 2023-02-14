@@ -104,7 +104,9 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         return success;
     }
 
-    private async Task<bool> ProcessTask(IAnsiConsole console, NoxWorkflowContext ctx, 
+    private async Task<bool> ProcessTask(
+        IAnsiConsole console, 
+        NoxWorkflowContext ctx, 
         string? formattedTaskDescription = null)
     {
         if (ctx.CurrentAction == null) return false;

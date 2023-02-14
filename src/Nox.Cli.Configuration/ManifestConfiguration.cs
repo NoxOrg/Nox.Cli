@@ -10,4 +10,4 @@ public class ManifestConfiguration: IManifestConfiguration
     public ILocalTaskExecutorConfiguration? LocalTaskExecutor { get; set; } = null;
 
     public IRemoteTaskExecutorConfiguration? RemoteTaskExecutor { get; set; } = null;
-}
+    }
