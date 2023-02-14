@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
+      <ProjectReference Include="..\Nox.Cli.Helpers\Nox.Cli.Helpers.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
+      <PackageReference Include="YamlDotNet" Version="13.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Nox.Core">
+        <HintPath>..\..\..\..\..\.nuget\packages\nox.core\6.0.31\lib\net6.0\Nox.Core.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+</Project>
