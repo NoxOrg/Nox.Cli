@@ -1,6 +1,7 @@
 ﻿using System.Net.NetworkInformation;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Variables;
 
 namespace Nox.Cli.Plugins.Network;
 
@@ -39,7 +40,7 @@ public class NetworkPing_v1 : INoxCliAddin
 
     private string? _host;
 
-    public Task BeginAsync(IDictionary<string, object> inputs)
+    public Task BeginAsync(IDictionary<string, IVariable> inputs)
     {
         _host = inputs.ValueOrDefault<string>("host", this);
         if (Uri.IsWellFormedUriString(_host, UriKind.Absolute))
@@ -53,9 +54,9 @@ public class NetworkPing_v1 : INoxCliAddin
         return Task.FromResult(true);
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object>();
+        var outputs = new Dictionary<string, IVariable>();
 
         ctx.SetState(ActionState.Error);
 
@@ -73,7 +74,7 @@ public class NetworkPing_v1 : INoxCliAddin
                 {
                     ctx.SetState(ActionState.Success);
 
-                    outputs["roundtrip-time"] = reply.RoundtripTime;
+                    outputs["roundtrip-time"] = new Variable(reply.RoundtripTime);
                 }
 
             }
@@ -86,7 +87,7 @@ public class NetworkPing_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
 
     {
         if (_ping != null)

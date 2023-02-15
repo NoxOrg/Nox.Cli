@@ -14,7 +14,6 @@ public class TaskExecutor: ITaskExecutor
     private Guid _workflowId;
     private ActionState _state;
     private IActionConfiguration? _configuration;
-    private IDictionary<string, object>? _inputs;
     private INoxCliAddin? _addin;
 
     public TaskExecutor(
@@ -31,13 +30,14 @@ public class TaskExecutor: ITaskExecutor
     public Guid WorkflowId => _workflowId;
     public ActionState State => _state;
 
-    public async Task<BeginTaskResponse> BeginAsync(Guid workflowId, IActionConfiguration configuration, IDictionary<string, object> inputs)
+    public async Task<BeginTaskResponse> BeginAsync(Guid workflowId, IActionConfiguration configuration, IDictionary<string, Variable> inputs)
     {
         var result = new BeginTaskResponse { TaskExecutorId = Id };
         _workflowId = workflowId;
         var variables = _cache.GetWorkflow(_workflowId);
-        _inputs = ParseInputs(inputs);
-        VariableHelper.CopyVariables(_inputs, variables);
+        var inputVars = VariableHelper.ParseJsonInputs(inputs);
+        VariableHelper.UpdateVariables(inputVars, variables);
+        //TODO resolve any unresolved variables
         _cache.SetWorkflow(_workflowId, variables);
         _configuration = configuration;
         //Resolve action
@@ -74,7 +74,7 @@ public class TaskExecutor: ITaskExecutor
         if (variables == null) throw new NoxCliException("Workflow not found in cache, cannot execute!");
         var context = new NoxServerWorkflowContext();
         var outputs = await _addin!.ProcessAsync(context);
-        VariableHelper.CopyVariables(outputs, variables);
+        VariableHelper.UpdateVariables(outputs, variables);
         _cache.SetWorkflow(_workflowId, variables);
         result.Outputs = VariableHelper.ExtractSimpleVariables(outputs);
         result.ErrorMessage = context.ErrorMessage;
@@ -84,52 +84,7 @@ public class TaskExecutor: ITaskExecutor
         return result;
     }
 
-    private IDictionary<string, object> ParseInputs(IDictionary<string, object> source)
-    {
-        var result = new Dictionary<string, object>();
-        foreach (var item in source)
-        {
-            if (item.Value != null)
-            {
-                if (item.Value is JsonElement element)
-                {
-                    switch (element.ValueKind)
-                    {
-                        case JsonValueKind.False:
-                        case JsonValueKind.True:
-                            result.Add(item.Key, element.GetBoolean());
-                            break;
-                        case JsonValueKind.Array:
-                            result.Add(item.Key, element.EnumerateArray());
-                            break;
-                        case JsonValueKind.Null:
-                            result.Add(item.Key, null!);
-                            break;
-                        case JsonValueKind.Object:
-                            result.Add(item.Key, element);
-                            break;
-                        case JsonValueKind.Undefined:
-                        case JsonValueKind.String:
-                        case JsonValueKind.Number:
-                        default:
-                            result.Add(item.Key, element!.GetString()!);
-                            break;
-                    }    
-                }
-                else
-                {
-                    result.Add(item.Key, item.Value);
-                }
-            }
-            else
-            {
-                result.Add(item.Key, null!);
-            }
-            
-        }
-
-        return result;
-    }
+    
 
 
 }

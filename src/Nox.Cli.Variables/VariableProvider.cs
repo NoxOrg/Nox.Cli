@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using MassTransit.Monitoring;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Secrets;
@@ -50,7 +51,14 @@ public class VariableProvider: IVariableProvider
     
     public void SetVariable(string key, object value)
     {
-        _variables[$"vars.{key}"].Value = value;
+        if (_variables.ContainsKey(key))
+        {
+            _variables[key].Value = value;
+        }
+        else
+        {
+            _variables.Add(key, new Variable(value));
+        }
     }
 
     public void SetActionVariable(INoxAction action, string key, object value)
@@ -59,11 +67,15 @@ public class VariableProvider: IVariableProvider
         ResolveAllVariables(action);
     }
 
-    public IDictionary<string, object> GetInputVariables(INoxAction action)
+    public IDictionary<string, IVariable> GetInputVariables(INoxAction action)
     {
         ResolveAllVariables(action);
-
-        return action.Inputs.ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
+        var result = new Dictionary<string, IVariable>(StringComparer.OrdinalIgnoreCase);
+        foreach (var input in action.Inputs)
+        {
+            result.Add(input.Key, new Variable(input.Value.Default));
+        }
+        return result;
     }
     
     public IDictionary<string, object> GetUnresolvedInputVariables(INoxAction action)
@@ -75,20 +87,20 @@ public class VariableProvider: IVariableProvider
         return unresolvedVars;
     }
 
-    public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
+    public void StoreOutputVariables(INoxAction action, IDictionary<string, IVariable> outputs)
     {
         foreach (var output in outputs)
         {
             var varKey = $"steps.{action.Id}.outputs.{output.Key}";
             if (_variables.ContainsKey(varKey))
             {
-                if (output.Value is JsonElement element)
+                if (output.Value.Value is JsonElement element)
                 {
                     _variables[varKey].Value = GetJsonElementValue(element);
                 }
                 else
                 {
-                    _variables[varKey].Value = output.Value;    
+                    _variables[varKey].Value = output.Value.Value;    
                 }
                 
             }

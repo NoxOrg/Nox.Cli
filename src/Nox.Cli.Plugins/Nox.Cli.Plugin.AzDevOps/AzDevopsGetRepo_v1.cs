@@ -2,6 +2,7 @@ using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Variables;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -51,7 +52,7 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
     private string? _repoName;
     private Guid? _projectId;
 
-    public async Task BeginAsync(IDictionary<string,object> inputs)
+    public async Task BeginAsync(IDictionary<string, IVariable> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectId = inputs.Value<Guid>("project-id");
@@ -59,9 +60,9 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
         _repoClient = await connection!.GetClientAsync<GitHttpClient>();
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object>();
+        var outputs = new Dictionary<string, IVariable>();
 
         ctx.SetState(ActionState.Error);
 
@@ -74,7 +75,7 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
             try
             {
                 var repo = await _repoClient.GetRepositoryAsync(_projectId!.Value, _repoName);
-                outputs["repository-id"] = repo.Id;
+                outputs["repository-id"] = new Variable(repo.Id);
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
@@ -87,7 +88,7 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _repoClient?.Dispose();
         return Task.CompletedTask;

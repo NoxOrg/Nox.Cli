@@ -7,13 +7,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.Identity" Version="1.8.1" />
+        <PackageReference Include="Azure.Identity" Version="1.8.2" />
         <PackageReference Include="Microsoft.Graph" Version="4.49.0" />
         <PackageReference Include="Nox.Core" Version="6.0.36-beta1" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
+        <ProjectReference Include="..\..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
     </ItemGroup>
     
 </Project>

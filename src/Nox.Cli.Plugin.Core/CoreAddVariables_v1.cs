@@ -36,18 +36,18 @@ public class CoreAddVariables_v1 : INoxCliAddin
         };
     }
 
-    private IDictionary<string,object> _variables=null!;
+    private IDictionary<string,IVariable> _variables=null!;
 
-    public Task BeginAsync(IDictionary<string,object> inputs)
+    public Task BeginAsync(IDictionary<string,IVariable> inputs)
     {
         _variables = inputs;
         
         return Task.FromResult(true);
     }
 
-    public Task<IDictionary<string,object>> ProcessAsync(INoxWorkflowContext ctx)
+    public Task<IDictionary<string,IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string,object>();
+        var outputs = new Dictionary<string,IVariable>();
 
         foreach (var (key, value) in _variables)
         {
@@ -56,10 +56,10 @@ public class CoreAddVariables_v1 : INoxCliAddin
 
         ctx.SetState( ActionState.Success );
 
-        return Task.FromResult((IDictionary<string,object>)outputs);
+        return Task.FromResult((IDictionary<string,IVariable>)outputs);
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
 
     {
         return Task.FromResult(true);

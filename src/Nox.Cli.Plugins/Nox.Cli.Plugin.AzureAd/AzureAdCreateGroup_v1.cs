@@ -1,5 +1,7 @@
 using Microsoft.Graph;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Variables;
 using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -65,18 +67,18 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
     private string? _projectName;
     private GraphServiceClient? _aadClient;
 
-    public Task BeginAsync(IDictionary<string, object> inputs)
+    public Task BeginAsync(IDictionary<string, IVariable> inputs)
     {
-        _groupName = (string)inputs["group-name"];
-        _groupDescription = (string)inputs["group-description"];
-        _aadClient = (GraphServiceClient)inputs["aad-client"];
-        _projectName = inputs.ContainsKey("project-name") ? (string)inputs["project-name"] : "";
+        _groupName = inputs.Value<string>("group-name");
+        _groupDescription = inputs.Value<string>("group-description");
+        _aadClient = inputs.Value<GraphServiceClient>("aad-client");
+        _projectName = inputs.ValueOrDefault<string>("project-name", this);
         return Task.CompletedTask;
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object>();
+        var outputs = new Dictionary<string, IVariable>();
 
         ctx.SetState(ActionState.Error);
 
@@ -98,11 +100,11 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
 
                 if (projectGroups.Count == 1)
                 {
-                    outputs["aad-group"] = projectGroups.First();
+                    outputs["aad-group"] = new Variable(projectGroups.First());
                 }
                 else
                 {
-                    outputs["aad-group"] = await CreateAdGroupAsync(projectGroupName);
+                    outputs["aad-group"] = new Variable(await CreateAdGroupAsync(projectGroupName));
                 }
                 ctx.SetState(ActionState.Success);
             }
@@ -115,7 +117,7 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         return Task.CompletedTask;
     }

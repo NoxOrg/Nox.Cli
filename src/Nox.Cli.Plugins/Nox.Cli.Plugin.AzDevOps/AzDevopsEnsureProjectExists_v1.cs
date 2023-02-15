@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.Services.Operations;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Variables;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -60,7 +61,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
     private string? _projectName;
     private string? _projectDescription;
 
-    public async Task BeginAsync(IDictionary<string,object> inputs)
+    public async Task BeginAsync(IDictionary<string, IVariable> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectName = inputs.Value<string>("project-name");
@@ -71,9 +72,9 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
         _operationsClient = await connection!.GetClientAsync<OperationsHttpClient>();
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object>();
+        var outputs = new Dictionary<string, IVariable>();
 
         ctx.SetState(ActionState.Error);
 
@@ -87,8 +88,8 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
             {
                 var project = await _projectClient.GetProject(_projectName);
                 
-                outputs["project-id"] = project.Id;
-                outputs["success-message"] = $"Found existing project {_projectName} ({project.Id})";
+                outputs["project-id"] = new Variable(project.Id);
+                outputs["success-message"] = new Variable($"Found existing project {_projectName} ({project.Id})");
 
                 ctx.SetState(ActionState.Success);
             }
@@ -100,8 +101,8 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
                     var project = await CreateProjectAsync(ctx);
                     if (project != null)
                     {
-                        outputs["project-id"] = project.Id;
-                        outputs["success-message"] = $"Succesfully created project {_projectName} ({project.Id})";
+                        outputs["project-id"] = new Variable(project.Id);
+                        outputs["success-message"] = new Variable($"Successfully created project {_projectName} ({project.Id})");
 
                         ctx.SetState(ActionState.Success);
                     }
@@ -116,7 +117,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _projectClient?.Dispose();
         _processClient?.Dispose();

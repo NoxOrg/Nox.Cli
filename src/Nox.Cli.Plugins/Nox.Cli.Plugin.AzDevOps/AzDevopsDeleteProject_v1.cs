@@ -46,7 +46,7 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
     private Guid? _projectId;
     private bool? _isHardDelete;
 
-    public async Task BeginAsync(IDictionary<string,object> inputs)
+    public async Task BeginAsync(IDictionary<string, IVariable> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectId = inputs.Value<Guid>("project-id");
@@ -54,9 +54,9 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
         _projectClient = await connection!.GetClientAsync<ProjectHttpClient>();
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object>();
+        var outputs = new Dictionary<string, IVariable>();
 
         ctx.SetState(ActionState.Error);
 
@@ -80,7 +80,7 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _projectClient?.Dispose();
         return Task.CompletedTask;

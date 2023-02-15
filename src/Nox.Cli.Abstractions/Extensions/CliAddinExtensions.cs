@@ -4,20 +4,12 @@ namespace Nox.Cli.Abstractions.Extensions;
 
 public static class CliAddinExtensions
 {
-    public static void ApplyDefaults(this IDictionary<string, object> inputs, INoxCliAddin addin)
-    {
-        var metadata = addin.Discover();
-        foreach (var metaInput in metadata.Inputs)
-        {
-            inputs[metaInput.Key] = metaInput.Value.Default;
-        }
-    }
-
-    public static T? Value<T>(this IDictionary<string, object> inputs, string key)
+    public static T? Value<T>(this IDictionary<string, IVariable> inputs, string key)
     {
         var result = default(T);
         if (!inputs.ContainsKey(key)) return result;
-        var value = inputs[key];
+        var value = inputs[key].Value;
+        if (value == null) return result;
         try
         {
             if (typeof(T).IsClass)
@@ -58,7 +50,7 @@ public static class CliAddinExtensions
         return result;
     }
     
-    public static T? ValueOrDefault<T>(this IDictionary<string, object> inputs, string key, INoxCliAddin addin)
+    public static T? ValueOrDefault<T>(this IDictionary<string, IVariable> inputs, string key, INoxCliAddin addin)
     {
         var result = default(T);
         //Set the default

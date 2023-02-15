@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Variables;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -61,7 +62,7 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
     private Guid? _repoId;
     private string? _branchName;
 
-    public async Task BeginAsync(IDictionary<string,object> inputs)
+    public async Task BeginAsync(IDictionary<string, IVariable> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _repoId = inputs.Value<Guid>("repository-id");
@@ -70,9 +71,9 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
         _branchName = inputs.ValueOrDefault<string>("branch-name", this);
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object>();
+        var outputs = new Dictionary<string, IVariable>();
 
         ctx.SetState(ActionState.Error);
 
@@ -97,7 +98,7 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
                     RefUpdates = new [] { branch },
                     Commits = new []{ commit },
                 }, _repoId!.Value);
-                outputs["commit-id"] = push.PushId;
+                outputs["commit-id"] = new Variable(push.PushId);
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
@@ -110,7 +111,7 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _gitClient?.Dispose();
         return Task.CompletedTask;

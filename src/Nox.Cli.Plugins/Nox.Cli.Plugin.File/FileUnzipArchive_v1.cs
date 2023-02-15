@@ -46,7 +46,7 @@ public class FileUnzipArchive_v1: INoxCliAddin
     private string? _destinationPath;
     private bool? _deleteArchive;
 
-    public Task BeginAsync(IDictionary<string,object> inputs)
+    public Task BeginAsync(IDictionary<string, IVariable> inputs)
     {
         _archivePath = inputs.Value<string>("archive-path");
         _destinationPath = inputs.Value<string>("destination-path");
@@ -54,9 +54,9 @@ public class FileUnzipArchive_v1: INoxCliAddin
         return Task.CompletedTask;
     }
 
-    public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object>();
+        var outputs = new Dictionary<string, IVariable>();
 
         ctx.SetState(ActionState.Error);
 
@@ -96,10 +96,10 @@ public class FileUnzipArchive_v1: INoxCliAddin
         {
             ctx.SetErrorMessage(ex.Message);
         }
-        return Task.FromResult<IDictionary<string, object>>(outputs);
+        return Task.FromResult<IDictionary<string, IVariable>>(outputs);
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         return Task.CompletedTask;
     }

@@ -1,5 +1,6 @@
 using Microsoft.Graph;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -47,17 +48,17 @@ public class AzureAdAddGroupToGroup_v1 : INoxCliAddin
     private Group? _parentGroup;
     private GraphServiceClient? _aadClient;
 
-    public Task BeginAsync(IDictionary<string, object> inputs)
+    public Task BeginAsync(IDictionary<string, IVariable> inputs)
     {
-        _aadClient = (GraphServiceClient)inputs["aad-client"];
-        _childGroup = (Group)inputs["child-group"];
-        _parentGroup = (Group)inputs["parent-group"];
+        _aadClient = inputs.Value<GraphServiceClient>("aad-client");
+        _childGroup = inputs.Value<Group>("child-group");
+        _parentGroup = inputs.Value<Group>("parent-group");
         return Task.CompletedTask;
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object>();
+        var outputs = new Dictionary<string, IVariable>();
 
         ctx.SetState(ActionState.Error);
 
@@ -112,7 +113,7 @@ public class AzureAdAddGroupToGroup_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         return Task.CompletedTask;
     }

@@ -13,6 +13,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
+      <ProjectReference Include="..\..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
     </ItemGroup>
 
 </Project>

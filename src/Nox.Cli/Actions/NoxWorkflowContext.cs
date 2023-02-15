@@ -77,12 +77,12 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _varProvider.SetVariable($"vars.{key}", value);
     }
     
-    public IDictionary<string, object> GetInputVariables(INoxAction action)
+    public IDictionary<string, IVariable> GetInputVariables(INoxAction action)
     {
         return _varProvider.GetInputVariables(action);
     }
 
-    public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
+    public void StoreOutputVariables(INoxAction action, IDictionary<string, IVariable> outputs)
     {
         _varProvider.StoreOutputVariables(action, outputs);
     }

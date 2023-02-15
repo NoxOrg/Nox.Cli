@@ -20,5 +20,5 @@ jobs:
         with:
           host: ${{ project.versionControl.server }}
         display:
-          success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds ${{ project.secrets.AZURE_DEVOPS_PAT }}
+          success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds. Your DevOps PAT- ${{ project.secrets.AZURE_DEVOPS_PAT }}
           error: The DevOps server is not accessible. Are you connected to the Internet? 

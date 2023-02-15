@@ -11,4 +11,9 @@
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
+      <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
+    </ItemGroup>
+
 </Project>

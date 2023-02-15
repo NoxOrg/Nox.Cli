@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.Services.Operations;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Variables;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -46,16 +47,16 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
     private ProjectHttpClient? _projectClient;
     private string? _projectName;
 
-    public async Task BeginAsync(IDictionary<string,object> inputs)
+    public async Task BeginAsync(IDictionary<string, IVariable> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectName = inputs.Value<string>("project-name");
         _projectClient = await connection!.GetClientAsync<ProjectHttpClient>();
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object>();
+        var outputs = new Dictionary<string, IVariable>();
 
         ctx.SetState(ActionState.Error);
 
@@ -68,7 +69,7 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
             try
             {
                 var project = await _projectClient.GetProject(_projectName);
-                outputs["project-id"] = project.Id;
+                outputs["project-id"] = new Variable(project.Id);
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
@@ -79,7 +80,7 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _projectClient?.Dispose();
         return Task.CompletedTask;

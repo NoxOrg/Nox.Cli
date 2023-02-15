@@ -2,6 +2,7 @@
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Server.Integration;
+using Nox.Cli.Variables;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 
@@ -88,7 +89,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             ctx.NextStep();
         }
 
-        await Task.WhenAll(_processedActions.Where(p => p.RunAtServer == false).Select(p => p.ActionProvider.EndAsync(ctx)));
+        await Task.WhenAll(_processedActions.Where(p => p.RunAtServer == false).Select(p => p.ActionProvider.EndAsync()));
 
 
         watch.Stop();
@@ -207,7 +208,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             return true;
         }
         
-        var beginResult = await _serverIntegration!.BeginTask(ctx.WorkflowId, ctx.CurrentAction, inputs);
+        var beginResult = await _serverIntegration!.BeginTask(ctx.WorkflowId, ctx.CurrentAction, inputs.ToConcreteVariables());
         var executeResponse = await _serverIntegration.ExecuteTask(beginResult.TaskExecutorId);
         ctx.SetState(executeResponse.State);
         var outputs = executeResponse.Outputs;

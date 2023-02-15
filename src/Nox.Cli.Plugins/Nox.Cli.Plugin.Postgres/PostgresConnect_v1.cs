@@ -1,6 +1,8 @@
 ﻿using Npgsql;
 using System.Data;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Variables;
 
 namespace Nox.Cli.Plugins.Postgres;
 
@@ -64,15 +66,15 @@ public class PostgresConnect_v1 : INoxCliAddin
 
     private NpgsqlConnection? _connection;
 
-    public Task BeginAsync(IDictionary<string,object> inputs)
+    public Task BeginAsync(IDictionary<string, IVariable> inputs)
     {
         var csb = new NpgsqlConnectionStringBuilder
         {
-            Host = (string)inputs["server"],
-            Port = Convert.ToInt32(inputs["port"]),
-            Username = (string)inputs["user"],
-            Password = (string)inputs["password"],
-            Database = (string)inputs["database"],
+            Host = inputs.Value<string>("server"),
+            Port = inputs.Value<int>("port"),
+            Username = inputs.Value<string>("user"),
+            Password = inputs.Value<string>("password"),
+            Database = inputs.Value<string>("database"),
         };
 
         _connection = new NpgsqlConnection(csb.ToString());
@@ -80,9 +82,9 @@ public class PostgresConnect_v1 : INoxCliAddin
         return Task.FromResult(true);
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object>();
+        var outputs = new Dictionary<string, IVariable>();
 
         ctx.SetState(ActionState.Error);
 
@@ -98,7 +100,7 @@ public class PostgresConnect_v1 : INoxCliAddin
                 {
                     await _connection.OpenAsync();
  
-                    outputs["connection"] = _connection;
+                    outputs["connection"] = new Variable(_connection);
 
                     ctx.SetState(ActionState.Success);
                 }
@@ -112,7 +114,7 @@ public class PostgresConnect_v1 : INoxCliAddin
         return outputs;
     }
 
-    public async Task EndAsync(INoxWorkflowContext ctx)
+    public async Task EndAsync()
 
     {
         if (_connection != null)

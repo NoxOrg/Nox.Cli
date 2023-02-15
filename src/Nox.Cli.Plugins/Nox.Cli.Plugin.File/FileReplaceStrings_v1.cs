@@ -36,16 +36,16 @@ public class FileReplaceStrings_v1 : INoxCliAddin
     private string? _path;
     private Dictionary<string, string>? _replacements;
 
-    public Task BeginAsync(IDictionary<string,object> inputs)
+    public Task BeginAsync(IDictionary<string, IVariable> inputs)
     {
         _path = inputs.Value<string>("path");
         _replacements = inputs.Value<Dictionary<string, string>>("replacements");
         return Task.CompletedTask;
     }
 
-    public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object>();
+        var outputs = new Dictionary<string, IVariable>();
 
         ctx.SetState(ActionState.Error);
 
@@ -76,10 +76,10 @@ public class FileReplaceStrings_v1 : INoxCliAddin
             }
         }
         
-        return Task.FromResult<IDictionary<string, object>>(outputs);
+        return Task.FromResult<IDictionary<string, IVariable>>(outputs);
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         return Task.CompletedTask;
     }

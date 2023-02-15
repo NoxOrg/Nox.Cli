@@ -1,16 +1,17 @@
 using System.Text.Json;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Configuration;
+using Nox.Cli.Variables;
 
 namespace Nox.Cli.Server.Tests;
 
 public static class TestHelper
 {
-    public static IDictionary<string, object> GetPingInputs()
+    public static IDictionary<string, Variable> GetPingInputs()
     {
-        return new Dictionary<string, object>
+        return new Dictionary<string, Variable>
         {
-            {"host", "https://dev.azure.com/iwgplc"}
+            {"host", new Variable("https://dev.azure.com/iwgplc")}
         };
     }
 
