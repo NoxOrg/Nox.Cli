@@ -1,0 +1,51 @@
+# NOX Test Variables Command
+
+name: Test variables
+
+cli:
+  branch: test
+  command: variables
+  command-alias: vars
+  description: Test Variables
+  examples:
+    - ["sync variables"]
+    - ["sync vars"]
+
+jobs:
+  test:  
+    steps:
+      - name: Resolve a Project variable
+        id: resolve-project-var
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ project.versionControl.server }}
+        display:
+          success: value = ${{ steps.resolve-project-var.outputs.my-result }}
+          error: Unable to resolve Project Variable
+
+      - name: Resolve a Project secret
+        id: resolve-project-secret
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ project.secrets.test-secret }}
+        display:
+          success: value = ${{ steps.resolve-project-secret.outputs.my-result }}
+          error: Unable to resolve Project Secret
+
+      - name: Resolve an Organization secret
+        id: resolve-org-secret
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ org.secrets.test-secret }}
+        display:
+          success: value = ${{ steps.resolve-org-secret.outputs.my-result }}
+          error: Unable to resolve Organization Secret
+
+      - name: Resolve a Server secret
+        id: resolve-server-secret
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ server.secrets.test-secret }}
+        display:
+          success: value = ${{ steps.resolve-server-secret.outputs.my-result }}
+          error: Unable to resolve Server Secret
