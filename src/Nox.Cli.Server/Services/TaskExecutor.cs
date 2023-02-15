@@ -1,7 +1,10 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Helpers;
+using Nox.Cli.Secrets;
 using Nox.Cli.Server.Cache;
 using Nox.Cli.Shared.DTO.Workflow;
 using Nox.Cli.Variables;
@@ -16,15 +19,18 @@ public class TaskExecutor: ITaskExecutor
     private IActionConfiguration? _configuration;
     private IDictionary<string, object>? _inputs;
     private INoxCliAddin? _addin;
+    private IManifestConfiguration _manifest;
 
     public TaskExecutor(
         Guid workflowId,
-        IWorkflowCache cache)
+        IWorkflowCache cache,
+        IManifestConfiguration manifest)
     {
         _workflowId = workflowId;
         _cache = cache;
         Id = Guid.NewGuid();
         _state = ActionState.NotStarted;
+        _manifest = manifest;
     }
 
     public Guid Id { get; init; }
@@ -37,9 +43,8 @@ public class TaskExecutor: ITaskExecutor
         _workflowId = workflowId;
         var variables = _cache.GetWorkflow(_workflowId);
         _inputs = ParseInputs(inputs);
-        //Resolve any unresolved variables
-        
         VariableHelper.CopyVariables(_inputs, variables);
+        variables.ResolveServerSecrets(_manifest.RemoteTaskExecutor!);
         _cache.SetWorkflow(_workflowId, variables);
         _configuration = configuration;
         //Resolve action
@@ -54,7 +59,7 @@ public class TaskExecutor: ITaskExecutor
             try
             {
                 _addin = (INoxCliAddin)Activator.CreateInstance(actionType)!;
-                await _addin.BeginAsync(variables);
+                await _addin.BeginAsync(variables.ToDictionary(item => item.Key, item => item.Value.Value));
                 result.Success = true;
             }
             catch (Exception ex)

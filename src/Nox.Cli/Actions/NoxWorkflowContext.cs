@@ -16,7 +16,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private readonly IWorkflowConfiguration _workflow;
     private readonly INoxCliServerIntegration _serverIntegration;
     private readonly IDictionary<string, INoxAction> _steps;
-    private readonly IVariableProvider _varProvider;
+    private readonly VariableProvider _varProvider;
 
     private int _currentActionSequence = 0;
 

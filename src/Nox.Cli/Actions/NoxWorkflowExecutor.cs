@@ -55,8 +55,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             if (ctx.CurrentAction.RunAtServer == true)
             {
                 var serverTaskDescription = $"{formattedTaskDescription} [bold yellow] -> CLI SERVER[/]";
-                // _console.WriteLine();
-                // _console.MarkupLine(serverTaskDescription);
+                _console.WriteLine();
+                _console.MarkupLine(serverTaskDescription);
                 success = await _console.Status().Spinner(Spinner.Known.Clock)
                     .StartAsync(serverTaskDescription, async _ =>
                         await ProcessServerTask(_console, ctx, serverTaskDescription)

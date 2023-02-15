@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
@@ -9,22 +10,19 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Nox.Cli.Variables;
 
-public class VariableProvider: IVariableProvider
+public class VariableProvider
 {
     private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private readonly Dictionary<string, IVariable> _variables;
     
-    public VariableProvider(
-        IProjectConfiguration projectConfig,
-        IWorkflowConfiguration workflow,
-        ILocalTaskExecutorConfiguration? lteConfig = null)
+    public VariableProvider(IProjectConfiguration projectConfig, IWorkflowConfiguration workflow, ILocalTaskExecutorConfiguration? lteConfig = null)
     {
         _variables = new Dictionary<string, IVariable>(StringComparer.OrdinalIgnoreCase);
         Initialize(projectConfig, workflow, lteConfig);
     }
 
-    private void Initialize(IProjectConfiguration projectConfig, IWorkflowConfiguration workflow, ILocalTaskExecutorConfiguration? lteConfig)
+    private void Initialize(IProjectConfiguration projectConfig, IWorkflowConfiguration workflow, ILocalTaskExecutorConfiguration? lteConfig = null)
     {
         var serializer = new SerializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
@@ -83,6 +81,18 @@ public class VariableProvider: IVariableProvider
         return unresolvedVars;
     }
 
+    public void ResolveVariables(IDictionary<string, object> source)
+    {
+        foreach (var item in source)
+        {
+            if (_variables.ContainsKey(item.Key))
+            {
+                source.Remove(item.Key);
+                source.Add(item.Key, _variables[item.Key]);
+            }
+        }
+    }
+    
     public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
     {
         foreach (var output in outputs)
@@ -139,7 +149,7 @@ public class VariableProvider: IVariableProvider
         return result;
     }
     
-    public object? LookupValue(string variable, bool obfuscate = false)
+    private object? LookupValue(string variable, bool obfuscate = false)
     {
         if (_variables.ContainsKey(variable))
         {

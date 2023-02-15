@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.OData.ModelBuilder;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Configuration;
 using Nox.Cli.Server.Cache;
 using Nox.Cli.Server.Services;
@@ -17,7 +18,23 @@ public class CoreTests
     {
         var memCache = new MemoryCache(new MemoryCacheOptions());
         var workflowCache = new WorkflowCache(memCache);
-        TestExecutor = new TaskExecutor(TestWorkflowId, workflowCache);
+        var manifest = new ManifestConfiguration
+        {
+            RemoteTaskExecutor = new RemoteTaskExecutorConfiguration
+            {
+                ApplicationId = Guid.NewGuid().ToString(),
+                Url = "http://localhost:8000",
+                Secrets = new List<ISecretConfiguration>
+                {
+                    new SecretConfiguration
+                    {
+                        Url = "https://nox-3D6394A1E5840C21.vault.azure.net/",
+                        Provider = "azure-keyvault"
+                    }
+                }
+            }
+        };
+        TestExecutor = new TaskExecutor(TestWorkflowId, workflowCache, manifest);
     }
     
     [Test]

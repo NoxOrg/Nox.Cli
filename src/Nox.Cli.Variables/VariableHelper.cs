@@ -1,8 +1,10 @@
+using Nox.Cli.Abstractions;
+
 namespace Nox.Cli.Variables;
 
 public static class VariableHelper
 {
-    public static void CopyVariables(IDictionary<string, object> source, IDictionary<string, object> destination)
+    public static void CopyVariables(IDictionary<string, object> source, IDictionary<string, IVariable> destination)
     {
         foreach (var sourceVar in source)
         {
@@ -10,19 +12,12 @@ public static class VariableHelper
             //If not in destination then add it
             if (!destination.ContainsKey(key))
             {
-                destination.Add(key, sourceVar.Value);
+                destination.Add(key, new Variable(sourceVar.Value));
             }
             else //If in destination but source has a value then replace it
             {
-                var destVal = destination[key];
-                if (!sourceVar.Value!.ToString()!.Contains("{{") &&  sourceVar.Value != destVal)
-                {
-                    destination.Remove(key);
-                    destination.Add(sourceVar);
-                }
+                destination[key].Value = sourceVar.Value;
             }
-            
-            
         }
     }
 
