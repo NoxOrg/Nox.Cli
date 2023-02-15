@@ -2,7 +2,7 @@ using Nox.Cli.Abstractions.Configuration;
 
 namespace Nox.Cli.Configuration;
 
-public class SecretConfiguration: ISecretConfiguration
+public class SecretsConfiguration: ISecretsConfiguration
 {
     public string Provider { get; set; } = "azure-keyvault";
 

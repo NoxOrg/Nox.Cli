@@ -1,7 +1,4 @@
-﻿using Nox.Core.Extensions;
-using Nox.Core.Helpers;
-
-namespace Nox.Cli;
+﻿namespace Nox.Cli;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,7 +31,7 @@ public static class ServiceCollectionExtensions
         }
         else
         {
-            services.AddSingleton<IProjectConfiguration>(new ProjectConfiguration());
+            services.AddSingleton<INoxConfiguration>(new NoxConfiguration());
         }
         return services;
     }

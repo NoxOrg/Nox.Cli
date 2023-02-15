@@ -3,8 +3,8 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Server.Cache;
+using Nox.Cli.Server.Helpers;
 using Nox.Cli.Shared.DTO.Workflow;
-using Nox.Cli.Variables;
 
 namespace Nox.Cli.Server.Services;
 

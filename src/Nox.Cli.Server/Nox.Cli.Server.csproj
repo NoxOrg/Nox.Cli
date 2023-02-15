@@ -32,7 +32,6 @@
         <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Console\Nox.Cli.Plugin.Console.csproj" />
         <ProjectReference Include="..\Nox.Cli.Server.Cache\Nox.Cli.Server.Cache.csproj" />
         <ProjectReference Include="..\Nox.Cli.Shared.DTO\Nox.Cli.Shared.DTO.csproj" />
-        <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
     </ItemGroup>
     
     <ItemGroup>

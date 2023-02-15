@@ -13,22 +13,19 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
     private readonly INoxCliServerIntegration _serverIntegration;
     private readonly List<INoxAction> _processedActions = new();
     private readonly IAnsiConsole _console;
-    private readonly IProjectConfiguration _noxConfig;
+    private readonly INoxConfiguration _noxConfig;
     private readonly IConfiguration _appConfig;
-    private readonly ILocalTaskExecutorConfiguration? _lteConfig;
     
     public NoxWorkflowExecutor(
         INoxCliServerIntegration serverIntegration,
         IAnsiConsole console,
-        IProjectConfiguration noxConfig,
-        IConfiguration appConfig,
-        ILocalTaskExecutorConfiguration? lteConfig = null)
+        INoxConfiguration noxConfig,
+        IConfiguration appConfig)
     {
         _serverIntegration = serverIntegration;
         _console = console;
         _noxConfig = noxConfig;
         _appConfig = appConfig;
-        _lteConfig = lteConfig;
     }
     
     public async Task<bool> Execute(IWorkflowConfiguration workflow)
@@ -41,7 +38,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         var ctx = _console.Status()
             .Spinner(Spinner.Known.Clock)
-            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _serverIntegration, _lteConfig));
+            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _appConfig, _serverIntegration));
 
         bool success = true;
 

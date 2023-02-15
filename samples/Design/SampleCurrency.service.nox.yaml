@@ -12,10 +12,6 @@ description: A sample currency conversion microservice
 
 autoMigrations: false
 
-secrets:
-  - provider: azure-keyvault
-    url: https://we-key-Nox-02.vault.azure.net/
-
 database:
   name: SampleCurrencyDb
   server: localhost

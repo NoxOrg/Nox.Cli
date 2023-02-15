@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace Nox.Cli.Variables;
+namespace Nox.Cli;
 
 public static class TypeExtensions
 {
