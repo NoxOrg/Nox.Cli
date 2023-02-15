@@ -47,7 +47,7 @@ public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
     private string? _projectName;
     private List<TeamMemberConfiguration>? _members;
 
-    public async Task BeginAsync(IDictionary<string, IVariable> inputs)
+    public async Task BeginAsync(IDictionary<string, object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectName = inputs.Value<string>("project-name");
@@ -55,9 +55,9 @@ public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
         _graphClient = await connection!.GetClientAsync<GraphHttpClient>();
     }
 
-    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, IVariable>();
+        var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
@@ -81,7 +81,7 @@ public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync()
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         _graphClient?.Dispose();
         return Task.CompletedTask;

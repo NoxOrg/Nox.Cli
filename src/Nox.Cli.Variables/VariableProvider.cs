@@ -1,9 +1,8 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Configuration;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
-using Nox.Core.Configuration;
+using Nox.Cli.Secrets;
 using Nox.Core.Interfaces.Configuration;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -12,26 +11,20 @@ namespace Nox.Cli.Variables;
 
 public class VariableProvider: IVariableProvider
 {
-    private readonly Regex _qualifiedVariableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    private readonly Regex _variableRegex = new(@"\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    
-    private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>secrets.[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    private readonly INoxConfiguration _noxConfig;
-    private readonly IConfiguration _appConfig;
-    private IDictionary<string, object>? _variables;
+    private readonly Dictionary<string, IVariable> _variables;
     
     public VariableProvider(
-        INoxConfiguration noxConfig,
-        IConfiguration appConfig)
+        IProjectConfiguration projectConfig,
+        IWorkflowConfiguration workflow,
+        ILocalTaskExecutorConfiguration? lteConfig = null)
     {
-        _noxConfig = noxConfig;
-        _appConfig = appConfig;
+        _variables = new Dictionary<string, IVariable>(StringComparer.OrdinalIgnoreCase);
+        Initialize(projectConfig, workflow, lteConfig);
     }
 
-    public IDictionary<string, object> Variables => _variables;
-    
-    public void Initialize(IWorkflowConfiguration workflow)
+    private void Initialize(IProjectConfiguration projectConfig, IWorkflowConfiguration workflow, ILocalTaskExecutorConfiguration? lteConfig)
     {
         var serializer = new SerializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
@@ -39,60 +32,25 @@ public class VariableProvider: IVariableProvider
 
         var workflowString = serializer.Serialize(workflow);
 
-        var matches = _qualifiedVariableRegex.Matches(workflowString);
+        var matches = _variableRegex.Matches(workflowString);
 
         var variablesTemp = matches.Select(m => m.Groups[1].Value)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(e => e);
-            //.ToDictionary(e => e, e , StringComparer.OrdinalIgnoreCase);
 
-        _variables = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         foreach (var v in variablesTemp)
         {
-            _variables.Add(v, null);
+            _variables.Add(v, new Variable(null));
         }
-            
-        var projectKeys = _variables.Select(kv => kv.Key)
-            .Where(e => e.StartsWith("project.", StringComparison.OrdinalIgnoreCase))
-            .Select(e => e[8..])
-            .ToArray();
-
-        _noxConfig.WalkProperties( (name, value) => { if (projectKeys.Contains(name, StringComparer.OrdinalIgnoreCase)) { _variables[$"project.{name}"] = value; } });
-
-        var secretKeys = _variables
-            .Where(kv => kv.Value != null)
-            .Select(kv => kv.Key)
-            .Select(e => e[7..])
-            .ToArray();
-
-        var secrets = ConfigurationHelper.GetNoxSecrets(_appConfig, secretKeys).Result;
-
-        if (secrets is null) return;
-
-        foreach (var kv in secrets)
-        {
-            _variables[$"secrets.{kv.Key}"] = kv.Value;
-        }
-
         
-        // var userKeys = variables.Select(kv => kv.Key)
-        //     .Where(e => e.StartsWith("user.", StringComparison.OrdinalIgnoreCase))
-        //     .Select(e => e[5..])
-        //     .ToArray();
-
-        // var cache = NoxCliCache.Load(ConfiguratorExtensions.CacheFile);
-        // cache.WalkProperties((name, value) =>
-        // {
-        //     if (userKeys.Contains(name, StringComparer.OrdinalIgnoreCase))
-        //     {
-        //         variables[$"user.{name}"] = value;
-        //     }
-        // });
+        _variables.ResolveOrgSecrets(lteConfig);
+        _variables.ResolveProjectSecrets(projectConfig);
+        _variables.ResolveProjectVariables(projectConfig);
     }
     
     public void SetVariable(string key, object value)
     {
-        _variables[$"vars.{key}"] = value;
+        _variables[$"vars.{key}"].Value = value;
     }
 
     public void SetActionVariable(INoxAction action, string key, object value)
@@ -126,11 +84,11 @@ public class VariableProvider: IVariableProvider
             {
                 if (output.Value is JsonElement element)
                 {
-                    _variables[varKey] = GetJsonElementValue(element);
+                    _variables[varKey].Value = GetJsonElementValue(element);
                 }
                 else
                 {
-                    _variables[varKey] = output.Value;    
+                    _variables[varKey].Value = output.Value;    
                 }
                 
             }
@@ -139,11 +97,11 @@ public class VariableProvider: IVariableProvider
         ResolveAllVariables(action);
     }
     
-    private object ReplaceVariable(string value)
+    private object ReplaceVariable(string value, bool obfuscate = false)
     {
         object result = value;
 
-        var match = _qualifiedVariableRegex.Match(result.ToString()!);
+        var match = _variableRegex.Match(result.ToString()!);
 
         while (match.Success)
         {
@@ -151,7 +109,7 @@ public class VariableProvider: IVariableProvider
 
             var variable = match.Groups["variable"].Value;
 
-            var resolvedValue = LookupValue(variable);
+            var resolvedValue = LookupValue(variable, obfuscate);
 
             if (resolvedValue == null || resolvedValue.GetType() == typeof(object))
             {
@@ -167,22 +125,21 @@ public class VariableProvider: IVariableProvider
                 break;
             }
 
-            match = _qualifiedVariableRegex.Match(result.ToString()!);
+            match = _variableRegex.Match(result.ToString()!);
         }
 
         return result;
     }
     
-    public object LookupValue(string variable)
+    public object? LookupValue(string variable, bool obfuscate = false)
     {
         if (_variables.ContainsKey(variable))
         {
-            if (_variables[variable] != null)
-            {
-                return _variables[variable];
-            }
+            var lookupVar = _variables[variable];
+            if (lookupVar.Value == null) return null;
+            return obfuscate ? _variables[variable].DisplayValue : _variables[variable].Value;
         }
-        return $"{{{{ {variable} }}}}";
+        return null;
     }
     
     private void ResolveAllVariables(INoxAction action)
@@ -197,7 +154,7 @@ public class VariableProvider: IVariableProvider
             {
                 for (var i = 0; i < inputValueList.Count; i++)
                 {
-                    if (inputValueList[i] is string inputValueArrayString)
+                    if (inputValueList[i] is string)
                     {
                         var index = inputValueList.FindIndex(n => n.Equals(inputValueList[i]));
                         inputValueList[index] = ReplaceVariable((string)inputValueList[i]);
@@ -228,12 +185,12 @@ public class VariableProvider: IVariableProvider
 
         if (!string.IsNullOrWhiteSpace(action.Display?.Success))
         {
-            action.Display.Success = ReplaceVariable(action.Display.Success).ToString()!;
+            action.Display.Success = ReplaceVariable(action.Display.Success, true).ToString()!;
         }
 
         if (!string.IsNullOrWhiteSpace(action.Display?.Error))
         {
-            action.Display.Error = ReplaceVariable(action.Display.Error).ToString()!;
+            action.Display.Error = ReplaceVariable(action.Display.Error, true).ToString()!;
         }
 
         if (!string.IsNullOrWhiteSpace(action.If))

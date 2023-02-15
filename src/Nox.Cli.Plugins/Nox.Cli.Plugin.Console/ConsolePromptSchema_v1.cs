@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
-using Nox.Cli.Variables;
 
 namespace Nox.Cli.Plugins.Console;
 
@@ -99,7 +98,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     private readonly Dictionary<string, object> _responses = new();
 
 
-    public Task BeginAsync(IDictionary<string, IVariable> inputs)
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
 
         var schemaUrl = inputs.Value<string>("schema-url");
@@ -123,9 +122,9 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
     }
 
-    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, IVariable>();
+        var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
@@ -164,7 +163,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
                         foreach(var (key,value) in _responses)
                         {
-                            outputs[key] = new Variable(value);
+                            outputs[key] = value;
                         }
 
                         if (_fileOptions != null && _fileOptions.ContainsKey("filename"))
@@ -193,7 +192,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync()
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
     }

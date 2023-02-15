@@ -3,7 +3,6 @@ using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Variables;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -64,7 +63,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
     private Guid? _projectId;
     private string? _defaultBranch;
 
-    public async Task BeginAsync(IDictionary<string, IVariable> inputs)
+    public async Task BeginAsync(IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectId = inputs.Value<Guid>("project-id");
@@ -73,9 +72,9 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
         _repoClient = await connection!.GetClientAsync<GitHttpClient>();
     }
 
-    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, IVariable>();
+        var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
@@ -90,8 +89,8 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
                 var repo = await _repoClient.GetRepositoryAsync(_projectId.Value, _repoName);
                 if(repo != null)
                 {
-                    outputs["repository-id"] = new Variable(repo.Id);
-                    outputs["success-message"] = new Variable($"Found existing repo {_repoName} ({repo.Id})");
+                    outputs["repository-id"] = repo.Id;
+                    outputs["success-message"] = $"Found existing repo {_repoName} ({repo.Id})";
                     ctx.SetState(ActionState.Success);
                 }
             }
@@ -103,8 +102,8 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
                     var repo = await CreateRepositoryAsync(ctx);
                     if (repo != null)
                     {
-                        outputs["repository-id"] = new Variable(repo.Id);
-                        outputs["success-message"] = new Variable($"Created repo {_repoName} ({repo.Id})");
+                        outputs["repository-id"] = repo.Id;
+                        outputs["success-message"] = $"Created repo {_repoName} ({repo.Id})";
                         ctx.SetState(ActionState.Success);
                     }
                 }
@@ -118,7 +117,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync()
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         _repoClient?.Dispose();
         return Task.CompletedTask;

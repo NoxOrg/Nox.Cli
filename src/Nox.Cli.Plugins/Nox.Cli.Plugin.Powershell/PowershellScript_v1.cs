@@ -1,7 +1,6 @@
 ﻿using Nox.Cli.Abstractions.Extensions;
 using System.Management.Automation;
 using Nox.Cli.Abstractions;
-using Nox.Cli.Variables;
 
 
 namespace Nox.Cli.Plugins.Powershell;
@@ -43,7 +42,7 @@ public class PowershellScript_v1 : INoxCliAddin
     private string _script = null!;
 
 
-    public Task BeginAsync(IDictionary<string, IVariable> inputs)
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _pwsh = PowerShell.Create();
 
@@ -53,9 +52,9 @@ public class PowershellScript_v1 : INoxCliAddin
 
     }
 
-    public Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
+    public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, IVariable>();
+        var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
@@ -71,7 +70,7 @@ public class PowershellScript_v1 : INoxCliAddin
 
                 var results = _pwsh.Invoke();
 
-                outputs["result"] = new Variable(results);
+                outputs["result"] = results;
 
                 ctx.SetState(ActionState.Success);
 
@@ -82,10 +81,10 @@ public class PowershellScript_v1 : INoxCliAddin
             }
         }
 
-        return Task.FromResult((IDictionary<string, IVariable>)outputs);
+        return Task.FromResult((IDictionary<string, object>)outputs);
     }
 
-    public Task EndAsync()
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
     }

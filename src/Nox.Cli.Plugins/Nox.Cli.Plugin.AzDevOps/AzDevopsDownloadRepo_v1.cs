@@ -4,7 +4,6 @@ using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Variables;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -54,7 +53,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
     private Guid? _repoId;
     private string? _branchName;
 
-    public async Task BeginAsync(IDictionary<string, IVariable> inputs)
+    public async Task BeginAsync(IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _gitClient = await connection!.GetClientAsync<GitHttpClient>();
@@ -62,9 +61,9 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
         _branchName = inputs.ValueOrDefault<string>("branch-name", this);
     }
 
-    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, IVariable>();
+        var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
@@ -83,7 +82,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
                 {
                     var extractFolder = UnzipRepo(repoId, zipFilePath, repoPath);
                     File.Delete(zipFilePath);
-                    outputs["local-repository-path"] = new Variable(extractFolder);
+                    outputs["local-repository-path"] = extractFolder;
                     ctx.SetState(ActionState.Success);    
                 }
                 else
@@ -101,7 +100,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync()
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
     }

@@ -2,7 +2,6 @@
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Variables;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -46,7 +45,7 @@ public class AzDevopsConnect_v1 : INoxCliAddin
 
     private VssConnection? _connection;
 
-    public Task BeginAsync(IDictionary<string,IVariable> inputs)
+    public Task BeginAsync(IDictionary<string,object> inputs)
     {
         var server = inputs.Value<string>("server");
         var pat = inputs.Value<string>("personal-access-token");
@@ -55,9 +54,9 @@ public class AzDevopsConnect_v1 : INoxCliAddin
         return Task.CompletedTask;
     }
 
-    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, IVariable>();
+        var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
@@ -73,7 +72,7 @@ public class AzDevopsConnect_v1 : INoxCliAddin
                 {
                     await _connection.ConnectAsync();
                     
-                    outputs["connection"] = new Variable(_connection);
+                    outputs["connection"] = _connection;
 
                     ctx.SetState(ActionState.Success);
                 }
@@ -87,7 +86,7 @@ public class AzDevopsConnect_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync()
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         if (_connection != null)
         {

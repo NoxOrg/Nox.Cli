@@ -1,6 +1,5 @@
 using Microsoft.Graph;
 using Nox.Cli.Abstractions;
-using Nox.Cli.Abstractions.Extensions;
 using Nox.Core.Configuration;
 using ActionState = Nox.Cli.Abstractions.ActionState;
 
@@ -51,17 +50,17 @@ public class AzureAdAddTeamMembersToGroup_v1 : INoxCliAddin
     private GraphServiceClient? _aadClient;
     private List<TeamMemberConfiguration>? _members;
 
-    public Task BeginAsync(IDictionary<string, IVariable> inputs)
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _group = inputs.Value<Group>("group");
-        _aadClient = inputs.Value<GraphServiceClient>("aad-client");
-        _members = inputs.Value<List<TeamMemberConfiguration>>("team-members");
+        _group = (Group)inputs["group"];
+        _aadClient = (GraphServiceClient)inputs["aad-client"];
+        _members = ((List<TeamMemberConfiguration>)inputs["team-members"]);
         return Task.CompletedTask;
     }
 
-    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, IVariable>();
+        var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
@@ -104,7 +103,7 @@ public class AzureAdAddTeamMembersToGroup_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync()
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
     }

@@ -1,8 +1,6 @@
 using Azure.Identity;
 using Microsoft.Graph;
 using Nox.Cli.Abstractions;
-using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Variables;
 using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -59,17 +57,17 @@ public class AzureAdConnect_v1 : INoxCliAddin
     private string? _clientId;
     private string? _clientSecret;
 
-    public Task BeginAsync(IDictionary<string, IVariable> inputs)
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _tenantId = inputs.Value<string>("tenant-id");
-        _clientId = inputs.Value<string>("client-id");
-        _clientSecret = inputs.Value<string>("client-secret");
+        _tenantId = (string)inputs["tenant-id"];
+        _clientId = (string)inputs["client-id"];
+        _clientSecret = (string)inputs["client-secret"];
         return Task.CompletedTask;
     }
 
-    public Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
+    public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, IVariable>();
+        var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
@@ -78,7 +76,7 @@ public class AzureAdConnect_v1 : INoxCliAddin
             var userScopes = new string[] { @"https://graph.microsoft.com/.default" };
             var credentials = new ClientSecretCredential(_tenantId, _clientId, _clientSecret);
             var client = new GraphServiceClient(credentials, userScopes);
-            outputs["aad-client"] = new Variable(client);
+            outputs["aad-client"] = client;
             ctx.SetState(ActionState.Success);
         }
         catch (Exception ex)
@@ -86,10 +84,10 @@ public class AzureAdConnect_v1 : INoxCliAddin
             ctx.SetErrorMessage(ex.Message);
         }
 
-        return Task.FromResult((IDictionary<string, IVariable>)outputs);
+        return Task.FromResult((IDictionary<string, object>)outputs);
     }
 
-    public Task EndAsync()
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
     }

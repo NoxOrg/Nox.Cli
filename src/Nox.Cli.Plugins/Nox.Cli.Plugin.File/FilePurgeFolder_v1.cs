@@ -35,16 +35,16 @@ public class FilePurgeFolder_v1 : INoxCliAddin
     private string? _path;
     private bool? _includeRoot;
     
-    public Task BeginAsync(IDictionary<string, IVariable> inputs)
+    public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _path = inputs.Value<string>("path");
         _includeRoot = inputs.ValueOrDefault<bool>("include-root", this);
         return Task.CompletedTask;
     }
 
-    public Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
+    public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, IVariable>();
+        var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
@@ -89,10 +89,10 @@ public class FilePurgeFolder_v1 : INoxCliAddin
             }
         }
         
-        return Task.FromResult<IDictionary<string, IVariable>>(outputs);
+        return Task.FromResult<IDictionary<string, object>>(outputs);
     }
 
-    public Task EndAsync()
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
     }

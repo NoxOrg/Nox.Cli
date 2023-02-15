@@ -1,6 +1,4 @@
 ﻿using Nox.Cli.Abstractions;
-using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Variables;
 using Npgsql;
 
 namespace Nox.Cli.Plugins.Postgres;
@@ -35,35 +33,29 @@ public class PostgresSanitizeSqlString_v1 : INoxCliAddin
         };
     }
 
-    private string? _inputString;
+    private string _inputString = string.Empty;
 
-    public Task BeginAsync(IDictionary<string, IVariable> inputs)
+    public Task BeginAsync(IDictionary<string,object> inputs)
     {
-        _inputString = inputs.Value<string>("input-string");
+        _inputString = (string)inputs["input-string"];
+
         return Task.FromResult(true);
     }
 
-    public  Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
+    public  Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, IVariable?>();
+        var outputs = new Dictionary<string, object?>();
 
         ctx.SetState(ActionState.Error);
-        if (string.IsNullOrEmpty(_inputString))
-        {
-            outputs["result"] = new Variable("");
-        }
-        else
-        {
-            outputs["result"] = new Variable( _inputString.Sanitize());    
-        }
-        
+
+        outputs["result"] = _inputString.Sanitize();
 
         ctx.SetState(ActionState.Success);
 
-        return Task.FromResult((IDictionary<string, IVariable>)outputs);
+        return Task.FromResult((IDictionary<string,object>)outputs);
     }
 
-    public Task EndAsync()
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.FromResult(true);
     }

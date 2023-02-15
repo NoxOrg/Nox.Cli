@@ -5,7 +5,6 @@ using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Authentication;
 using Nox.Cli.Shared.DTO.Health;
 using Nox.Cli.Shared.DTO.Workflow;
-using Nox.Cli.Variables;
 using RestSharp;
 using RestSharp.Authenticators.OAuth2;
 
@@ -42,7 +41,7 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
         return JsonSerializer.Deserialize<EchoHealthResponse>(result.Content!, _serializerOptions)!;
     }
 
-    public async Task<BeginTaskResponse> BeginTask(Guid workflowId, INoxAction? action, IDictionary<string, Variable>? inputs)
+    public async Task<BeginTaskResponse> BeginTask(Guid workflowId, INoxAction? action, IDictionary<string, object>? inputs)
     {
         if (string.IsNullOrEmpty(_remoteTaskExecutorConfiguration.Url)) throw new Exception("NoxCliServerIntegration::BeginTask -> ServerUrl not set");
         var client = new RestClient($"{_remoteTaskExecutorConfiguration.Url}/Task/v1/Begin");

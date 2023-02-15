@@ -1,6 +1,4 @@
 ﻿using Nox.Cli.Abstractions;
-using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Variables;
 using Npgsql;
 
 namespace Nox.Cli.Plugins.Postgres;
@@ -54,23 +52,23 @@ public class PostgresExecuteScalar_v1 : INoxCliAddin
 
     private List<object>? _parameters;
 
-    public Task BeginAsync(IDictionary<string, IVariable> inputs)
+    public Task BeginAsync(IDictionary<string,object> inputs)
     {
-        _connection = inputs.Value<NpgsqlConnection>("connection");
+        _connection = (NpgsqlConnection)inputs["connection"];
 
-        _sql = inputs.Value<string>("sql");
+        _sql = (string)inputs["sql"];
 
         if (inputs.ContainsKey("parameters"))
         {
-            _parameters = inputs.Value<List<object>>("parameters");
+            _parameters = (List<object>)inputs["parameters"];
         }
 
         return Task.FromResult(true);
     }
 
-    public async Task<IDictionary<string, IVariable>> ProcessAsync(INoxWorkflowContext ctx)
+    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, IVariable?>();
+        var outputs = new Dictionary<string, object?>();
 
         ctx.SetState(ActionState.Error);
 
@@ -98,7 +96,7 @@ public class PostgresExecuteScalar_v1 : INoxCliAddin
 
                 var result = await cmd.ExecuteScalarAsync();
 
-                outputs["result"] = new Variable(result ?? new object());
+                outputs["result"] = result ?? new object();
 
                 ctx.SetState(ActionState.Success);
             }
@@ -111,7 +109,7 @@ public class PostgresExecuteScalar_v1 : INoxCliAddin
         return outputs!;
     }
 
-    public Task EndAsync()
+    public Task EndAsync(INoxWorkflowContext ctx)
     {
         return Task.CompletedTask;
     }

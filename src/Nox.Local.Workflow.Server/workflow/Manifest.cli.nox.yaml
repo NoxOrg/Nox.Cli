@@ -15,11 +15,11 @@ authentication:
 local-task-executor:
   secrets:
     - provider: azure-keyvault
-      url: https://EDA1DB500EBCEB02.azure.net/
+      url: https://we-key-Nox-02.vault.azure.net/
 
 remote-task-executor:
   url: http://localhost:8000
   application-id: 750b96e1-e772-48f8-b6b3-84bac1961d9b
   secrets:
     - provider: azure-keyvault
-      url: https://nox-14356B22BB785E44.vault.azure.net/
+      url: https://nox-3D6394A1E5840C21.vault.azure.net/

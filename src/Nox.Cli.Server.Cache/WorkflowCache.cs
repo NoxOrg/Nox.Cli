@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Caching.Memory;
-using Nox.Cli.Abstractions;
-using Nox.Cli.Variables;
 
 namespace Nox.Cli.Server.Cache;
 
@@ -18,22 +16,19 @@ public class WorkflowCache: IWorkflowCache
             .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
     }
     
-    public IDictionary<string, IVariable> GetWorkflow(Guid workflowId)
+    public IDictionary<string, object> GetWorkflow(Guid workflowId)
     {
-        if (_memCache.TryGetValue(workflowId, out IDictionary<string, IVariable>? cacheValue))
+        if (_memCache.TryGetValue(workflowId, out IDictionary<string, object>? cacheValue))
         {
             return cacheValue!;
         }
-        return new Dictionary<string, IVariable>();
+        return new Dictionary<string, object>();
     }
 
-    public void SetWorkflow(Guid workflowId, IDictionary<string, IVariable> variables)
+    public void SetWorkflow(Guid workflowId, IDictionary<string, object> variables)
     {
-        //var cacheValue = GetWorkflow(workflowId);
-        //if (cacheValue != null) 
-        _memCache.Remove(workflowId);
+        var cacheValue = GetWorkflow(workflowId);
+        if (cacheValue != null) _memCache.Remove(workflowId);
         _memCache.Set(workflowId, variables, _cacheOptions);
     }
-    
-    
 }
