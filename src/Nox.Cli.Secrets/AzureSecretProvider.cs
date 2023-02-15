@@ -29,8 +29,15 @@ public class AzureSecretProvider: ISecretProvider
         {
             foreach (var key in keys)
             {
-                var secret = await secretClient.GetSecretAsync(key.Replace(":", "--").Replace("_", "-"));
-                secrets.Add(new KeyValuePair<string, string>(key, secret.Value.Value ?? ""));
+                try
+                {
+                    var secret = await secretClient.GetSecretAsync(key.Replace(":", "--").Replace("_", "-"));
+                    secrets.Add(new KeyValuePair<string, string>(key, secret.Value.Value ?? ""));
+                }
+                catch 
+                {
+                    //Ignore
+                }
             }
         }
         catch (Exception ex)

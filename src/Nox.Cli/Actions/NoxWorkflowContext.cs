@@ -158,21 +158,6 @@ public class NoxWorkflowContext : INoxWorkflowContext
         // }
     }
 
-    private string MaskSecretsInDisplayText(string input)
-    {
-        var output = input;
-        var match = _secretsVariableRegex.Match(output);
-        while (match.Success)
-        {
-            var variable = match.Groups["variable"].Value;
-            string resolvedValue = _varProvider.LookupValue(variable)?.ToString() ?? "";
-            output = _secretsVariableRegex.Replace(input,
-                new string('*', Math.Min(20, resolvedValue.Length))
-            );
-            match = _secretsVariableRegex.Match(output);
-        }
-        return output;
-    }
 }
 
 

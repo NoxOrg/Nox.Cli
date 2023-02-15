@@ -13,5 +13,12 @@ public class Variable: IVariable
     public object? Value { get; set; } = null;
     public bool IsSecret { get; set; } = false;
     
-    public string DisplayValue => IsSecret ? new string('*', Math.Min(20, Value.ToString().Length)) : Value.ToString();
+    public string DisplayValue
+    {
+        get
+        {
+            if (Value != null) return IsSecret ? new string('*', Math.Min(20, Value.ToString()!.Length)) : Value.ToString()!;
+            return "";
+        }
+    }
 }

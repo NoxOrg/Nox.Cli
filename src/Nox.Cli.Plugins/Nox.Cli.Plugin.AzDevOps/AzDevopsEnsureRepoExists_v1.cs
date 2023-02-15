@@ -12,7 +12,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/ensure-repo@v1",
+            Name = "azdevops/ensure-repo-exists@v1",
             Author = "Jan Schutte",
             Description = "Get a reference to a DevOps repository, if it does not exist then create it.",
 

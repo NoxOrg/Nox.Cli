@@ -37,6 +37,8 @@ public class TaskExecutor: ITaskExecutor
         _workflowId = workflowId;
         var variables = _cache.GetWorkflow(_workflowId);
         _inputs = ParseInputs(inputs);
+        //Resolve any unresolved variables
+        
         VariableHelper.CopyVariables(_inputs, variables);
         _cache.SetWorkflow(_workflowId, variables);
         _configuration = configuration;

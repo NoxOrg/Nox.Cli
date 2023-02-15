@@ -54,16 +54,12 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             
             if (ctx.CurrentAction.RunAtServer == true)
             {
-                // if (!await authenticator.Authenticate())
-                // {
-                //     throw new Exception("Unable to authenticate with Nox Cli Server!");
-                // }
                 var serverTaskDescription = $"{formattedTaskDescription} [bold yellow] -> CLI SERVER[/]";
-                _console.WriteLine();
-                _console.MarkupLine(serverTaskDescription);
+                // _console.WriteLine();
+                // _console.MarkupLine(serverTaskDescription);
                 success = await _console.Status().Spinner(Spinner.Known.Clock)
-                    .StartAsync(formattedTaskDescription, async _ =>
-                        await ProcessServerTask(_console, ctx, formattedTaskDescription)
+                    .StartAsync(serverTaskDescription, async _ =>
+                        await ProcessServerTask(_console, ctx, serverTaskDescription)
                     );
             }
             else
@@ -193,7 +189,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             console.MarkupLine($"{Emoji.Known.RedCircle} [indianred1]Unable to connect to Nox Cli Server[/]");
             return false;
         }
-
+        
         var inputs = ctx.GetInputVariables(ctx.CurrentAction);
 
         if (!ctx.CurrentAction.EvaluateIf())
@@ -217,12 +213,6 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         ctx.CurrentAction.EvaluateValidate();
 
         _processedActions.Add(ctx.CurrentAction);
-        
-        if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
-        {
-            console.WriteLine();
-            console.MarkupLine(formattedTaskDescription);
-        }
 
         if (ctx.CurrentAction.State == ActionState.Error)
         {

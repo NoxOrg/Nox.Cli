@@ -14,7 +14,7 @@ autoMigrations: false
 
 secrets:
   - provider: azure-keyvault
-    url: https://we-key-Nox-02.vault.azure.net/
+    url: https://svc-6A9B1182FC66686F.vault.azure.net/
 
 database:
   name: SampleCurrencyDb

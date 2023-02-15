@@ -50,7 +50,15 @@ public class VariableProvider: IVariableProvider
     
     public void SetVariable(string key, object value)
     {
-        _variables[$"vars.{key}"].Value = value;
+        if (_variables.ContainsKey(key))
+        {
+            _variables[$"{key}"].Value = value;    
+        }
+        else
+        {
+            _variables.Add(key, new Variable(value));
+        }
+        
     }
 
     public void SetActionVariable(INoxAction action, string key, object value)

@@ -2,7 +2,7 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "test ping",
+      "commandLineArgs": "test vars",
       "workingDirectory": "$(ProjectDir)"
     }
   }

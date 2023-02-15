@@ -12,7 +12,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/ensure-Project@v1",
+            Name = "azdevops/ensure-project-exists@v1",
             Author = "Jan Schutte",
             Description = "Get a reference to a DevOps project, if it does not exist then create it.",
 
