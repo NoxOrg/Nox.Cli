@@ -1,7 +1,4 @@
-﻿using System.Text.Json;
-using Microsoft.Extensions.Configuration;
-using Nox.Core.Configuration;
-using Nox.Core.Interfaces.Configuration;
+﻿using Nox.Core.Interfaces.Configuration;
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
@@ -24,7 +21,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private INoxAction? _currentAction;
     private INoxAction? _nextAction;
 
-    private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>[(secrets)\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+secret[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public INoxAction? CurrentAction => _currentAction;
 
@@ -48,7 +45,9 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _nextAction = _steps.Select(kv => kv.Value).Where(a => a.Sequence == _currentActionSequence + 1).FirstOrDefault();
     }
 
+    public Guid InstanceId { get; }
     public Guid WorkflowId { get; init; }
+    public ActionState State { get; }
 
     public void SetState(ActionState state)
     {
@@ -71,7 +70,12 @@ public class NoxWorkflowContext : INoxWorkflowContext
         var varKey = $"steps.{action.Id}.error-message";
         _varProvider.SetActionVariable(action, varKey, errorMessage);
     }
-    
+
+    public async Task<ExecuteTaskResult> ExecuteTask(INoxAction action)
+    {
+        throw new NotImplementedException();
+    }
+
     public void AddToVariables(string key, object value)
     {
         _varProvider.SetVariable($"vars.{key}", value);
@@ -141,6 +145,19 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
                     newAction.Inputs.Add(withKey, input);
                 }
+                
+                if (newAction.Display != null)
+                {
+                    if (newAction.Display.Error != null)
+                    {
+                        newAction.Display.Error = MaskSecretsInDisplayText(newAction.Display.Error);
+                    }
+
+                    if (newAction.Display.Success != null)
+                    {
+                        //newAction.Display.Success = MaskSecretsInDisplayText(newAction.Display.Success);
+                    }
+                }
 
                 steps[newAction.Id] = newAction;
 
@@ -157,7 +174,22 @@ public class NoxWorkflowContext : INoxWorkflowContext
         //     throw new Exception("You have set one of the steps in the workflow to run on the cli server, but the server has not been defined in the Manifest.cli.nox.yaml file.");
         // }
     }
-
+    
+    private string MaskSecretsInDisplayText(string input)
+    {
+        var output = input;
+        var match = _secretsVariableRegex.Match(output);
+        while (match.Success)
+        {
+            var variable = match.Groups["variable"].Value;
+            output = _secretsVariableRegex.Replace(input,
+                new string('*', 20)
+            );
+            match = _secretsVariableRegex.Match(output);
+        }
+        return output;
+    }
+    
 }
 
 

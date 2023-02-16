@@ -90,7 +90,7 @@ public class AzDevopsAddTeamMember_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _graphClient?.Dispose();
         return Task.CompletedTask;

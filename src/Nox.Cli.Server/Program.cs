@@ -1,6 +1,7 @@
 using Microsoft.Graph.ExternalConnectors;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
+using Nox.Cli.Server.Abstractions;
 using Nox.Cli.Server.Cache;
 using Nox.Cli.Server.Extensions;
 using Nox.Cli.Server.Services;
@@ -49,7 +50,7 @@ builder.Services.AddSwaggerGen(options =>
     }); 
 });
 
-builder.Services.AddSingleton<ITaskExecutorFactory, TaskExecutorFactory>();
+builder.Services.AddSingleton<IWorkflowContextFactory, WorkflowContextFactory>();
 
 var app = builder.Build();
 

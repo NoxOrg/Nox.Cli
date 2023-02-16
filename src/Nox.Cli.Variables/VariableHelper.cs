@@ -1,26 +1,10 @@
+using System.Text.Json;
 using Nox.Cli.Abstractions;
 
 namespace Nox.Cli.Variables;
 
 public static class VariableHelper
 {
-    public static void CopyVariables(IDictionary<string, object> source, IDictionary<string, IVariable> destination)
-    {
-        foreach (var sourceVar in source)
-        {
-            var key = sourceVar.Key;
-            //If not in destination then add it
-            if (!destination.ContainsKey(key))
-            {
-                destination.Add(key, new Variable(sourceVar.Value));
-            }
-            else //If in destination but source has a value then replace it
-            {
-                destination[key].Value = sourceVar.Value;
-            }
-        }
-    }
-
     public static IDictionary<string, object>? ExtractSimpleVariables(IDictionary<string, object>? source)
     {
         if (source == null) return null;
@@ -35,4 +19,32 @@ public static class VariableHelper
         }
         return result;
     }
+    
+    public static object GetJsonElementValue(JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.False:
+            case JsonValueKind.True:
+                return element.GetBoolean();
+            case JsonValueKind.Array:
+                return element.EnumerateArray();
+            case JsonValueKind.Null:
+                return null!;
+            case JsonValueKind.Object:
+                return element;
+            case JsonValueKind.Number:
+                if (element.TryGetInt32(out var intVal))
+                {
+                    return element.GetInt32();    
+                }
+
+                return element.GetDouble();
+            case JsonValueKind.Undefined:
+            case JsonValueKind.String:
+            default:
+                return element!.GetString()!;
+        }   
+    }
+    
 }

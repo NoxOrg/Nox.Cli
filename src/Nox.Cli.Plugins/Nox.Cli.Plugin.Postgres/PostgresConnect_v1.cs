@@ -112,7 +112,7 @@ public class PostgresConnect_v1 : INoxCliAddin
         return outputs;
     }
 
-    public async Task EndAsync(INoxWorkflowContext ctx)
+    public async Task EndAsync()
 
     {
         if (_connection != null)

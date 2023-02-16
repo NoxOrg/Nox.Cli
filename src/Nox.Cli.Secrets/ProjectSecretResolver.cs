@@ -6,7 +6,7 @@ namespace Nox.Cli.Secrets;
 
 public static class ProjectSecretResolver
 {
-    public static void ResolveProjectSecrets(this IDictionary<string, IVariable> variables, IProjectConfiguration config)
+    public static void ResolveProjectSecrets(this IDictionary<string, object?> variables, IProjectConfiguration config)
     {
         var secretKeys = variables
             .Select(kv => kv.Key)
@@ -33,8 +33,7 @@ public static class ProjectSecretResolver
 
         foreach (var kv in secrets)
         {
-            variables[$"project.secrets.{kv.Key}"].Value = kv.Value;
-            variables[$"project.secrets.{kv.Key}"].IsSecret = true;
+            variables[$"project.secrets.{kv.Key}"] = kv.Value;
         }
     }
 }

@@ -1,20 +1,29 @@
+using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
+using Nox.Cli.Server.Abstractions;
 using Nox.Core.Interfaces.Configuration;
 
 namespace Nox.Cli.Secrets;
 
 public static class ServerSecretResolver
 {
-    public static void ResolveServerSecrets(this IDictionary<string, IVariable> variables, IRemoteTaskExecutorConfiguration config)
+    private static readonly Regex SecretsVariableRegex = new(@"\$\{\{\s*server\.secrets\.(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    
+    public static void ResolveServerSecrets(this List<ServerVariable> variables, IRemoteTaskExecutorConfiguration config)
     {
-        var secretKeys = variables
-            .Select(kv => kv.Key)
-            .Where(e => e.StartsWith("server.secrets.", StringComparison.OrdinalIgnoreCase))
-            .Select(e => e[15..])
-            .ToArray();
+        if (config?.Secrets == null) return;
+        var secretKeys = new Dictionary<string, string>();
+        foreach (var item in variables)
+        {
+            var match = SecretsVariableRegex.Match(item.Value.ToString());
+            if (match.Success)
+            {
+                var secretKey = match.Groups["variable"].Value;
+                secretKeys.Add(secretKey, item.FullName);
+            }
+        }
         
-        if (config.Secrets == null) return;
         var secrets = new List<KeyValuePair<string, string>>();
         foreach (var vault in config.Secrets)
         {
@@ -22,8 +31,8 @@ public static class ServerSecretResolver
             {
                 case "azure-keyvault":
                     var azureVault = new AzureSecretProvider(vault.Url);
-                    
-                    var azureSecrets = azureVault.GetSecretsFromVault(secretKeys).Result;
+                    //TODO cache these secrets
+                    var azureSecrets = azureVault.GetSecretsFromVault(secretKeys.Keys.ToArray()).Result;
                     if (azureSecrets != null && azureSecrets.Any()) secrets.AddRange(azureSecrets);
                     break;
             }
@@ -33,8 +42,9 @@ public static class ServerSecretResolver
 
         foreach (var kv in secrets)
         {
-            variables[$"server.secrets.{kv.Key}"].Value = kv.Value;
-            variables[$"server.secrets.{kv.Key}"].IsSecret = true;
+            var varName = secretKeys[kv.Key];
+            var variable = variables.Single(v => v.FullName == varName);
+            variable.Value = kv.Value;
         }
     }
 }

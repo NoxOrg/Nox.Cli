@@ -5,7 +5,7 @@ namespace Nox.Cli.Secrets;
 
 public static class OrgSecretResolver
 {
-    public static void ResolveOrgSecrets(this IDictionary<string, IVariable> variables, ILocalTaskExecutorConfiguration? config)
+    public static void ResolveOrgSecrets(this IDictionary<string, object?> variables, ILocalTaskExecutorConfiguration? config)
     {
         var secretKeys = variables
             .Select(kv => kv.Key)
@@ -32,8 +32,7 @@ public static class OrgSecretResolver
 
         foreach (var kv in secrets)
         {
-            variables[$"org.secrets.{kv.Key}"].Value = kv.Value;
-            variables[$"org.secrets.{kv.Key}"].IsSecret = true;
+            variables[$"org.secrets.{kv.Key}"] = kv.Value;
         }
     }
 }

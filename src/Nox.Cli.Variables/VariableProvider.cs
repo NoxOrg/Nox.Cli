@@ -14,11 +14,11 @@ public class VariableProvider
 {
     private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    private readonly Dictionary<string, IVariable> _variables;
+    private readonly Dictionary<string, object?> _variables;
     
     public VariableProvider(IProjectConfiguration projectConfig, IWorkflowConfiguration workflow, ILocalTaskExecutorConfiguration? lteConfig = null)
     {
-        _variables = new Dictionary<string, IVariable>(StringComparer.OrdinalIgnoreCase);
+        _variables = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         Initialize(projectConfig, workflow, lteConfig);
     }
 
@@ -38,7 +38,7 @@ public class VariableProvider
 
         foreach (var v in variablesTemp)
         {
-            _variables.Add(v, new Variable(null));
+            _variables.Add(v, null);
         }
         
         _variables.ResolveOrgSecrets(lteConfig);
@@ -50,11 +50,11 @@ public class VariableProvider
     {
         if (_variables.ContainsKey(key))
         {
-            _variables[$"{key}"].Value = value;    
+            _variables[$"{key}"] = value;    
         }
         else
         {
-            _variables.Add(key, new Variable(value));
+            _variables.Add(key, value);
         }
         
     }
@@ -81,18 +81,6 @@ public class VariableProvider
         return unresolvedVars;
     }
 
-    public void ResolveVariables(IDictionary<string, object> source)
-    {
-        foreach (var item in source)
-        {
-            if (_variables.ContainsKey(item.Key))
-            {
-                source.Remove(item.Key);
-                source.Add(item.Key, _variables[item.Key]);
-            }
-        }
-    }
-    
     public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
     {
         foreach (var output in outputs)
@@ -102,11 +90,11 @@ public class VariableProvider
             {
                 if (output.Value is JsonElement element)
                 {
-                    _variables[varKey].Value = GetJsonElementValue(element);
+                    _variables[varKey] = VariableHelper.GetJsonElementValue(element);
                 }
                 else
                 {
-                    _variables[varKey].Value = output.Value;    
+                    _variables[varKey] = output.Value;    
                 }
                 
             }
@@ -115,7 +103,7 @@ public class VariableProvider
         ResolveAllVariables(action);
     }
     
-    private object ReplaceVariable(string value, bool obfuscate = false)
+    private object ReplaceVariable(string value)
     {
         object result = value;
 
@@ -127,7 +115,7 @@ public class VariableProvider
 
             var variable = match.Groups["variable"].Value;
 
-            var resolvedValue = LookupValue(variable, obfuscate);
+            var resolvedValue = LookupValue(variable);
 
             if (resolvedValue == null || resolvedValue.GetType() == typeof(object))
             {
@@ -149,13 +137,13 @@ public class VariableProvider
         return result;
     }
     
-    private object? LookupValue(string variable, bool obfuscate = false)
+    private object? LookupValue(string variable)
     {
         if (_variables.ContainsKey(variable))
         {
             var lookupVar = _variables[variable];
-            if (lookupVar.Value == null) return null;
-            return obfuscate ? _variables[variable].DisplayValue : _variables[variable].Value;
+            if (lookupVar == null) return null;
+            return _variables[variable];
         }
         return null;
     }
@@ -203,12 +191,12 @@ public class VariableProvider
 
         if (!string.IsNullOrWhiteSpace(action.Display?.Success))
         {
-            action.Display.Success = ReplaceVariable(action.Display.Success, true).ToString()!;
+            action.Display.Success = ReplaceVariable(action.Display.Success).ToString()!;
         }
 
         if (!string.IsNullOrWhiteSpace(action.Display?.Error))
         {
-            action.Display.Error = ReplaceVariable(action.Display.Error, true).ToString()!;
+            action.Display.Error = ReplaceVariable(action.Display.Error).ToString()!;
         }
 
         if (!string.IsNullOrWhiteSpace(action.If))
@@ -217,25 +205,5 @@ public class VariableProvider
         }
     }
 
-    private object GetJsonElementValue(JsonElement element)
-    {
-        switch (element.ValueKind)
-        {
-            case JsonValueKind.False:
-            case JsonValueKind.True:
-                return element.GetBoolean();
-            case JsonValueKind.Array:
-                return element.EnumerateArray();
-            case JsonValueKind.Null:
-                return null!;
-            case JsonValueKind.Object:
-                return element;
-            case JsonValueKind.Number:
-                return element.GetDouble();
-            case JsonValueKind.Undefined:
-            case JsonValueKind.String:
-            default:
-                return element!.GetString()!;
-        }   
-    }
+    
 }

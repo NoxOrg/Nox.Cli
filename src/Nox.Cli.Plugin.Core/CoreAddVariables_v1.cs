@@ -59,7 +59,7 @@ public class CoreAddVariables_v1 : INoxCliAddin
         return Task.FromResult((IDictionary<string,object>)outputs);
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
 
     {
         return Task.FromResult(true);

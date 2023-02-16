@@ -8,7 +8,6 @@ namespace Nox.Cli.Server.Integration;
 public interface INoxCliServerIntegration
 {
     Task<EchoHealthResponse?> EchoHealth();
-    Task<BeginTaskResponse> BeginTask(Guid workflowId, INoxAction action, IDictionary<string, object>? inputs);
-    Task<ExecuteTaskResponse> ExecuteTask(Guid taskExecutorId);
+    Task<ExecuteTaskResult> ExecuteTask(Guid workflowId, INoxAction? action);
     Task<TaskStateResponse> GetTaskState(Guid taskExecutorId);
 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Server.Abstractions;
 using Nox.Cli.Server.Services;
 using Nox.Cli.Shared.DTO.Workflow;
 
@@ -11,44 +12,40 @@ namespace Nox.Cli.Server.Controllers;
 [Produces("application/json")]
 public class TaskController : Controller
 {
-    private readonly ITaskExecutorFactory _executorFactory;
+    private readonly IWorkflowContextFactory _contextFactory;
 
     public TaskController(
-        ITaskExecutorFactory executorFactory)
+        IWorkflowContextFactory contextFactory)
     {
-        _executorFactory = executorFactory;
+        _contextFactory = contextFactory;
     }
     
     
     [HttpGet("[action]/{taskExecutorId}")]
-    public ActionResult<ExecuteTaskResponse> GetState(Guid taskExecutorId)
+    public ActionResult<ExecuteTaskResult> GetState(Guid workflowId)
     {
-        var executor = _executorFactory.GetInstance(taskExecutorId);
+        //var executor = _executorFactory.GetInstance(taskExecutorId);
         var result = new TaskStateResponse
         {
-            TaskExecutorId = taskExecutorId,
-            WorkflowId = executor.WorkflowId,
-            State = executor.State,
-            StateName = Enum.GetName(executor.State)
+            //TaskExecutorId = taskExecutorId,
+            //WorkflowId = executor.WorkflowId,
+            //State = executor.State,
+            //StateName = Enum.GetName(executor.State)
         };
         return Ok(result);
     }
-    
-    [HttpPost("[action]")]
-    public async Task<ActionResult<ExecuteTaskResponse>> Begin([FromBody] BeginTaskRequest request)
-    {
-        var executor = _executorFactory.NewInstance(request.WorkflowId);
-        
-        var result = await executor.BeginAsync(request.WorkflowId, request.ActionConfiguration!, request.Inputs!);
-        return Ok(result);
-    }
 
 
     [HttpPost("[action]")]
-    public async Task<ActionResult<ExecuteTaskResponse>> Execute([FromBody] ExecuteTaskRequest request)
+    public async Task<ActionResult<ExecuteTaskResult>> Execute([FromBody] ExecuteTaskRequest request)
     {
-        var executor = _executorFactory.GetInstance(request.TaskExecutorId);
-        var result = await executor.ExecuteAsync();
+        var context = _contextFactory.GetInstance(request.WorkflowId);
+        if (context == null)
+        {
+            context = _contextFactory.NewInstance(request.WorkflowId);
+        }
+
+        var result = context.ExecuteTask(request.ActionConfiguration);
         return Ok(result);
     }
 }

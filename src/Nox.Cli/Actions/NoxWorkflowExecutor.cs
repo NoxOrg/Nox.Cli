@@ -84,7 +84,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             ctx.NextStep();
         }
 
-        await Task.WhenAll(_processedActions.Where(p => p.RunAtServer == false).Select(p => p.ActionProvider.EndAsync(ctx)));
+        await Task.WhenAll(_processedActions.Where(p => p.RunAtServer == false).Select(p => p.ActionProvider.EndAsync()));
 
 
         watch.Stop();
@@ -190,7 +190,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             return false;
         }
         
-        var inputs = ctx.GetInputVariables(ctx.CurrentAction);
+        //var inputs = ctx.GetInputVariables(ctx.CurrentAction);
 
         if (!ctx.CurrentAction.EvaluateIf())
         {
@@ -203,8 +203,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             return true;
         }
         
-        var beginResult = await _serverIntegration!.BeginTask(ctx.WorkflowId, ctx.CurrentAction, inputs);
-        var executeResponse = await _serverIntegration.ExecuteTask(beginResult.TaskExecutorId);
+        var executeResponse = await _serverIntegration.ExecuteTask(ctx.WorkflowId, ctx.CurrentAction);
         ctx.SetState(executeResponse.State);
         var outputs = executeResponse.Outputs;
 

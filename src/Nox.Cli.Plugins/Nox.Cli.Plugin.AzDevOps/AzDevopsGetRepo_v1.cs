@@ -87,7 +87,7 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _repoClient?.Dispose();
         return Task.CompletedTask;

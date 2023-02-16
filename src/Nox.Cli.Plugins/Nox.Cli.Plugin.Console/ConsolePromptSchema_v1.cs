@@ -192,7 +192,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         return Task.CompletedTask;
     }

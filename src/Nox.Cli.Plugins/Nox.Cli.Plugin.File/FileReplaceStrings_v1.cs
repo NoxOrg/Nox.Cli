@@ -79,7 +79,7 @@ public class FileReplaceStrings_v1 : INoxCliAddin
         return Task.FromResult<IDictionary<string, object>>(outputs);
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         return Task.CompletedTask;
     }

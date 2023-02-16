@@ -110,7 +110,7 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _gitClient?.Dispose();
         return Task.CompletedTask;
