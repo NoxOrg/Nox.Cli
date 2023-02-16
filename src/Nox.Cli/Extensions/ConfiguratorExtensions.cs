@@ -1,5 +1,4 @@
-﻿using Azure.Identity;
-using Nox.Cli.Commands;
+﻿using Nox.Cli.Commands;
 using Nox.Core.Constants;
 using RestSharp;
 using Spectre.Console.Cli;
@@ -15,8 +14,8 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Authentication;
 using Nox.Cli.Authentication.Azure;
+using Nox.Cli.Configuration.Validation;
 using Nox.Cli.Server.Integration;
-using Nox.Cli.Validation.Configuration;
 
 namespace Nox.Cli;
 
@@ -58,6 +57,7 @@ internal static class ConfiguratorExtensions
             .WithTypeMapping<ICliCommandConfiguration, CliCommandConfiguration>()
             .WithTypeMapping<ILocalTaskExecutorConfiguration, LocalTaskExecutorConfiguration>()
             .WithTypeMapping<ISecretConfiguration, SecretConfiguration>()
+            .WithTypeMapping<ISecretValidForConfiguration, SecretsValidForConfiguration>()
             .WithTypeMapping<ICliAuthConfiguration, CliAuthConfiguration>()
             .WithTypeMapping<IRemoteTaskExecutorConfiguration, RemoteTaskExecutorConfiguration>()
             .Build();

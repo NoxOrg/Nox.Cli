@@ -25,7 +25,7 @@ public class ServerCache: IServerCache
         _memCache.Set(workflowId, context, _cacheOptions);
     }
 
-    public INoxWorkflowContext GetContext(Guid workflowId)
+    public INoxWorkflowContext? GetContext(Guid workflowId)
     {
         if (_memCache.TryGetValue(workflowId, out INoxWorkflowContext? cacheValue))
         {

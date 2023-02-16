@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Nox.Cli.Validation {
+namespace Nox.Cli.Configuration {
     using System;
     
     
@@ -28,7 +28,7 @@ namespace Nox.Cli.Validation {
         internal static System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.Equals(null, resourceMan)) {
-                    System.Resources.ResourceManager temp = new System.Resources.ResourceManager("Nox.Cli.Validation.ValidationResources", typeof(ValidationResources).Assembly);
+                    System.Resources.ResourceManager temp = new System.Resources.ResourceManager("Nox.Cli.Configuration.ValidationResources", typeof(ValidationResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -45,6 +45,12 @@ namespace Nox.Cli.Validation {
             }
         }
         
+        internal static string AuthAuthorityEmpty {
+            get {
+                return ResourceManager.GetString("AuthAuthorityEmpty", resourceCulture);
+            }
+        }
+        
         internal static string AuthProviderEmpty {
             get {
                 return ResourceManager.GetString("AuthProviderEmpty", resourceCulture);
@@ -57,21 +63,15 @@ namespace Nox.Cli.Validation {
             }
         }
         
-        internal static string AuthAuthorityEmpty {
+        internal static string RteApplicationIdEmpty {
             get {
-                return ResourceManager.GetString("AuthAuthorityEmpty", resourceCulture);
+                return ResourceManager.GetString("RteApplicationIdEmpty", resourceCulture);
             }
         }
         
         internal static string RteUrlEmpty {
             get {
                 return ResourceManager.GetString("RteUrlEmpty", resourceCulture);
-            }
-        }
-        
-        internal static string RteApplicationIdEmpty {
-            get {
-                return ResourceManager.GetString("RteApplicationIdEmpty", resourceCulture);
             }
         }
     }

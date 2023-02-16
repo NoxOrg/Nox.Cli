@@ -55,6 +55,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.Test", "Nox.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Server.Abstractions", "Nox.Cli.Server.Abstractions\Nox.Cli.Server.Abstractions.csproj", "{0D7A8A90-FE75-41CF-974B-29FE22308BB9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{63454657-F25B-4BAB-8868-0766A619BFE6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Secrets.Tests", "Nox.Cli.Secrets.Tests\Nox.Cli.Secrets.Tests.csproj", "{92234CC8-9E26-405B-8846-73D5DFC0B6D2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -161,6 +165,10 @@ Global
 		{0D7A8A90-FE75-41CF-974B-29FE22308BB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D7A8A90-FE75-41CF-974B-29FE22308BB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D7A8A90-FE75-41CF-974B-29FE22308BB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92234CC8-9E26-405B-8846-73D5DFC0B6D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92234CC8-9E26-405B-8846-73D5DFC0B6D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92234CC8-9E26-405B-8846-73D5DFC0B6D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92234CC8-9E26-405B-8846-73D5DFC0B6D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -171,5 +179,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{A756124C-2559-4032-BB26-8FBC9E32CCB6} = {6E571105-AAD9-437E-BB86-E3D682786253}
 		{99D27D81-9868-49B9-B344-17826D0554EB} = {417CEF6C-3342-434D-92C7-B1A4597EE655}
+		{B0A97144-20F8-4CD1-A8D2-653DC262BB94} = {63454657-F25B-4BAB-8868-0766A619BFE6}
+		{92234CC8-9E26-405B-8846-73D5DFC0B6D2} = {63454657-F25B-4BAB-8868-0766A619BFE6}
 	EndGlobalSection
 EndGlobal

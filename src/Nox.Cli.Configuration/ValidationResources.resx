@@ -18,19 +18,19 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
+    <data name="AuthAuthorityEmpty" xml:space="preserve">
+        <value>The Cli Authentication authority must be specified  in Manifest.cli.nox.yaml</value>
+    </data>
     <data name="AuthProviderEmpty" xml:space="preserve">
         <value>The Cli Authentication provider must be specified  in Manifest.cli.nox.yaml</value>
     </data>
     <data name="AuthProviderInvalid" xml:space="preserve">
         <value>The Cli Authentication provider must be one of {0}  in Manifest.cli.nox.yaml</value>
     </data>
-    <data name="AuthAuthorityEmpty" xml:space="preserve">
-        <value>The Cli Authentication authority must be specified  in Manifest.cli.nox.yaml</value>
+    <data name="RteApplicationIdEmpty" xml:space="preserve">
+        <value>The Remote Task Executor application-id must be specified in Manifest.cli.nox.yaml</value>
     </data>
     <data name="RteUrlEmpty" xml:space="preserve">
         <value>The Remote Task Executor url must be specified in Manifest.cli.nox.yaml</value>
-    </data>
-    <data name="RteApplicationIdEmpty" xml:space="preserve">
-        <value>The Remote Task Executor application-id must be specified in Manifest.cli.nox.yaml</value>
     </data>
 </root>

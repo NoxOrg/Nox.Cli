@@ -58,7 +58,8 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
                 If = action!.If,
                 Validate = action!.Validate,
                 Name = action!.Name,
-                Uses = action!.Uses
+                Uses = action!.Uses,
+                Inputs = action.Inputs
             },
         }));
 

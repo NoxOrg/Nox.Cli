@@ -46,7 +46,7 @@
     <PackageReference Include="Spectre.Console" Version="0.46.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.46.0" />
     <PackageReference Include="System.IO.Abstractions" Version="19.1.5" />
-    <PackageReference Include="Nox.Core" Version="6.0.36-beta1" />
+    <PackageReference Include="Nox.Core" Version="6.0.36-beta2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
@@ -65,18 +65,5 @@
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Console\Nox.Cli.Plugin.Console.csproj" />
     <ProjectReference Include="..\Nox.Cli.Server.Integration\Nox.Cli.Server.Integration.csproj" />
     <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Update="Validation\ValidationResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>ValidationResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="Validation\ValidationResources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ValidationResources.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
 </Project>

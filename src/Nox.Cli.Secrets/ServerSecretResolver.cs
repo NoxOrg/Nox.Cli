@@ -16,11 +16,14 @@ public static class ServerSecretResolver
         var secretKeys = new Dictionary<string, string>();
         foreach (var item in variables)
         {
-            var match = SecretsVariableRegex.Match(item.Value.ToString());
-            if (match.Success)
+            if (item.Value != null)
             {
-                var secretKey = match.Groups["variable"].Value;
-                secretKeys.Add(secretKey, item.FullName);
+                var match = SecretsVariableRegex.Match(item.Value.ToString()!);
+                if (match.Success)
+                {
+                    var secretKey = match.Groups["variable"].Value;
+                    secretKeys.Add(secretKey, item.FullName);
+                }    
             }
         }
         

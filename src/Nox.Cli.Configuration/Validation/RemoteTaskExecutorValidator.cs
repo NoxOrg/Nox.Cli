@@ -1,7 +1,7 @@
 using FluentValidation;
 using Nox.Cli.Abstractions.Configuration;
 
-namespace Nox.Cli.Validation.Configuration;
+namespace Nox.Cli.Configuration.Validation;
 
 public class RemoteTaskExecutorValidator: AbstractValidator<IRemoteTaskExecutorConfiguration>
 {

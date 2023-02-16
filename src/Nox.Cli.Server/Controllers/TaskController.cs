@@ -45,7 +45,7 @@ public class TaskController : Controller
             context = _contextFactory.NewInstance(request.WorkflowId);
         }
 
-        var result = context.ExecuteTask(request.ActionConfiguration);
+        var result = context.ExecuteTask(request.ActionConfiguration!);
         return Ok(result);
     }
 }

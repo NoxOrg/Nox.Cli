@@ -190,8 +190,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             return false;
         }
         
-        //var inputs = ctx.GetInputVariables(ctx.CurrentAction);
-
+        ctx.GetInputVariables(ctx.CurrentAction);
+        
         if (!ctx.CurrentAction.EvaluateIf())
         {
             if (!string.IsNullOrWhiteSpace(formattedTaskDescription))

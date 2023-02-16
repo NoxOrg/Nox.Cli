@@ -86,6 +86,12 @@ public class WorkflowContextTests
         {
             Assert.That(result.State, Is.EqualTo(ActionState.Success));
             Assert.That(result.StateName, Is.EqualTo("Success"));
+            Assert.That(result.Outputs, Is.Not.Null);
+            if (result.Outputs != null)
+            {
+                Assert.That(result.Outputs.Count, Is.EqualTo(1));
+                Assert.That(result.Outputs["my-result"], Is.EqualTo("0"));
+            }
         });
     }
 }

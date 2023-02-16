@@ -22,7 +22,6 @@ public static class ProjectSecretResolver
             {
                 case "azure-keyvault":
                     var azureVault = new AzureSecretProvider(vault.Url);
-                    
                     var azureSecrets = azureVault.GetSecretsFromVault(secretKeys).Result;
                     if (azureSecrets != null && azureSecrets.Any()) secrets.AddRange(azureSecrets);
                     break;

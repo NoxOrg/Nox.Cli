@@ -22,7 +22,7 @@ public class ServerVariableProvider
         if (_manifest.RemoteTaskExecutor == null) throw new Exception("Remote Task Executor has not been configured in Manifest!");
     }
 
-    public void SaveOutputs(string actionId, IDictionary<string, object?> values)
+    public void SaveOutputs(string actionId, IDictionary<string, object> values)
     {
         foreach (var value in values)
         {
@@ -31,7 +31,7 @@ public class ServerVariableProvider
         }
     }
 
-    public IDictionary<string, object?> ResolveInputs(INoxAction action)
+    public IDictionary<string, object> ResolveInputs(INoxAction action)
     {
         var tempVars = new Dictionary<string, object?>();
         foreach (var (_, item) in action.Inputs)
@@ -51,11 +51,12 @@ public class ServerVariableProvider
         }
 
         ResolveVariables();
-        var result = new Dictionary<string, object?>();
+        var result = new Dictionary<string, object>();
         foreach (var item in action.Inputs)
         {
             var varName = $"steps.{action.Id}.inputs.{item.Key}";
-            result.Add(item.Key, LookupValue(varName));
+            var lookupValue = LookupValue(varName);
+            if (lookupValue != null) result.Add(item.Key, lookupValue);
         }
         return result;
     }
@@ -85,11 +86,11 @@ public class ServerVariableProvider
         ResolveServerVariables();
     }
     
-    public IDictionary<string, object> GetUnresolvedVariables()
+    public IDictionary<string, object?> GetUnresolvedVariables()
     {
         var unresolvedVars = _variables
-            .Where(i => _variableRegex.Match(i.Value.ToString()!).Success)
-            .ToDictionary(i => i.ShortName, i => i.Value, StringComparer.OrdinalIgnoreCase);
+            .Where(i => _variableRegex.Match(i.Value?.ToString()!).Success)
+            .ToDictionary(i => i.FullName, i => i.Value, StringComparer.OrdinalIgnoreCase);
 
         return unresolvedVars;
     }
