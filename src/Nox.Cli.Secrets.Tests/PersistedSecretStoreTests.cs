@@ -11,12 +11,10 @@ public class PersistedSecretStoreTests
     {
         var services = new ServiceCollection();
         services.AddPersistedSecretStore();
-        var config = SecretHelpers.GetSecretConfig();
-        services.AddSingleton<ISecretValidForConfiguration>(config);
         var provider = services.BuildServiceProvider();
         var store = provider.GetRequiredService<IPersistedSecretStore>();
         await store.SaveAsync("my-secret", "This is my secret");
-        var secret = await store.LoadAsync("my-secret");
+        var secret = await store.LoadAsync("my-secret", TimeSpan.FromSeconds(1));
         Assert.That(secret, Is.Not.Null);
         Assert.That(secret, Is.EqualTo("This is my secret"));
     }
@@ -27,13 +25,13 @@ public class PersistedSecretStoreTests
         var services = new ServiceCollection();
         services.AddPersistedSecretStore();
         var config = SecretHelpers.GetSecretConfig();
-        services.AddSingleton<ISecretValidForConfiguration>(config);
+        services.AddSingleton<ISecretsValidForConfiguration>(config);
         var provider = services.BuildServiceProvider();
         var store = provider.GetRequiredService<IPersistedSecretStore>();
         await store.SaveAsync("my-secret", "This is my secret");
         //Wait 2 seconds
         Thread.Sleep(new TimeSpan(0,0,0, 2));
-        var secret = await store.LoadAsync("my-secret");
+        var secret = await store.LoadAsync("my-secret", TimeSpan.FromSeconds(1));
         Assert.That(secret, Is.Null);
     }
 }

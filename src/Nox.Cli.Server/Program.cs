@@ -1,6 +1,7 @@
 using Microsoft.Graph.ExternalConnectors;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
+using Nox.Cli.Secrets;
 using Nox.Cli.Server.Abstractions;
 using Nox.Cli.Server.Cache;
 using Nox.Cli.Server.Extensions;
@@ -12,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration);
 builder.Services.AddWorkflowCache();
 builder.Services.AddNoxCliManifest($"{builder.Configuration["NoxManifestUrl"]}/{builder.Configuration["AzureAd:TenantId"]}");
+builder.Services.AddServerSecretResolver();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

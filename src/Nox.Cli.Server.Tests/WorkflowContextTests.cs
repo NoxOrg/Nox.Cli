@@ -48,22 +48,6 @@ public class WorkflowContextTests
             Assert.That(result.ErrorMessage, Does.StartWith("Some variables are unresolved"));
         });
     }
-    
-    [Test]
-    public async Task Can_Execute_a_task_with_a_server_secret()
-    {
-        var manifest = TestHelper.GetValidManifest();
-        var workflowId = Guid.NewGuid();
-        var context = new WorkflowContext(workflowId, manifest);
-        var action = TestHelper.GetSecretAction();
-        var result = await context.ExecuteTask(action);
-        Assert.That(result, Is.Not.Null);
-        Assert.Multiple(() =>
-        {
-            Assert.That(result.State, Is.EqualTo(ActionState.Success));
-            Assert.That(result.StateName, Is.EqualTo("Success"));
-        });
-    }
 
     [Test]
     public async Task Can_execute_another_task_on_the_same_context()

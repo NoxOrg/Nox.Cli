@@ -56,8 +56,9 @@ internal static class ConfiguratorExtensions
             .WithTypeMapping<IStepConfiguration, StepConfiguration>()
             .WithTypeMapping<ICliCommandConfiguration, CliCommandConfiguration>()
             .WithTypeMapping<ILocalTaskExecutorConfiguration, LocalTaskExecutorConfiguration>()
-            .WithTypeMapping<ISecretConfiguration, SecretConfiguration>()
-            .WithTypeMapping<ISecretValidForConfiguration, SecretsValidForConfiguration>()
+            .WithTypeMapping<ISecretsConfiguration, SecretsConfiguration>()
+            .WithTypeMapping<ISecretProviderConfiguration, SecretProviderConfiguration>()
+            .WithTypeMapping<ISecretsValidForConfiguration, SecretsValidForConfiguration>()
             .WithTypeMapping<ICliAuthConfiguration, CliAuthConfiguration>()
             .WithTypeMapping<IRemoteTaskExecutorConfiguration, RemoteTaskExecutorConfiguration>()
             .Build();

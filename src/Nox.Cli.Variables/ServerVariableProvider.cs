@@ -8,17 +8,21 @@ using Nox.Cli.Server.Abstractions;
 
 namespace Nox.Cli.Variables;
 
-public class ServerVariableProvider
+public class ServerVariableProvider: IServerVariableProvider
 {
     private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private readonly IManifestConfiguration _manifest;
     private readonly List<ServerVariable> _variables;
+    private readonly IServerSecretResolver? _secretResolver;
     
-    public ServerVariableProvider(IManifestConfiguration manifest)
+    public ServerVariableProvider(
+        IManifestConfiguration manifest,
+        IServerSecretResolver? secretResolver = null)
     {
         _variables = new List<ServerVariable>();
         _manifest = manifest;
+        _secretResolver = secretResolver;
         if (_manifest.RemoteTaskExecutor == null) throw new Exception("Remote Task Executor has not been configured in Manifest!");
     }
 
@@ -61,6 +65,15 @@ public class ServerVariableProvider
         return result;
     }
     
+    public IDictionary<string, object?> GetUnresolvedVariables()
+    {
+        var unresolvedVars = _variables
+            .Where(i => _variableRegex.Match(i.Value?.ToString()!).Success)
+            .ToDictionary(i => i.FullName, i => i.Value, StringComparer.OrdinalIgnoreCase);
+
+        return unresolvedVars;
+    }
+    
     private void SetVariable(string fullname, string shortName, object? value)
     {
         var variable = _variables.SingleOrDefault(v => string.Equals(v.FullName, fullname, StringComparison.OrdinalIgnoreCase));
@@ -81,18 +94,9 @@ public class ServerVariableProvider
     
     private void ResolveVariables()
     {
-        _variables.ResolveServerSecrets(_manifest.RemoteTaskExecutor!);
+        _secretResolver?.Resolve(_variables, _manifest.RemoteTaskExecutor!);
         //TODO resolve runner variables
         ResolveServerVariables();
-    }
-    
-    public IDictionary<string, object?> GetUnresolvedVariables()
-    {
-        var unresolvedVars = _variables
-            .Where(i => _variableRegex.Match(i.Value?.ToString()!).Success)
-            .ToDictionary(i => i.FullName, i => i.Value, StringComparer.OrdinalIgnoreCase);
-
-        return unresolvedVars;
     }
     
     private object? LookupValue(string key)

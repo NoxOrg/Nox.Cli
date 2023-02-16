@@ -100,18 +100,38 @@ public static class TestHelper
             },
             LocalTaskExecutor = new LocalTaskExecutorConfiguration
             {
-                Secrets = new List<ISecretConfiguration>
+                Secrets = new SecretsConfiguration
                 {
-                    new SecretConfiguration { Provider = "azure-keyvault", Url = "https://we-key-Nox-02.vault.azure.net/" }
+                    ValidFor = new SecretsValidForConfiguration
+                    {
+                        Days = 0,
+                        Hours = 0,
+                        Minutes = 0,
+                        Seconds = 30
+                    },
+                    Providers = new List<ISecretProviderConfiguration>
+                    {
+                        new SecretProviderConfiguration { Provider = "azure-keyvault", Url = "https://we-key-Nox-02.vault.azure.net/" }
+                    }
                 }
             },
             RemoteTaskExecutor = new RemoteTaskExecutorConfiguration
             {
                 ApplicationId = "750b96e1-e772-48f8-b6b3-84bac1961d9b",
                 Url = "http://localhost:8000",
-                Secrets = new List<ISecretConfiguration>
+                Secrets = new SecretsConfiguration
                 {
-                    new SecretConfiguration { Provider = "azure-keyvault", Url = "https://nox-14356B22BB785E44.vault.azure.net/" }
+                    ValidFor = new SecretsValidForConfiguration
+                    {
+                        Days = 0,
+                        Hours = 0,
+                        Minutes = 0,
+                        Seconds = 30
+                    },
+                    Providers = new List<ISecretProviderConfiguration>
+                    {
+                        new SecretProviderConfiguration { Provider = "azure-keyvault", Url = "https://nox-14356B22BB785E44.vault.azure.net/" }
+                    }
                 }
             }
         };

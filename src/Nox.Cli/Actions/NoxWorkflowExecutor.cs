@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
+using Nox.Cli.Secrets;
 using Nox.Cli.Server.Integration;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
@@ -14,6 +15,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
     private readonly IAnsiConsole _console;
     private readonly IProjectConfiguration _noxConfig;
     private readonly IConfiguration _appConfig;
+    private readonly IProjectSecretResolver _projectSecretResolver;
+    private readonly IOrgSecretResolver _orgSecretResolver;
     private readonly ILocalTaskExecutorConfiguration? _lteConfig;
     
     public NoxWorkflowExecutor(
@@ -21,6 +24,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         IAnsiConsole console,
         IProjectConfiguration noxConfig,
         IConfiguration appConfig,
+        IProjectSecretResolver projectSecretResolver,
+        IOrgSecretResolver orgSecretResolver,
         ILocalTaskExecutorConfiguration? lteConfig = null)
     {
         _serverIntegration = serverIntegration;
@@ -28,6 +33,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         _noxConfig = noxConfig;
         _appConfig = appConfig;
         _lteConfig = lteConfig;
+        _projectSecretResolver = projectSecretResolver;
+        _orgSecretResolver = orgSecretResolver;
     }
     
     public async Task<bool> Execute(IWorkflowConfiguration workflow)
@@ -40,7 +47,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         var ctx = _console.Status()
             .Spinner(Spinner.Known.Clock)
-            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _serverIntegration, _lteConfig));
+            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _projectSecretResolver, _orgSecretResolver, _lteConfig));
 
         bool success = true;
 

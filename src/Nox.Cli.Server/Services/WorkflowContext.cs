@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
+using Nox.Cli.Secrets;
 using Nox.Cli.Shared.DTO.Workflow;
 using Nox.Cli.Variables;
 
@@ -18,11 +19,11 @@ public class WorkflowContext: INoxWorkflowContext
 
     private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+secret[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    public WorkflowContext(Guid workflowId, IManifestConfiguration manifest)
+    public WorkflowContext(Guid workflowId, IManifestConfiguration manifest, IServerSecretResolver? serverSecretResolver = null)
     {
         _instanceId = Guid.NewGuid();
         _workflowId = workflowId;
-        _varProvider = new ServerVariableProvider(manifest);
+        _varProvider = new ServerVariableProvider(manifest, serverSecretResolver);
     }
 
     public Guid InstanceId => _instanceId;

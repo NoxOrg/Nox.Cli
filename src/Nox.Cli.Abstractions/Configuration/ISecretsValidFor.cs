@@ -1,6 +1,6 @@
 namespace Nox.Cli.Abstractions.Configuration;
 
-public interface ISecretValidForConfiguration
+public interface ISecretsValidForConfiguration
 {
     public int? Days { get; set; }
     public int? Hours { get; set; }

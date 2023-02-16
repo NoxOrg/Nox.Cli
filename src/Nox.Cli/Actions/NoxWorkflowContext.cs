@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
+using Nox.Cli.Secrets;
 using Nox.Cli.Server.Integration;
 using Nox.Cli.Variables;
 
@@ -11,9 +12,8 @@ namespace Nox.Cli.Actions;
 public class NoxWorkflowContext : INoxWorkflowContext
 {
     private readonly IWorkflowConfiguration _workflow;
-    private readonly INoxCliServerIntegration _serverIntegration;
     private readonly IDictionary<string, INoxAction> _steps;
-    private readonly VariableProvider _varProvider;
+    private readonly ClientVariableProvider _varProvider;
 
     private int _currentActionSequence = 0;
 
@@ -25,12 +25,16 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     public INoxAction? CurrentAction => _currentAction;
 
-    public NoxWorkflowContext(IWorkflowConfiguration workflow, IProjectConfiguration projectConfig, INoxCliServerIntegration serverIntegration, ILocalTaskExecutorConfiguration? lteConfig)
+    public NoxWorkflowContext(
+        IWorkflowConfiguration workflow, 
+        IProjectConfiguration projectConfig,
+        IProjectSecretResolver projectSecretResolver,
+        IOrgSecretResolver orgSecretResolver,
+        ILocalTaskExecutorConfiguration? lteConfig)
     {
         WorkflowId = Guid.NewGuid();
-        _serverIntegration = serverIntegration;
         _workflow = workflow;
-        _varProvider = new VariableProvider(projectConfig, workflow, lteConfig);
+        _varProvider = new ClientVariableProvider(projectConfig, workflow, projectSecretResolver, orgSecretResolver, lteConfig);
         _steps = ParseSteps();
         ValidateSteps();
         _currentActionSequence = 0;

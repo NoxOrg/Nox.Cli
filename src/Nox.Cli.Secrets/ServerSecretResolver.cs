@@ -1,19 +1,25 @@
 using System.Text.RegularExpressions;
-using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Server.Abstractions;
-using Nox.Core.Interfaces.Configuration;
 
 namespace Nox.Cli.Secrets;
 
-public static class ServerSecretResolver
+public class ServerSecretResolver: IServerSecretResolver
 {
     private static readonly Regex SecretsVariableRegex = new(@"\$\{\{\s*server\.secrets\.(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+ 
+    private readonly IPersistedSecretStore _store;
+
+    public ServerSecretResolver(IPersistedSecretStore store)
+    {
+        _store = store;
+    }
+
     
-    public static void ResolveServerSecrets(this List<ServerVariable> variables, IRemoteTaskExecutorConfiguration config)
+    public async Task Resolve(List<ServerVariable> variables, IRemoteTaskExecutorConfiguration config)
     {
         if (config?.Secrets == null) return;
-        var secretKeys = new Dictionary<string, string>();
+        var secretKeys = new List<KeyValuePair<string, string>>();
         foreach (var item in variables)
         {
             if (item.Value != null)
@@ -22,20 +28,35 @@ public static class ServerSecretResolver
                 if (match.Success)
                 {
                     var secretKey = match.Groups["variable"].Value;
-                    secretKeys.Add(secretKey, item.FullName);
+                    secretKeys.Add(new KeyValuePair<string, string>(secretKey, item.FullName));
                 }    
             }
         }
         
         var secrets = new List<KeyValuePair<string, string>>();
-        foreach (var vault in config.Secrets)
+        foreach (var item in secretKeys)
+        {
+            var secretTtl = TimeSpan.FromHours(8);
+            if (config.Secrets is { ValidFor: { } })
+            {
+                secretTtl = new TimeSpan(config.Secrets.ValidFor.Days ?? 0, config.Secrets.ValidFor.Hours ?? 0, config.Secrets.ValidFor.Minutes ?? 0, config.Secrets.ValidFor.Seconds ?? 0);
+            }
+            var storedSecret = await _store.LoadAsync(item.Key, secretTtl);
+            if (storedSecret != null)
+            {
+                secrets.Add(new KeyValuePair<string, string>(item.Key, storedSecret));
+                secretKeys.Remove(item);
+            }
+        }
+        
+        foreach (var vault in config.Secrets.Providers)
         {
             switch (vault.Provider.ToLower())
             {
                 case "azure-keyvault":
                     var azureVault = new AzureSecretProvider(vault.Url);
                     //TODO cache these secrets
-                    var azureSecrets = azureVault.GetSecretsFromVault(secretKeys.Keys.ToArray()).Result;
+                    var azureSecrets = azureVault.GetSecretsFromVault(secretKeys.Select(k => k.Key).ToArray()).Result;
                     if (azureSecrets != null && azureSecrets.Any()) secrets.AddRange(azureSecrets);
                     break;
             }
@@ -45,7 +66,7 @@ public static class ServerSecretResolver
 
         foreach (var kv in secrets)
         {
-            var varName = secretKeys[kv.Key];
+            var varName = secretKeys.Single(k => k.Key == kv.Key).Value;
             var variable = variables.Single(v => v.FullName == varName);
             variable.Value = kv.Value;
         }

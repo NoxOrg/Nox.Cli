@@ -2,7 +2,7 @@ using Nox.Cli.Abstractions.Configuration;
 
 namespace Nox.Cli.Configuration;
 
-public class SecretsValidForConfiguration: ISecretValidForConfiguration
+public class SecretsValidForConfiguration: ISecretsValidForConfiguration
 {
     public int? Days { get; set; }
     public int? Hours { get; set; }

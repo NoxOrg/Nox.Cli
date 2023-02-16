@@ -5,7 +5,7 @@ namespace Nox.Cli.Secrets.Tests;
 
 public static class SecretHelpers
 {
-    public static ISecretValidForConfiguration GetSecretConfig()
+    public static ISecretsValidForConfiguration GetSecretConfig()
     {
         return new SecretsValidForConfiguration
         {

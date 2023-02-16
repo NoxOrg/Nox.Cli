@@ -10,42 +10,27 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Nox.Cli.Variables;
 
-public class VariableProvider
+public class ClientVariableProvider: IClientVariableProvider
 {
     private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private readonly Dictionary<string, object?> _variables;
+    private readonly IProjectSecretResolver _projectSecretResolver;
+    private readonly IOrgSecretResolver _orgSecretResolver;
     
-    public VariableProvider(IProjectConfiguration projectConfig, IWorkflowConfiguration workflow, ILocalTaskExecutorConfiguration? lteConfig = null)
+    public ClientVariableProvider(
+        IProjectConfiguration projectConfig, 
+        IWorkflowConfiguration workflow, 
+        IProjectSecretResolver projectSecretResolver,
+        IOrgSecretResolver orgSecretResolver,
+        ILocalTaskExecutorConfiguration? lteConfig = null)
     {
         _variables = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        _projectSecretResolver = projectSecretResolver;
+        _orgSecretResolver = orgSecretResolver;
         Initialize(projectConfig, workflow, lteConfig);
     }
 
-    private void Initialize(IProjectConfiguration projectConfig, IWorkflowConfiguration workflow, ILocalTaskExecutorConfiguration? lteConfig = null)
-    {
-        var serializer = new SerializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .Build();
-
-        var workflowString = serializer.Serialize(workflow);
-
-        var matches = _variableRegex.Matches(workflowString);
-
-        var variablesTemp = matches.Select(m => m.Groups[1].Value)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(e => e);
-
-        foreach (var v in variablesTemp)
-        {
-            _variables.Add(v, null);
-        }
-        
-        _variables.ResolveOrgSecrets(lteConfig);
-        _variables.ResolveProjectSecrets(projectConfig);
-        _variables.ResolveProjectVariables(projectConfig);
-    }
-    
     public void SetVariable(string key, object value)
     {
         if (_variables.ContainsKey(key))
@@ -101,6 +86,30 @@ public class VariableProvider
         }
 
         ResolveAllVariables(action);
+    }
+    
+    private void Initialize(IProjectConfiguration projectConfig, IWorkflowConfiguration workflow, ILocalTaskExecutorConfiguration? lteConfig = null)
+    {
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .Build();
+
+        var workflowString = serializer.Serialize(workflow);
+
+        var matches = _variableRegex.Matches(workflowString);
+
+        var variablesTemp = matches.Select(m => m.Groups[1].Value)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(e => e);
+
+        foreach (var v in variablesTemp)
+        {
+            _variables.Add(v, null);
+        }
+
+        _orgSecretResolver.Resolve(_variables, lteConfig);
+        _projectSecretResolver.Resolve(_variables, projectConfig);
+        _variables.ResolveProjectVariables(projectConfig);
     }
     
     private object ReplaceVariable(string value)

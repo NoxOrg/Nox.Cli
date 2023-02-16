@@ -26,12 +26,22 @@ public class CoreTests
             {
                 ApplicationId = Guid.NewGuid().ToString(),
                 Url = "http://localhost:8000",
-                Secrets = new List<ISecretConfiguration>
+                Secrets = new SecretsConfiguration
                 {
-                    new SecretConfiguration
+                    ValidFor = new SecretsValidForConfiguration
                     {
-                        Url = "https://nox-3D6394A1E5840C21.vault.azure.net/",
-                        Provider = "azure-keyvault"
+                        Days = 0,
+                        Hours = 0,
+                        Minutes = 0,
+                        Seconds = 30
+                    },
+                    Providers = new List<ISecretProviderConfiguration>
+                    {
+                        new SecretProviderConfiguration
+                        {
+                            Url = "https://nox-3D6394A1E5840C21.vault.azure.net/",
+                            Provider = "azure-keyvault"
+                        }
                     }
                 }
             }
@@ -51,6 +61,6 @@ public class CoreTests
     {
         var result = await TestContext.ExecuteTask(TestHelper.GetInvalidAction());
         Assert.That(result.State, Is.EqualTo(ActionState.Error));
-        Assert.That(result.ErrorMessage!.EndsWith("uses test/invalid@v1 which was not found"));
+        Assert.That(result.ErrorMessage!.StartsWith("Some variables are unresolved"));
     }
 }

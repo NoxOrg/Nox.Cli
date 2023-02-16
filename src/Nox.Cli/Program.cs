@@ -14,6 +14,7 @@ using Nox.Cli.Interceptors;
 using Nox.Cli.Services;
 using Nox.Cli.Commands;
 using Nox.Cli.Helpers;
+using Nox.Cli.Secrets;
 
 var isLoggingOut = (args.Length > 0 && args[0].ToLower().Equals("logout")); 
 
@@ -35,6 +36,9 @@ services.AddSingleton<IFileSystem, FileSystem>();
 services.AddSingleton<IConsoleWriter, ConsoleWriter>();
 services.AddTransient<INoxWorkflowExecutor, NoxWorkflowExecutor>();
 services.AddNoxCliServices(args);
+services.AddPersistedSecretStore();
+services.AddProjectSecretResolver();
+services.AddOrgSecretResolver();
 services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 var registrar = new TypeRegistrar(services);
