@@ -197,7 +197,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             return false;
         }
         
-        ctx.GetInputVariables(ctx.CurrentAction);
+        ctx.GetInputVariables(ctx.CurrentAction, true);
         
         if (!ctx.CurrentAction.EvaluateIf())
         {

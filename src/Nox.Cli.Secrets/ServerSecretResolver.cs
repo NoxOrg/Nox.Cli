@@ -16,7 +16,7 @@ public class ServerSecretResolver: IServerSecretResolver
     }
 
     
-    public async Task Resolve(List<ServerVariable> variables, IRemoteTaskExecutorConfiguration config)
+    public async Task ResolveAsync(List<ServerVariable> variables, IRemoteTaskExecutorConfiguration config)
     {
         if (config.Secrets == null) return;
         var secretKeys = new List<KeyValuePair<string, string>>();

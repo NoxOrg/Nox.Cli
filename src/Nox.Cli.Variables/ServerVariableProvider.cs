@@ -15,6 +15,7 @@ public class ServerVariableProvider: IServerVariableProvider
     private readonly List<ServerVariable> _variables;
     private readonly IServerSecretResolver? _secretResolver;
     
+    
     public ServerVariableProvider(
         IManifestConfiguration manifest,
         IServerSecretResolver? secretResolver = null)
@@ -93,9 +94,12 @@ public class ServerVariableProvider: IServerVariableProvider
     
     private void ResolveVariables()
     {
-        _secretResolver?.Resolve(_variables, _manifest.RemoteTaskExecutor!);
+        //Resolve runner variables
+        _variables.ResolveRunnerVariables();
+        _secretResolver?.ResolveAsync(_variables, _manifest.RemoteTaskExecutor!).Wait();
         //TODO resolve runner variables
         ResolveServerVariables();
+        
     }
     
     private object? LookupValue(string key)

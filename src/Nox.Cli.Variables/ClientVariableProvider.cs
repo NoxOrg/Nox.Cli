@@ -16,6 +16,8 @@ public class ClientVariableProvider: IClientVariableProvider
     private readonly Dictionary<string, object?> _variables;
     private readonly IProjectSecretResolver _projectSecretResolver;
     private readonly IOrgSecretResolver _orgSecretResolver;
+    private readonly IProjectConfiguration? _projectConfig;
+    private readonly ILocalTaskExecutorConfiguration? _lteConfig;
     
     
     public ClientVariableProvider(
@@ -28,7 +30,9 @@ public class ClientVariableProvider: IClientVariableProvider
         _variables = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         _projectSecretResolver = projectSecretResolver;
         _orgSecretResolver = orgSecretResolver;
-        Initialize(workflow, projectConfig, lteConfig);
+        _projectConfig = projectConfig;
+        _lteConfig = lteConfig;
+        Initialize(workflow);
     }
 
     public void SetVariable(string key, object value)
@@ -87,8 +91,25 @@ public class ClientVariableProvider: IClientVariableProvider
 
         ResolveAllVariables(action);
     }
-    
-    private void Initialize(IWorkflowConfiguration workflow, IProjectConfiguration? projectConfig = null, ILocalTaskExecutorConfiguration? lteConfig = null)
+
+    public void ResolveAll()
+    {
+        _variables.ResolveRunnerVariables();
+        ResolveForServer();
+    }
+
+    public void ResolveForServer()
+    {
+        if (_lteConfig != null) _orgSecretResolver.Resolve(_variables, _lteConfig);
+        if (_projectConfig != null) _projectSecretResolver.Resolve(_variables, _projectConfig);
+        if (_projectConfig != null)
+        {
+            _variables.ResolveEnvironmentVariables();
+            _variables.ResolveProjectVariables(_projectConfig);
+        }
+    }
+
+    private void Initialize(IWorkflowConfiguration workflow)
     {
         var serializer = new SerializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
@@ -105,15 +126,6 @@ public class ClientVariableProvider: IClientVariableProvider
         foreach (var v in variablesTemp)
         {
             _variables.Add(v, null);
-        }
-
-        _variables.ResolveRunnerVariables();
-        if (lteConfig != null) _orgSecretResolver.Resolve(_variables, lteConfig);
-        if (projectConfig != null) _projectSecretResolver.Resolve(_variables, projectConfig);
-        if (projectConfig != null)
-        {
-            _variables.ResolveEnvironmentVariables();
-            _variables.ResolveProjectVariables(projectConfig);
         }
     }
     

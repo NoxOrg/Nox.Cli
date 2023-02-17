@@ -5,5 +5,5 @@ namespace Nox.Cli.Secrets;
 
 public interface IServerSecretResolver
 {
-    Task Resolve(List<ServerVariable> variables, IRemoteTaskExecutorConfiguration config);
+    Task ResolveAsync(List<ServerVariable> variables, IRemoteTaskExecutorConfiguration config);
 }

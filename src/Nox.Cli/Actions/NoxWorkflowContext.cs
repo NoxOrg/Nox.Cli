@@ -84,9 +84,17 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _varProvider.SetVariable($"vars.{key}", value);
     }
     
-    public IDictionary<string, object> GetInputVariables(INoxAction action)
+    public IDictionary<string, object> GetInputVariables(INoxAction action, bool isServer = false)
     {
-        return _varProvider.GetInputVariables(action);
+        if (isServer)
+        {
+            _varProvider.ResolveForServer();
+        }
+        else
+        {
+            _varProvider.ResolveAll();
+        }    
+        return _varProvider.GetInputVariables(action);        
     }
 
     public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
