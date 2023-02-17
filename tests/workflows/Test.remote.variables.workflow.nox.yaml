@@ -1,0 +1,175 @@
+# NOX Test Variables Command
+
+name: Test Remote variables
+
+cli:
+  branch: test
+  command: remote-variables
+  command-alias: remote-vars
+  description: Test Remote Variables
+  examples:
+    - ["test remote-variables"]
+    - ["test remote-vars"]
+
+jobs:
+  test:  
+    steps:
+      - name: Resolve a Project variable
+        id: resolve-project-var
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ project.versionControl.server }}
+        display:
+          success: value = ${{ steps.resolve-project-var.outputs.my-result }}
+          error: Unable to resolve Project Variable
+        run-at-server: true
+
+      - name: Resolve a Project secret
+        id: resolve-project-secret
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ project.secrets.test-secret }}
+        display:
+          success: value = ${{ steps.resolve-project-secret.outputs.my-result }}
+          error: Unable to resolve Project Secret
+        run-at-server: true  
+
+      - name: Resolve an Organization secret
+        id: resolve-org-secret
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ org.secrets.test-secret }}
+        display:
+          success: value = ${{ steps.resolve-org-secret.outputs.my-result }}
+          error: Unable to resolve Organization Secret
+        run-at-server: true  
+
+      - name: Resolve a Server secret
+        id: resolve-server-secret
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ server.secrets.test-secret }}
+        display:
+          success: value = ${{ steps.resolve-server-secret.outputs.my-result }}
+          error: Unable to resolve Server Secret
+        run-at-server: true 
+
+      - name: Resolve an Environment Variables
+        id: resolve-env-var
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ env.username }}
+        display:
+          success: value = ${{ steps.resolve-env-var.outputs.my-result }}
+          error: Unable to resolve Environment Variable
+        run-at-server: true
+
+      - name: Resolve Current Path
+        id: resolve-runner-cp
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ runner.current }}
+        display:
+          success: value = ${{ steps.resolve-runner-cp.outputs.my-result }}
+          error: Unable to resolve Current Path
+        run-at-server: true
+
+      - name: Resolve Temp Path
+        id: resolve-runner-tp
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ runner.temp }}
+        display:
+          success: value = ${{ steps.resolve-runner-tp.outputs.my-result }}
+          error: Unable to resolve Temp Path
+        run-at-server: true
+
+      - name: Resolve IPv4
+        id: resolve-runner-v4
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ runner.ipv4 }}
+        display:
+          success: value = ${{ steps.resolve-runner-v4.outputs.my-result }}
+          error: Unable to resolve IPv4
+        run-at-server: true
+
+      - name: Resolve Is Online
+        id: resolve-runner-isonline
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ runner.isonline }}
+        display:
+          success: value = ${{ steps.resolve-runner-isonline.outputs.my-result }}
+          error: Unable to resolve Is Online
+        run-at-server: true
+
+      - name: Resolve Arch
+        id: resolve-runner-arch
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ runner.arch }}
+        display:
+          success: value = ${{ steps.resolve-runner-arch.outputs.my-result }}
+          error: Unable to resolve Arch
+        run-at-server: true
+
+      - name: Resolve OS
+        id: resolve-runner-os
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ runner.os }}
+        display:
+          success: value = ${{ steps.resolve-runner-os.outputs.my-result }}
+          error: Unable to resolve OS
+        run-at-server: true
+
+      - name: Resolve Is Mac
+        id: resolve-runner-ismac
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ runner.ismacos }}
+        display:
+          success: value = ${{ steps.resolve-runner-ismac.outputs.my-result }}
+          error: Unable to resolve Is Mac
+        run-at-server: true
+
+      - name: Resolve Is Linux
+        id: resolve-runner-islinux
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ runner.islinux }}
+        display:
+          success: value = ${{ steps.resolve-runner-islinux.outputs.my-result }}
+          error: Unable to resolve Is Linux
+        run-at-server: true
+
+      - name: Resolve Is Windows
+        id: resolve-runner-iswindows
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ runner.iswindows }}
+        display:
+          success: value = ${{ steps.resolve-runner-iswindows.outputs.my-result }}
+          error: Unable to resolve Is Windows
+        run-at-server: true
+
+      - name: Resolve Available Memory
+        id: resolve-runner-availablememory
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ runner.availablememory }}
+        display:
+          success: value = ${{ steps.resolve-runner-availablememory.outputs.my-result }}
+          error: Unable to resolve Available Memory
+        run-at-server: true
+
+      - name: Resolve Available Disk Space
+        id: resolve-runner-availablediskspace
+        uses: test/empty-task@v1
+        with:
+          my-variable: ${{ runner.availablediskspace }}
+        display:
+          success: value = ${{ steps.resolve-runner-availablediskspace.outputs.my-result }}
+          error: Unable to resolve Available Disk Space
+        run-at-server: true
