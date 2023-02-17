@@ -24,6 +24,7 @@ public class OrgSecretResolver: IOrgSecretResolver
         if (config?.Secrets == null) return;
         
         var secrets = new List<KeyValuePair<string, string>>();
+        var onlineSecretKeys = new List<string>();
         foreach (var key in secretKeys)
         {
             var secretTtl = TimeSpan.FromHours(4);
@@ -31,31 +32,37 @@ public class OrgSecretResolver: IOrgSecretResolver
             {
                 secretTtl = new TimeSpan(config.Secrets.ValidFor.Days ?? 0, config.Secrets.ValidFor.Hours ?? 0, config.Secrets.ValidFor.Minutes ?? 0, config.Secrets.ValidFor.Seconds ?? 0);
             } 
-            var storedSecret = await _store.LoadAsync(key, secretTtl);
+            var storedSecret = await _store.LoadAsync($"org.{key}", secretTtl);
             if (storedSecret != null)
             {
                 secrets.Add(new KeyValuePair<string, string>(key, storedSecret));
-                secretKeys.Remove(key);
+            }
+            else
+            {
+                onlineSecretKeys.Add(key);
             }
         }
-        
-        foreach (var vault in config.Secrets.Providers)
-        {
-            switch (vault.Provider.ToLower())
-            {
-                case "azure-keyvault":
-                    var azureVault = new AzureSecretProvider(vault.Url);
-                    var azureSecrets = azureVault.GetSecretsFromVault(secretKeys.ToArray()).Result;
-                    if (azureSecrets != null)
-                    {
-                        if (azureSecrets.Any()) secrets.AddRange(azureSecrets);
-                        foreach (var azureSecret in azureSecrets)
-                        {
-                            await _store.SaveAsync(azureSecret.Key, azureSecret.Value);
-                        }
-                    }
 
-                    break;
+        if (onlineSecretKeys.Any() && config.Secrets.Providers != null)
+        {
+            foreach (var vault in config.Secrets.Providers)
+            {
+                switch (vault.Provider.ToLower())
+                {
+                    case "azure-keyvault":
+                        var azureVault = new AzureSecretProvider(vault.Url);
+                        var azureSecrets = azureVault.GetSecretsFromVault(onlineSecretKeys.ToArray()).Result;
+                        if (azureSecrets != null)
+                        {
+                            if (azureSecrets.Any()) secrets.AddRange(azureSecrets);
+                            foreach (var azureSecret in azureSecrets)
+                            {
+                                await _store.SaveAsync($"org.{azureSecret.Key}", azureSecret.Value);
+                            }
+                        }
+
+                        break;
+                }
             }
         }
 

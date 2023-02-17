@@ -17,14 +17,16 @@ public class PersistedSecretStore: IPersistedSecretStore
     public Task SaveAsync(string key, string secret)
     {
         //TODO replace this with xxhash
-        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $".{key}");
+        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nox");
+        Directory.CreateDirectory(path);
+        path += $"/.{key}";
         return File.WriteAllTextAsync(path, _protector.Protect(secret));
     }
 
     public async Task<string?> LoadAsync(string key, TimeSpan ttl)
     {
         //TODO maybe replace this with xxhash
-        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $".{key}");
+        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nox", $".{key}");
         if (!File.Exists(path)) return null;
         //Check if the secret has expired
         var fileInfo = new FileInfo(path);

@@ -11,9 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration);
-builder.Services.AddWorkflowCache();
-builder.Services.AddNoxCliManifest($"{builder.Configuration["NoxManifestUrl"]}/{builder.Configuration["AzureAd:TenantId"]}");
-builder.Services.AddServerSecretResolver();
+builder.Services.AddWorkflowCache()
+    .AddNoxCliManifest($"{builder.Configuration["NoxManifestUrl"]}/{builder.Configuration["AzureAd:TenantId"]}")
+    .AddPersistedSecretStore()
+    .AddServerSecretResolver();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

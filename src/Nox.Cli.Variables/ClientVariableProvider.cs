@@ -19,16 +19,16 @@ public class ClientVariableProvider: IClientVariableProvider
     private readonly IOrgSecretResolver _orgSecretResolver;
     
     public ClientVariableProvider(
-        IProjectConfiguration projectConfig, 
         IWorkflowConfiguration workflow, 
         IProjectSecretResolver projectSecretResolver,
         IOrgSecretResolver orgSecretResolver,
+        IProjectConfiguration? projectConfig = null,
         ILocalTaskExecutorConfiguration? lteConfig = null)
     {
         _variables = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         _projectSecretResolver = projectSecretResolver;
         _orgSecretResolver = orgSecretResolver;
-        Initialize(projectConfig, workflow, lteConfig);
+        Initialize(workflow, projectConfig, lteConfig);
     }
 
     public void SetVariable(string key, object value)
@@ -88,7 +88,7 @@ public class ClientVariableProvider: IClientVariableProvider
         ResolveAllVariables(action);
     }
     
-    private void Initialize(IProjectConfiguration projectConfig, IWorkflowConfiguration workflow, ILocalTaskExecutorConfiguration? lteConfig = null)
+    private void Initialize(IWorkflowConfiguration workflow, IProjectConfiguration? projectConfig = null, ILocalTaskExecutorConfiguration? lteConfig = null)
     {
         var serializer = new SerializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
@@ -107,9 +107,9 @@ public class ClientVariableProvider: IClientVariableProvider
             _variables.Add(v, null);
         }
 
-        _orgSecretResolver.Resolve(_variables, lteConfig);
-        _projectSecretResolver.Resolve(_variables, projectConfig);
-        _variables.ResolveProjectVariables(projectConfig);
+        if (lteConfig != null) _orgSecretResolver.Resolve(_variables, lteConfig);
+        if (projectConfig != null) _projectSecretResolver.Resolve(_variables, projectConfig);
+        if (projectConfig != null) _variables.ResolveProjectVariables(projectConfig);
     }
     
     private object ReplaceVariable(string value)

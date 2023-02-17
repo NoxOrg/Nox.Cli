@@ -18,7 +18,7 @@ local-task-executor:
       hours: 12
     providers:
       - provider: azure-keyvault
-        url: https://we-key-Nox-02.vault.azure.net/
+        url: https://nox-EDA1DB500EBCEB02.vault.azure.net/
 
 remote-task-executor:
   url: http://localhost:8000
@@ -28,5 +28,5 @@ remote-task-executor:
       hours: 12
     providers:
       - provider: azure-keyvault
-        url: https://nox-3D6394A1E5840C21.vault.azure.net/
+        url: https://nox-14356B22BB785E44.vault.azure.net/
       

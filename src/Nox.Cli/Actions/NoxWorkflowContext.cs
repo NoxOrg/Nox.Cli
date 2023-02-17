@@ -34,7 +34,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     {
         WorkflowId = Guid.NewGuid();
         _workflow = workflow;
-        _varProvider = new ClientVariableProvider(projectConfig, workflow, projectSecretResolver, orgSecretResolver, lteConfig);
+        _varProvider = new ClientVariableProvider(workflow, projectSecretResolver, orgSecretResolver, projectConfig, lteConfig);
         _steps = ParseSteps();
         ValidateSteps();
         _currentActionSequence = 0;
@@ -75,7 +75,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _varProvider.SetActionVariable(action, varKey, errorMessage);
     }
 
-    public async Task<ExecuteTaskResult> ExecuteTask(INoxAction action)
+    public Task<ExecuteTaskResult> ExecuteTask(INoxAction action)
     {
         throw new NotImplementedException();
     }

@@ -49,6 +49,7 @@ public static class ManifestExtensions
             .WithTypeMapping<IManifestConfiguration, ManifestConfiguration>()
             .WithTypeMapping<ICliCommandConfiguration, CliCommandConfiguration>()
             .WithTypeMapping<ILocalTaskExecutorConfiguration, LocalTaskExecutorConfiguration>()
+            .WithTypeMapping<ISecretsConfiguration, SecretsConfiguration>()
             .WithTypeMapping<ISecretProviderConfiguration, SecretProviderConfiguration>()
             .WithTypeMapping<ISecretsValidForConfiguration, SecretsValidForConfiguration>()
             .WithTypeMapping<ICliAuthConfiguration, CliAuthConfiguration>()

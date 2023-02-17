@@ -18,7 +18,7 @@ public class ServerSecretResolver: IServerSecretResolver
     
     public async Task Resolve(List<ServerVariable> variables, IRemoteTaskExecutorConfiguration config)
     {
-        if (config?.Secrets == null) return;
+        if (config.Secrets == null) return;
         var secretKeys = new List<KeyValuePair<string, string>>();
         foreach (var item in variables)
         {
@@ -34,6 +34,7 @@ public class ServerSecretResolver: IServerSecretResolver
         }
         
         var secrets = new List<KeyValuePair<string, string>>();
+        var onlineSecretKeys = new List<KeyValuePair<string, string>>();
         foreach (var item in secretKeys)
         {
             var secretTtl = TimeSpan.FromHours(8);
@@ -41,24 +42,38 @@ public class ServerSecretResolver: IServerSecretResolver
             {
                 secretTtl = new TimeSpan(config.Secrets.ValidFor.Days ?? 0, config.Secrets.ValidFor.Hours ?? 0, config.Secrets.ValidFor.Minutes ?? 0, config.Secrets.ValidFor.Seconds ?? 0);
             }
-            var storedSecret = await _store.LoadAsync(item.Key, secretTtl);
+            var storedSecret = await _store.LoadAsync($"srv.{item.Key}", secretTtl);
             if (storedSecret != null)
             {
                 secrets.Add(new KeyValuePair<string, string>(item.Key, storedSecret));
-                secretKeys.Remove(item);
+            }
+            else
+            {
+                onlineSecretKeys.Add(item);
             }
         }
-        
-        foreach (var vault in config.Secrets.Providers)
+
+        if (onlineSecretKeys.Any() && config.Secrets.Providers != null)
         {
-            switch (vault.Provider.ToLower())
+            foreach (var vault in config.Secrets.Providers)
             {
-                case "azure-keyvault":
-                    var azureVault = new AzureSecretProvider(vault.Url);
-                    //TODO cache these secrets
-                    var azureSecrets = azureVault.GetSecretsFromVault(secretKeys.Select(k => k.Key).ToArray()).Result;
-                    if (azureSecrets != null && azureSecrets.Any()) secrets.AddRange(azureSecrets);
-                    break;
+                switch (vault.Provider.ToLower())
+                {
+                    case "azure-keyvault":
+                        var azureVault = new AzureSecretProvider(vault.Url);
+                        //TODO cache these secrets
+                        var azureSecrets = azureVault.GetSecretsFromVault(onlineSecretKeys.Select(k => k.Key).ToArray()).Result;
+                        if (azureSecrets != null && azureSecrets.Any())
+                        {
+                            secrets.AddRange(azureSecrets);
+                            foreach (var azureSecret in azureSecrets)
+                            {
+                                await _store.SaveAsync($"srv.{azureSecret.Key}", azureSecret.Value);
+                            }
+                        }
+                        
+                        break;
+                }
             }
         }
 

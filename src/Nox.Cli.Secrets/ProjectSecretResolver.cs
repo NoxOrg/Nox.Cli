@@ -23,34 +23,41 @@ public class ProjectSecretResolver: IProjectSecretResolver
         
         if (config.Secrets == null) return;
         var secrets = new List<KeyValuePair<string, string>>();
+        var onlineSecretKeys = new List<string>();
         foreach (var key in secretKeys)
         {
             //Todo change this in Nox.Core to a configurable setting
-            var storedSecret = await _store.LoadAsync(key, TimeSpan.FromHours(1));
+            var storedSecret = await _store.LoadAsync($"{config.Name}.{key}", TimeSpan.FromHours(1));
             if (storedSecret != null)
             {
                 secrets.Add(new KeyValuePair<string, string>(key, storedSecret));
-                secretKeys.Remove(key);
+            }
+            else
+            {
+                onlineSecretKeys.Add(key);
             }
         }
-        
-        foreach (var vault in config.Secrets)
-        {
-            switch (vault.Provider.ToLower())
-            {
-                case "azure-keyvault":
-                    var azureVault = new AzureSecretProvider(vault.Url);
-                    var azureSecrets = azureVault.GetSecretsFromVault(secretKeys.ToArray()).Result;
-                    if (azureSecrets != null)
-                    {
-                        if (azureSecrets.Any()) secrets.AddRange(azureSecrets);
-                        foreach (var azureSecret in azureSecrets)
-                        {
-                            await _store.SaveAsync(azureSecret.Key, azureSecret.Value);
-                        }
-                    }
 
-                    break;
+        if (onlineSecretKeys.Any())
+        {
+            foreach (var vault in config.Secrets)
+            {
+                switch (vault.Provider.ToLower())
+                {
+                    case "azure-keyvault":
+                        var azureVault = new AzureSecretProvider(vault.Url);
+                        var azureSecrets = azureVault.GetSecretsFromVault(onlineSecretKeys.ToArray()).Result;
+                        if (azureSecrets != null)
+                        {
+                            if (azureSecrets.Any()) secrets.AddRange(azureSecrets);
+                            foreach (var azureSecret in azureSecrets)
+                            {
+                                await _store.SaveAsync($"{config.Name}.{azureSecret.Key}", azureSecret.Value);
+                            }
+                        }
+
+                        break;
+                }
             }
         }
 
