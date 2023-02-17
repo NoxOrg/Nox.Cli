@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Configuration;

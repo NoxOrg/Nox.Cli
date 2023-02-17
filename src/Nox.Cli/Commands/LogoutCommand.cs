@@ -1,8 +1,6 @@
 ﻿namespace Nox.Cli.Commands;
 
 using Spectre.Console.Cli;
-using Nox.Cli.Helpers;
-using Nox.Cli.Services;
 using Spectre.Console;
 
 public class LogoutCommand : AsyncCommand<LogoutCommand.Settings>

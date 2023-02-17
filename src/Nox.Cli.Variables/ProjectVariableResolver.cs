@@ -1,4 +1,3 @@
-using Nox.Cli.Abstractions;
 using Nox.Core.Interfaces.Configuration;
 
 namespace Nox.Cli.Variables;

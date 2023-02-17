@@ -2,7 +2,6 @@ using Microsoft.VisualStudio.Services.Graph.Client;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Core.Configuration;
 
 namespace Nox.Cli.Plugins.AzDevops;
 

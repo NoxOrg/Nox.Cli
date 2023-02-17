@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
@@ -17,6 +16,7 @@ public class ClientVariableProvider: IClientVariableProvider
     private readonly Dictionary<string, object?> _variables;
     private readonly IProjectSecretResolver _projectSecretResolver;
     private readonly IOrgSecretResolver _orgSecretResolver;
+    
     
     public ClientVariableProvider(
         IWorkflowConfiguration workflow, 
@@ -107,9 +107,14 @@ public class ClientVariableProvider: IClientVariableProvider
             _variables.Add(v, null);
         }
 
+        _variables.ResolveRunnerVariables();
         if (lteConfig != null) _orgSecretResolver.Resolve(_variables, lteConfig);
         if (projectConfig != null) _projectSecretResolver.Resolve(_variables, projectConfig);
-        if (projectConfig != null) _variables.ResolveProjectVariables(projectConfig);
+        if (projectConfig != null)
+        {
+            _variables.ResolveEnvironmentVariables();
+            _variables.ResolveProjectVariables(projectConfig);
+        }
     }
     
     private object ReplaceVariable(string value)

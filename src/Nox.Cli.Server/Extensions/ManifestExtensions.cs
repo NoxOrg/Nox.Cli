@@ -1,6 +1,5 @@
 using System.Text.Json;
 using MassTransit;
-using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Configuration;
 using RestSharp;

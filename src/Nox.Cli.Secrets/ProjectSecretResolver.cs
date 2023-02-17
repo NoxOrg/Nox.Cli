@@ -1,5 +1,3 @@
-using Nox.Cli.Abstractions;
-using Nox.Core.Configuration;
 using Nox.Core.Interfaces.Configuration;
 
 namespace Nox.Cli.Secrets;

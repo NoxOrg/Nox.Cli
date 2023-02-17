@@ -1,5 +1,4 @@
 ﻿using Nox.Cli.Abstractions;
-using Npgsql;
 
 namespace Nox.Cli.Plugins.Postgres;
 

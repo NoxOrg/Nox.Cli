@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Nox.Cli.Plugin.YamlMaker.JsonSchema;
+﻿namespace Nox.Cli.Plugin.YamlMaker.JsonSchema;
 
 internal class JsonSchema
 {

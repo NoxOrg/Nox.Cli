@@ -1,4 +1,3 @@
-using Microsoft.Graph.ExternalConnectors;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
 using Nox.Cli.Secrets;

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Nox.Cli.Abstractions.Configuration;
-using NUnit.Framework.Internal;
 
 namespace Nox.Cli.Secrets.Tests;
 

@@ -1,5 +1,4 @@
-﻿using Nox.Cli.Authentication;
-using Nox.Cli.Helpers;
+﻿using Nox.Cli.Helpers;
 
 namespace Nox.Cli.Commands;
 

@@ -1,5 +1,4 @@
 using Nox.Cli.Abstractions;
-using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Shared.DTO.Health;
 using Nox.Cli.Shared.DTO.Workflow;
 

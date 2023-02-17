@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Nox.Cli.Abstractions;
 
 namespace Nox.Cli.Variables;
 

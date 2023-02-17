@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.DataProtection;
-using Nox.Cli.Abstractions.Configuration;
 
 namespace Nox.Cli.Secrets;
 

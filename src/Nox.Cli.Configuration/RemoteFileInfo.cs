@@ -1,6 +1,4 @@
-﻿using Nox.Cli.Abstractions.Configuration;
-
-namespace Nox.Cli.Configuration;
+﻿namespace Nox.Cli.Configuration;
 
 public class RemoteFileInfo : IEquatable<RemoteFileInfo>
 {

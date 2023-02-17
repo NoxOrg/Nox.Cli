@@ -3,7 +3,6 @@ using Nox.Cli.Abstractions.Extensions;
 using Nox.Cli.Plugin.YamlMaker.JsonSchema;
 using RestSharp;
 using Spectre.Console;
-using System;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;

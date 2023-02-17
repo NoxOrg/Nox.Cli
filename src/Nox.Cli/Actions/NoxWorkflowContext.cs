@@ -4,7 +4,6 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
-using Nox.Cli.Server.Integration;
 using Nox.Cli.Variables;
 
 namespace Nox.Cli.Actions;

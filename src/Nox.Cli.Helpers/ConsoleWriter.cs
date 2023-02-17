@@ -1,8 +1,5 @@
 ﻿namespace Nox.Cli.Helpers;
 
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Spectre.Console;
 
 public interface IConsoleWriter

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Server.Abstractions;
-using Nox.Cli.Server.Services;
 using Nox.Cli.Shared.DTO.Workflow;
 
 namespace Nox.Cli.Server.Controllers;
