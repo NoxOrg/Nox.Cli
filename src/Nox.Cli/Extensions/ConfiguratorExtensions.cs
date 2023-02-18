@@ -1,17 +1,21 @@
-﻿using Azure.Identity;
-using Nox.Cli.Commands;
+﻿using Nox.Cli.Commands;
 using Nox.Core.Constants;
 using RestSharp;
 using Spectre.Console.Cli;
-using System.IdentityModel.Tokens.Jwt;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using System.Text.Json;
+using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Nox.Cli.Services.Caching;
 using Nox.Cli.Configuration;
-using System.Linq;
-using Microsoft.Identity.Core.Cache;
+using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Configuration;
+using Nox.Cli.Authentication;
+using Nox.Cli.Authentication.Azure;
+using Nox.Cli.Configuration.Validation;
+using Nox.Cli.Server.Integration;
 
 namespace Nox.Cli;
 
@@ -21,15 +25,15 @@ internal static class ConfiguratorExtensions
     public static string CacheFile => Path.Combine(CachePath, "NoxCliCache.json");
     public static string WorkflowsCachePath => Path.Combine(CachePath, "workflows");
 
-    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig)
+    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services)
     {
         var cachePath = CachePath;
 
         Directory.CreateDirectory(cachePath);
 
         var cacheFile = CacheFile;
-
-        NoxCliCache? cache = GetOrCreateCache(cacheFile);
+        
+        var cache = GetOrCreateCache(cacheFile);
 
         Dictionary<string,string> yamlFiles = new(StringComparer.OrdinalIgnoreCase);
 
@@ -39,17 +43,54 @@ internal static class ConfiguratorExtensions
         }
 
         GetLocalWorkflows(yamlFiles);
+        
+#if DEBUG
+        GetLocalWorkflows(yamlFiles, "../../tests/workflows");        
+#endif
 
         var deserializer = new DeserializerBuilder()
             .WithNamingConvention(HyphenatedNamingConvention.Instance)
             .IgnoreUnmatchedProperties()
+            .WithTypeMapping<IActionConfiguration, ActionConfiguration>()
+            .WithTypeMapping<ICliConfiguration, CliConfiguration>()
+            .WithTypeMapping<IStepConfiguration, StepConfiguration>()
+            .WithTypeMapping<ICliCommandConfiguration, CliCommandConfiguration>()
+            .WithTypeMapping<ILocalTaskExecutorConfiguration, LocalTaskExecutorConfiguration>()
+            .WithTypeMapping<ISecretsConfiguration, SecretsConfiguration>()
+            .WithTypeMapping<ISecretProviderConfiguration, SecretProviderConfiguration>()
+            .WithTypeMapping<ISecretsValidForConfiguration, SecretsValidForConfiguration>()
+            .WithTypeMapping<ICliAuthConfiguration, CliAuthConfiguration>()
+            .WithTypeMapping<IRemoteTaskExecutorConfiguration, RemoteTaskExecutorConfiguration>()
             .Build();
-
+        
         var manifest = yamlFiles
             .Where(kv => kv.Key.EndsWith(".cli.nox.yaml")) // TODO: define in nox.core constants
             .Select(kv => deserializer.Deserialize<ManifestConfiguration>(kv.Value))
             .FirstOrDefault();
 
+        if (manifest!.Authentication != null)
+        {
+            var authValidator = new CliAuthValidator();
+            authValidator.ValidateAndThrow(manifest.Authentication);
+            
+            services.AddSingleton<ICliAuthConfiguration>(manifest!.Authentication);
+            services.AddNoxServerAuthentication();
+            services.AddAzureAuthentication();
+        }
+
+        if (manifest.LocalTaskExecutor != null)
+        {
+            services.AddSingleton<ILocalTaskExecutorConfiguration>(manifest!.LocalTaskExecutor);
+        }
+        
+        if (manifest.RemoteTaskExecutor != null)
+        {
+            var rteValidator = new RemoteTaskExecutorValidator();
+            rteValidator.ValidateAndThrow(manifest.RemoteTaskExecutor);
+            services.AddSingleton<IRemoteTaskExecutorConfiguration>(manifest.RemoteTaskExecutor);
+            services.AddSingleton<INoxCliServerIntegration, NoxCliServerIntegration>();
+        }
+        
         var workflowsByBranch = yamlFiles
             .Where(kv => kv.Key.EndsWith(FileExtension.WorflowDefinition.TrimStart('*')))
             .Select(kv => deserializer.Deserialize<WorkflowConfiguration>(kv.Value))
@@ -58,9 +99,9 @@ internal static class ConfiguratorExtensions
             .GroupBy(w => w.Cli.Branch.ToLower());
 
         var branchDescriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        if (manifest?.Branches != null)
+        if (manifest?.CliCommands != null)
         {
-            branchDescriptions = manifest.Branches.ToDictionary( m => m.Name, m => m.Description, StringComparer.OrdinalIgnoreCase);
+            branchDescriptions = manifest.CliCommands.ToDictionary( m => m.Name, m => m.Description, StringComparer.OrdinalIgnoreCase);
         }
 
         foreach (var branch in workflowsByBranch)
@@ -83,6 +124,7 @@ internal static class ConfiguratorExtensions
                     {
                         cmdConfigContinuation = cmdConfigContinuation.WithExample(example.ToArray());
                     };
+                    
                 }
 
             });
@@ -107,14 +149,15 @@ internal static class ConfiguratorExtensions
             }
         }
 
-        cache = GetCacheInfoFromAzureToken(cacheFile).Result;        
+        cache = GetCacheInfoFromAzureToken(cacheFile).Result;      
 
         return cache;
     }
+    
 
-    private static void GetLocalWorkflows(Dictionary<string, string> yamlFiles)
+    private static void GetLocalWorkflows(Dictionary<string, string> yamlFiles, string searchPath = "")
     {
-        var files = FindWorkflows();
+        var files = FindWorkflows(searchPath);
 
         var overriddenFiles = new List<string>(files.Length);
 
@@ -158,6 +201,11 @@ internal static class ConfiguratorExtensions
 
         if (onlineFilesJson.Content == null) return;
 
+        if (onlineFilesJson.ResponseStatus == ResponseStatus.Error)
+        {
+            throw new Exception($"GetOnlineWorkflows:-> {onlineFilesJson.ErrorException?.Message}");
+        }
+        
         var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -218,61 +266,50 @@ internal static class ConfiguratorExtensions
     {
         AnsiConsole.MarkupLine($"[bold mediumpurple3_1]Checking your credentials...[/]");
 
-        var credential = new ChainedTokenCredential(
-            new AzureCliCredential(),
-            new InteractiveBrowserCredential()
-        );
+        var authenticator = new AzureBasicAuthenticator();
+        var noxIdentity = await authenticator.SignIn();
+    
+        if (noxIdentity == null)
+        {
+            AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} Unable to login to Azure AD. Continuing without login.");
+            return null;
+        }
         
-        if(credential == null) return null;
-
-        string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
-
-        var token = await credential.GetTokenAsync(new Azure.Core.TokenRequestContext(scopes));
-
-        var handler = new JwtSecurityTokenHandler();
-
-        if (handler.ReadToken(token.Token) is not JwtSecurityToken jsonToken) return null;
-
-        var upn = jsonToken.Claims.FirstOrDefault(c => c.Type == "upn");
-        if (upn == null)
+        if (noxIdentity!.UserPrincipalName == null)
         {
             AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} User principal name (UPN) not detected. Continuing without login.");
             return null;
         }
-
-        var tid = jsonToken.Claims.FirstOrDefault(c => c.Type == "tid");
-        if (tid == null)
+    
+        if (noxIdentity.TenantId == null)
         {
             AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} Tenant Id (TId) not detected. Continuing without login.");
             return null;
         }
-
-        var name = jsonToken.Claims.FirstOrDefault(c => c.Type == "name");
-        if (name == null)
-        {
-            AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} User name not detected. Continuing without login.");
-            return null;
-        }
-
+    
         var ret = new NoxCliCache(cacheFile) 
         { 
-            Name = name.Value,
-            Upn = upn.Value, 
-            Tid = tid.Value, 
+            Upn = noxIdentity.UserPrincipalName, 
+            Tid = noxIdentity.TenantId, 
             Expires = new DateTimeOffset(DateTime.Now.AddDays(7)) 
         };
-
+    
         ret.Save();
-
-        AnsiConsole.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} Logged in as {upn.Value} on tenant {tid.Value}");
+    
+        AnsiConsole.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} Logged in as {noxIdentity.UserPrincipalName} on tenant {noxIdentity.TenantId}");
         AnsiConsole.WriteLine();
-
+    
         return ret;
     }
 
-    private static string[] FindWorkflows()
+    private static string[] FindWorkflows(string searchPath = "")
     {
         var path = new DirectoryInfo(Directory.GetCurrentDirectory());
+        
+        if (!string.IsNullOrEmpty(searchPath))
+        {
+            path = new DirectoryInfo(searchPath);
+        }
 
         var files = path.GetFiles(FileExtension.WorflowDefinition);
 

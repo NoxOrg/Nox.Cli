@@ -1,6 +1,6 @@
-﻿using Nox.Cli.Actions;
-using Npgsql;
+﻿using Npgsql;
 using System.Data;
+using Nox.Cli.Abstractions;
 
 namespace Nox.Cli.Plugins.Postgres;
 
@@ -64,7 +64,7 @@ public class PostgresConnect_v1 : INoxCliAddin
 
     private NpgsqlConnection? _connection;
 
-    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(IDictionary<string,object> inputs)
     {
         var csb = new NpgsqlConnectionStringBuilder
         {
@@ -112,7 +112,7 @@ public class PostgresConnect_v1 : INoxCliAddin
         return outputs;
     }
 
-    public async Task EndAsync(INoxWorkflowContext ctx)
+    public async Task EndAsync()
 
     {
         if (_connection != null)

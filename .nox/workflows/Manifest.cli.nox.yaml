@@ -1,18 +1,22 @@
 # Manifest.cli.nox.yaml
 
-secrets:
-  provider: azure-keyvault
-  url: https://we-key-Nox-02.vault.azure.net/
-
-branches: 
+cli-commands:
   - name: new
     description: Create new services, entities, loaders, api's, and more
   - name: sync
     description: Synchronize your project with version control and remote environments
-  - name: version    
+  - name: version
     description: Displays the current NOX cli version
-    
-remote-task-proxy:
-  url: https://iwg-taskexecutor.azure.com
-  auth: aad-credential
-  log-local-tasks: yes
+
+authentication:
+  provider: azure
+  tenant-id: 88155c28-f750-4013-91d3-8347ddb3daa7 # see if we can remove this
+
+local-task-executor:
+  secrets:
+    - provider: azure-keyvault
+      url: https://we-key-Nox-02.vault.azure.net/
+
+remote-task-executor:
+  url: http://localhost:8000
+  application-id: 750b96e1-e772-48f8-b6b3-84bac1961d9b

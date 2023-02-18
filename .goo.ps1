@@ -32,6 +32,8 @@ $script:SolutionFolder          = $script:SourceFolder
 $script:SolutionFile            = "$script:SolutionFolder\Nox.Cli.sln"
 $script:ProjectFolder           = "$script:SolutionFolder\Nox.Cli"
 $script:ProjectFile             = "$script:ProjectFolder\Nox.Cli.csproj"
+$script:ServerFolder            = "$script:SolutionFolder\Nox.Cli.Server"
+$script:ServerFile              = "$script:SolutionFolder\Nox.Cli.Server.csproj"
 
 $script:DefaultEnvironment      = 'Development'
 
@@ -77,15 +79,20 @@ $goo.Command.Add( 'build', {
     $goo.Console.WriteInfo("Building solution...")
     $goo.Command.RunExternal('dotnet','build /clp:ErrorsOnly --warnaserror --configuration Release', $script:SolutionFolder)
     $goo.StopIfError("Failed to build solution. (Release)")
-    $goo.Command.RunExternal('dotnet','publish --configuration Release --output ../../dist --no-build', $script:SolutionFolder)
+    $goo.Command.RunExternal('dotnet','publish --configuration Release --output ../dist --no-build', $script:SolutionFolder)
     $goo.StopIfError("Failed to publish CLI project. (Release)")
 })
-
 
 # command: goo run [<cliParameters>]| Run the console application
 $goo.Command.Add( 'run', { param([string]$dotNetOptions, [string]$cliOptions)
     $goo.Console.WriteLine("Starting: dotnet run $dotNetOptions")
     $goo.Command.RunExternal('dotnet',"run $dotNetOptions", $script:ProjectFolder)
+})
+
+# command: goo listen | Start the Cli server 
+$goo.Command.Add( 'listen', {
+    $goo.Console.WriteLine( "starting the Cli Server at https://localhost:8000..." )
+    $goo.Command.RunExternal('dotnet','run',$script:ServerFolder)
 })
 
 # command: goo env | Show all environment variables

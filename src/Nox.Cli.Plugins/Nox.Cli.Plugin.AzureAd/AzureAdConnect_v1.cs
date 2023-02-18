@@ -1,7 +1,7 @@
 using Azure.Identity;
 using Microsoft.Graph;
-using Nox.Cli.Actions;
-using ActionState = Nox.Cli.Actions.ActionState;
+using Nox.Cli.Abstractions;
+using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -57,7 +57,7 @@ public class AzureAdConnect_v1 : INoxCliAddin
     private string? _clientId;
     private string? _clientSecret;
 
-    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _tenantId = (string)inputs["tenant-id"];
         _clientId = (string)inputs["client-id"];
@@ -87,7 +87,7 @@ public class AzureAdConnect_v1 : INoxCliAddin
         return Task.FromResult((IDictionary<string, object>)outputs);
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         return Task.CompletedTask;
     }

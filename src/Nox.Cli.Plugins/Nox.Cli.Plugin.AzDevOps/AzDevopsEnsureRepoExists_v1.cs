@@ -1,7 +1,7 @@
 using Microsoft.TeamFoundation.Core.WebApi;
-using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -12,7 +12,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/ensure-repo@v1",
+            Name = "azdevops/ensure-repo-exists@v1",
             Author = "Jan Schutte",
             Description = "Get a reference to a DevOps repository, if it does not exist then create it.",
 
@@ -63,7 +63,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
     private Guid? _projectId;
     private string? _defaultBranch;
 
-    public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
+    public async Task BeginAsync(IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectId = inputs.Value<Guid>("project-id");
@@ -117,7 +117,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _repoClient?.Dispose();
         return Task.CompletedTask;

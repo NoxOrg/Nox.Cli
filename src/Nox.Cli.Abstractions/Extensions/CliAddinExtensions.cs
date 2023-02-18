@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Nox.Cli.Actions;
 
 namespace Nox.Cli.Abstractions.Extensions;
 

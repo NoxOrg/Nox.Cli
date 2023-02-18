@@ -12,6 +12,13 @@ description: A sample currency conversion microservice
 
 autoMigrations: false
 
+secrets:
+  validFor:
+    hours: 12
+  providers:
+    - provider: azure-keyvault
+      url: https://svc-6A9B1182FC66686F.vault.azure.net/
+
 database:
   name: SampleCurrencyDb
   server: localhost
@@ -27,7 +34,6 @@ messagingProviders:
     connectionString: rabbitmq://guest:guest@localhost/
       
 dataSources:
-
   - name: JsonSeedData
     provider: json
     options: Source=File;Path=../../docs/sample-data/;

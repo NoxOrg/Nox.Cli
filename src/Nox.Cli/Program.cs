@@ -7,11 +7,15 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 
 using Nox.Cli;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
+using Nox.Cli.Actions;
 using Nox.Cli.Interceptors;
 using Nox.Cli.Services;
 using Nox.Cli.Commands;
 using Nox.Cli.Helpers;
+using Nox.Cli.Secrets;
+using Nox.Utilities.Secrets;
 
 var isLoggingOut = (args.Length > 0 && args[0].ToLower().Equals("logout")); 
 
@@ -28,9 +32,14 @@ if (!isGettingVersion || args.Length == 0)
 }
 
 var services = new ServiceCollection();
+
 services.AddSingleton<IFileSystem, FileSystem>();
 services.AddSingleton<IConsoleWriter, ConsoleWriter>();
+services.AddTransient<INoxWorkflowExecutor, NoxWorkflowExecutor>();
 services.AddNoxCliServices(args);
+services.AddPersistedSecretStore();
+services.AddProjectSecretResolver();
+services.AddOrgSecretResolver();
 services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 var registrar = new TypeRegistrar(services);
@@ -49,7 +58,7 @@ app.Configure(config =>
 
     if(!isGettingVersion && !isLoggingOut)
     {
-        config.AddNoxCommands();
+        config.AddNoxCommands(services);
     }
 
     config.AddCommand<LogoutCommand>("logout")
@@ -57,7 +66,6 @@ app.Configure(config =>
 
     config.AddCommand<VersionCommand>("version")
         .WithDescription("Displays the current NOX cli version.");
-    
 });
 
 

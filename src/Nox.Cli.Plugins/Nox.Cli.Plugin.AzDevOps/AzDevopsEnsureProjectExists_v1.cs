@@ -1,7 +1,7 @@
-using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.VisualStudio.Services.Operations;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -12,7 +12,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/ensure-Project@v1",
+            Name = "azdevops/ensure-project-exists@v1",
             Author = "Jan Schutte",
             Description = "Get a reference to a DevOps project, if it does not exist then create it.",
 
@@ -60,7 +60,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
     private string? _projectName;
     private string? _projectDescription;
 
-    public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
+    public async Task BeginAsync(IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectName = inputs.Value<string>("project-name");
@@ -116,7 +116,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _projectClient?.Dispose();
         _processClient?.Dispose();

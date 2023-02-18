@@ -1,7 +1,6 @@
-using Nox.Cli.Actions;
 using Microsoft.TeamFoundation.Core.WebApi;
-using Microsoft.VisualStudio.Services.Operations;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -46,7 +45,7 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
     private ProjectHttpClient? _projectClient;
     private string? _projectName;
 
-    public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
+    public async Task BeginAsync(IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectName = inputs.Value<string>("project-name");
@@ -79,7 +78,7 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _projectClient?.Dispose();
         return Task.CompletedTask;

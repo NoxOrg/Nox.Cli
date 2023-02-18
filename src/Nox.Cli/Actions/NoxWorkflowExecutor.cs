@@ -1,30 +1,53 @@
-﻿
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using Microsoft.Extensions.Configuration;
-using Nox.Cli.Configuration;
+﻿using Microsoft.Extensions.Configuration;
+using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Configuration;
+using Nox.Cli.Secrets;
+using Nox.Cli.Server.Integration;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 
 namespace Nox.Cli.Actions;
 
-public class NoxWorkflowExecutor
+public class NoxWorkflowExecutor: INoxWorkflowExecutor
 {
-
-    private static readonly List<NoxAction> processedActions = new();
-
-    public async static Task<bool> Execute(WorkflowConfiguration workflow,
-        IConfiguration appConfig, INoxConfiguration noxConfig, IAnsiConsole console
-    )
+    private readonly INoxCliServerIntegration _serverIntegration;
+    private readonly List<INoxAction> _processedActions = new();
+    private readonly IAnsiConsole _console;
+    private readonly IProjectConfiguration _noxConfig;
+    private readonly IConfiguration _appConfig;
+    private readonly IProjectSecretResolver _projectSecretResolver;
+    private readonly IOrgSecretResolver _orgSecretResolver;
+    private readonly ILocalTaskExecutorConfiguration? _lteConfig;
+    
+    public NoxWorkflowExecutor(
+        INoxCliServerIntegration serverIntegration,
+        IAnsiConsole console,
+        IProjectConfiguration noxConfig,
+        IConfiguration appConfig,
+        IProjectSecretResolver projectSecretResolver,
+        IOrgSecretResolver orgSecretResolver,
+        ILocalTaskExecutorConfiguration? lteConfig = null)
+    {
+        _serverIntegration = serverIntegration;
+        _console = console;
+        _noxConfig = noxConfig;
+        _appConfig = appConfig;
+        _lteConfig = lteConfig;
+        _projectSecretResolver = projectSecretResolver;
+        _orgSecretResolver = orgSecretResolver;
+    }
+    
+    public async Task<bool> Execute(IWorkflowConfiguration workflow)
     {
         var workflowDescription = $"[seagreen1]Executing workflow: {workflow.Name.EscapeMarkup()}[/]";
-        console.WriteLine();
-        console.MarkupLine(workflowDescription);
+        _console.WriteLine();
+        _console.MarkupLine(workflowDescription);
 
         var watch = System.Diagnostics.Stopwatch.StartNew();
 
-        var ctx = console.Status()
+        var ctx = _console.Status()
             .Spinner(Spinner.Known.Clock)
-            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, noxConfig, appConfig));
+            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _projectSecretResolver, _orgSecretResolver, _lteConfig));
 
         bool success = true;
 
@@ -35,19 +58,32 @@ public class NoxWorkflowExecutor
             var formattedTaskDescription = $"[bold mediumpurple3_1]{taskDescription}[/]";
 
             var requiresConsole = ctx.CurrentAction.ActionProvider.Discover().RequiresConsole;
-
-            if(requiresConsole)
+            
+            if (ctx.CurrentAction.RunAtServer == true)
             {
-                console.WriteLine();
-                console.MarkupLine(formattedTaskDescription);
-                success = await ProcessTask(console, ctx);
-            }
-            else // show spinner
-            {
-                success = await console.Status().Spinner(Spinner.Known.Clock)
-                    .StartAsync(formattedTaskDescription, async _ =>
-                        await ProcessTask(console, ctx, formattedTaskDescription)
+                var serverTaskDescription = $"{formattedTaskDescription} [bold yellow] -> CLI SERVER[/]";
+                _console.WriteLine();
+                _console.MarkupLine(serverTaskDescription);
+                success = await _console.Status().Spinner(Spinner.Known.Clock)
+                    .StartAsync(serverTaskDescription, async _ =>
+                        await ProcessServerTask(_console, ctx, serverTaskDescription)
                     );
+            }
+            else
+            {
+                if (requiresConsole)
+                {
+                    _console.WriteLine();
+                    _console.MarkupLine(formattedTaskDescription);
+                    success = await ProcessTask(_console, ctx);
+                }
+                else // show spinner
+                {
+                    success = await _console.Status().Spinner(Spinner.Known.Clock)
+                        .StartAsync(formattedTaskDescription, async _ =>
+                            await ProcessTask(_console, ctx, formattedTaskDescription)
+                        );
+                }
             }
 
             if (!success) break;
@@ -55,26 +91,28 @@ public class NoxWorkflowExecutor
             ctx.NextStep();
         }
 
-        await Task.WhenAll( processedActions.Select(p => p.ActionProvider.EndAsync(ctx) ) );
+        await Task.WhenAll(_processedActions.Where(p => p.RunAtServer == false).Select(p => p.ActionProvider.EndAsync()));
+
 
         watch.Stop();
 
-        console.WriteLine();
-        
+        _console.WriteLine();
+
         if (success)
         {
-            console.MarkupLine($"[seagreen1]Success! ({watch.Elapsed:hh\\:mm\\:ss})[/]");
+            _console.MarkupLine($"[seagreen1]Success! ({watch.Elapsed:hh\\:mm\\:ss})[/]");
         }
         else
         {
-            console.MarkupLine($"[indianred1]Workflow halted with an error. ({watch.Elapsed:hh\\:mm\\:ss})[/]");
+            _console.MarkupLine($"[indianred1]Workflow halted with an error. ({watch.Elapsed:hh\\:mm\\:ss})[/]");
         }
 
         return success;
-
     }
 
-    private static async Task<bool> ProcessTask(IAnsiConsole console, NoxWorkflowContext ctx, 
+    private async Task<bool> ProcessTask(
+        IAnsiConsole console, 
+        NoxWorkflowContext ctx, 
         string? formattedTaskDescription = null)
     {
         if (ctx.CurrentAction == null) return false;
@@ -105,15 +143,15 @@ public class NoxWorkflowExecutor
             return true;
         }
 
-        await ctx.CurrentAction.ActionProvider.BeginAsync(ctx, inputs);
-
+        await ctx.CurrentAction.ActionProvider.BeginAsync(inputs);
+        
         var outputs = await ctx.CurrentAction.ActionProvider.ProcessAsync(ctx);
 
         ctx.StoreOutputVariables(ctx.CurrentAction, outputs);
 
         ctx.CurrentAction.EvaluateValidate();
 
-        processedActions.Add(ctx.CurrentAction);
+        _processedActions.Add(ctx.CurrentAction);
 
         if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
         {
@@ -143,6 +181,74 @@ public class NoxWorkflowExecutor
         }
 
         return true;
+    }
+    
+    private async Task<bool> ProcessServerTask(
+        IAnsiConsole console, 
+        NoxWorkflowContext ctx, 
+        string? formattedTaskDescription = null)
+    {
+        if (ctx.CurrentAction == null) return false;
+
+        if (!await IsServerHealthy())
+        {
+            ctx.SetErrorMessage(ctx.CurrentAction, "Unable to connect to Nox Cli Server");
+            console.MarkupLine($"{Emoji.Known.RedCircle} [indianred1]Unable to connect to Nox Cli Server[/]");
+            return false;
+        }
+        
+        ctx.GetInputVariables(ctx.CurrentAction, true);
+        
+        if (!ctx.CurrentAction.EvaluateIf())
+        {
+            if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
+            {
+                console.WriteLine();
+                console.MarkupLine(formattedTaskDescription);
+            }
+            console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} is false");
+            return true;
+        }
+        
+        var executeResponse = await _serverIntegration.ExecuteTask(ctx.WorkflowId, ctx.CurrentAction);
+        ctx.SetState(executeResponse.State);
+        var outputs = executeResponse.Outputs;
+
+        if (outputs != null) ctx.StoreOutputVariables(ctx.CurrentAction, outputs);
+        
+        ctx.CurrentAction.EvaluateValidate();
+
+        _processedActions.Add(ctx.CurrentAction);
+
+        if (ctx.CurrentAction.State == ActionState.Error)
+        {
+            if (ctx.CurrentAction.ContinueOnError)
+            {
+                console.MarkupLine($"{Emoji.Known.GreenCircle} {ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}");
+            }
+            else
+            {
+                ctx.SetErrorMessage(ctx.CurrentAction, ctx.CurrentAction.ErrorMessage);
+                console.MarkupLine($"{Emoji.Known.RedCircle} [indianred1]{ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}[/]");
+                return false;
+            }
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.Success))
+            {
+                console.MarkupLine($"{Emoji.Known.GreenCircle} {ctx.CurrentAction.Display.Success.EscapeMarkup()}");
+            }
+        }
+
+        return true;
+    }
+
+    private async Task<bool> IsServerHealthy()
+    {
+        var result = await _serverIntegration!.EchoHealth();
+        if (result == null) return false;
+        return result.Name == "Nox Cli Server";
     }
 }
 

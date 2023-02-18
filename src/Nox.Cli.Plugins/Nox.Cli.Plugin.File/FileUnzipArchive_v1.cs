@@ -1,7 +1,7 @@
 using System.IO.Compression;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Actions;
 
 namespace Nox.Cli.Plugin.File;
 
@@ -46,7 +46,7 @@ public class FileUnzipArchive_v1: INoxCliAddin
     private string? _destinationPath;
     private bool? _deleteArchive;
 
-    public Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string,object> inputs)
+    public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _archivePath = inputs.Value<string>("archive-path");
         _destinationPath = inputs.Value<string>("destination-path");
@@ -99,7 +99,7 @@ public class FileUnzipArchive_v1: INoxCliAddin
         return Task.FromResult<IDictionary<string, object>>(outputs);
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         return Task.CompletedTask;
     }

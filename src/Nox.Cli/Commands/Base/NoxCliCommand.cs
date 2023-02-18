@@ -1,6 +1,7 @@
-﻿namespace Nox.Cli.Commands;
+﻿using Nox.Cli.Helpers;
 
-using Helpers;
+namespace Nox.Cli.Commands;
+
 using Microsoft.Extensions.Configuration;
 using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
@@ -10,11 +11,11 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
 {
     protected readonly IAnsiConsole _console;
     protected readonly IConsoleWriter _consoleWriter;
-    protected readonly INoxConfiguration _noxConfiguration;
+    protected readonly IProjectConfiguration _noxConfiguration;
     protected readonly IConfiguration _configuration;
 
     public NoxCliCommand(IAnsiConsole console, IConsoleWriter consoleWriter,
-        INoxConfiguration noxConfiguration, IConfiguration configuration)
+        IProjectConfiguration noxConfiguration, IConfiguration configuration)
     {
         _console = console;
         _consoleWriter = consoleWriter;
@@ -24,7 +25,6 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
 
     public override Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
-
         _console.WriteLine();
         _consoleWriter.WriteInfo($"Design folder:");
         _console.WriteLine(_configuration["NoxCli:DesignFolder"]!);

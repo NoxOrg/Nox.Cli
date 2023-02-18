@@ -1,8 +1,7 @@
 using Microsoft.VisualStudio.Services.Graph.Client;
 using Microsoft.VisualStudio.Services.WebApi;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Actions;
-using Nox.Core.Configuration;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -55,7 +54,7 @@ public class AzDevopsAddTeamMember_v1 : INoxCliAddin
     private string? _username;
     private string? _groupName;
 
-    public async Task BeginAsync(INoxWorkflowContext ctx, IDictionary<string, object> inputs)
+    public async Task BeginAsync(IDictionary<string, object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectName = inputs.Value<string>("project-name");
@@ -90,7 +89,7 @@ public class AzDevopsAddTeamMember_v1 : INoxCliAddin
         return outputs;
     }
 
-    public Task EndAsync(INoxWorkflowContext ctx)
+    public Task EndAsync()
     {
         _graphClient?.Dispose();
         return Task.CompletedTask;

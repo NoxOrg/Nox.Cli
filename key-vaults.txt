@@ -1,0 +1,3 @@
+nox-cli-server.TEST: nox-14356B22BB785E44
+nox-cli.TEST: nox-EDA1DB500EBCEB02
+sample-currency.TEST: svc-6A9B1182FC66686F
