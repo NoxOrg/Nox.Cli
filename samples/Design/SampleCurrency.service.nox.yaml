@@ -13,8 +13,11 @@ description: A sample currency conversion microservice
 autoMigrations: false
 
 secrets:
-  - provider: azure-keyvault
-    url: https://svc-6A9B1182FC66686F.vault.azure.net/
+  validFor:
+    hours: 12
+  providers:
+    - provider: azure-keyvault
+      url: https://svc-6A9B1182FC66686F.vault.azure.net/
 
 database:
   name: SampleCurrencyDb
