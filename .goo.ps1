@@ -79,7 +79,7 @@ $goo.Command.Add( 'build', {
     $goo.Console.WriteInfo("Building solution...")
     $goo.Command.RunExternal('dotnet','build /clp:ErrorsOnly --warnaserror --configuration Release', $script:SolutionFolder)
     $goo.StopIfError("Failed to build solution. (Release)")
-    $goo.Command.RunExternal('dotnet','publish --configuration Release --output ../../dist --no-build', $script:SolutionFolder)
+    $goo.Command.RunExternal('dotnet','publish --configuration Release --output ../dist --no-build', $script:SolutionFolder)
     $goo.StopIfError("Failed to publish CLI project. (Release)")
 })
 
