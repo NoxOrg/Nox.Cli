@@ -49,8 +49,14 @@ public class AzDevopsConnect_v1 : INoxCliAddin
     {
         var server = inputs.Value<string>("server");
         var pat = inputs.Value<string>("personal-access-token");
-
-        _connection = new VssConnection(new Uri(server!), new VssBasicCredential(string.Empty, pat));
+        if(server != null && pat != null)
+        {
+            // make sure a malicious url is not being injected to obtain PAT
+            if(server.Trim().ToLower().StartsWith("https://dev.azure.com/"))
+            {
+                _connection = new VssConnection(new Uri(server), new VssBasicCredential(string.Empty, pat));
+            }      
+        }
         return Task.CompletedTask;
     }
 
