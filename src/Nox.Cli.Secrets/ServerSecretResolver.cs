@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Server.Abstractions;
+using Nox.Utilities.Secrets;
 
 namespace Nox.Cli.Secrets;
 
@@ -62,7 +63,7 @@ public class ServerSecretResolver: IServerSecretResolver
                     case "azure-keyvault":
                         var azureVault = new AzureSecretProvider(vault.Url);
                         //TODO cache these secrets
-                        var azureSecrets = azureVault.GetSecretsFromVault(onlineSecretKeys.Select(k => k.Key).ToArray()).Result;
+                        var azureSecrets = azureVault.GetSecretsAsync(onlineSecretKeys.Select(k => k.Key).ToArray()).Result;
                         if (azureSecrets != null && azureSecrets.Any())
                         {
                             secrets.AddRange(azureSecrets);

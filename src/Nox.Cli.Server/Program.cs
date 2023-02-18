@@ -5,6 +5,7 @@ using Nox.Cli.Server.Abstractions;
 using Nox.Cli.Server.Cache;
 using Nox.Cli.Server.Extensions;
 using Nox.Cli.Server.Services;
+using Nox.Utilities.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 

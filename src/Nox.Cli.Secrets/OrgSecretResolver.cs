@@ -1,4 +1,5 @@
 using Nox.Cli.Abstractions.Configuration;
+using Nox.Utilities.Secrets;
 
 namespace Nox.Cli.Secrets;
 
@@ -50,7 +51,7 @@ public class OrgSecretResolver: IOrgSecretResolver
                 {
                     case "azure-keyvault":
                         var azureVault = new AzureSecretProvider(vault.Url);
-                        var azureSecrets = azureVault.GetSecretsFromVault(onlineSecretKeys.ToArray()).Result;
+                        var azureSecrets = azureVault.GetSecretsAsync(onlineSecretKeys.ToArray()).Result;
                         if (azureSecrets != null)
                         {
                             if (azureSecrets.Any()) secrets.AddRange(azureSecrets);

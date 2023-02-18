@@ -88,7 +88,6 @@ public static class RunnerVariableResolver
             case "arch":
                 var arch = RuntimeInformation.ProcessArchitecture;
                 return Enum.GetName(arch);
-                break;
             case "os":
                 var os = RuntimeInformation.OSDescription;
                 return os;
