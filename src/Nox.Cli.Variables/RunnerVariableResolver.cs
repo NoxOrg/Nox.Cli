@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -14,6 +15,7 @@ public static class RunnerVariableResolver
     public static void ResolveRunnerVariables(this IDictionary<string, object?> variables)
     {
         var keys = variables
+            .Where(kv => kv.Value == null)
             .Select(kv => kv.Key)
             .Where(e => e.StartsWith("runner.", StringComparison.OrdinalIgnoreCase))
             .Select(e => e[7..])
@@ -21,7 +23,7 @@ public static class RunnerVariableResolver
 
         foreach (var key in keys)
         {
-            var value = ResolveValue(key);
+            var value = ResolveRunnerValue(key);
             if (value != null) variables[$"runner.{key}"] = value;
         }
     }
@@ -36,86 +38,85 @@ public static class RunnerVariableResolver
                 if (match.Success)
                 {
                     var key = match.Groups["variable"].Value;
-                    var value = ResolveValue(key);
+                    var value = ResolveRunnerValue(key);
                     if (value != null) item.Value = value;
                 }    
             }
-        }
-        
+        }    
     }
 
-    private static object? ResolveValue(string runnerKey)
+    private static object? ResolveRunnerValue(string runnerKey)
     {
-        var curPath = Assembly.GetExecutingAssembly().Location;
-        var hostName = Dns.GetHostName();
-        var ipEntry = Dns.GetHostEntry(hostName);
-
-        switch (runnerKey)
+        return runnerKey.ToLower() switch
         {
-            case "current":
-                if (curPath != null) return Path.GetDirectoryName(curPath);
-                break;
-            case "temp":
-                var tmpPath = Path.GetTempPath();
-                return tmpPath;
-            case "isonline":
-            case "ipv4":
-                var isOnline = false;
-                try
-                {
-                    var isOnlineClient = new RestClient($"https://icanhazip.com/");
-                    var isOnlineRequest = new RestRequest
-                    {
-                        Method = Method.Get,
-                        Timeout = 1000
-                    };
-                    var isOnlineResponse = isOnlineClient.Execute(isOnlineRequest);
-                    isOnline = isOnlineResponse.StatusCode == HttpStatusCode.OK;
-                    switch (runnerKey)
-                    {
-                        case "isonline":
-                            return isOnline;
-                        case "ipv4":
-                            return isOnlineResponse.Content!.Trim();
-                    }
-                }
-                catch
-                {
-                    // ignore
-                }
+            "cli" => Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location!),
+            "current" => Directory.GetCurrentDirectory(),
+            "temp" => Path.GetTempPath(),
+            "home" => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            "machine" => Environment.MachineName,
+            "host" => Dns.GetHostName(),
+            "isonline" => IsOnline(),
+            "ipv4" => PublicIPv4(),
+            "arch" => Enum.GetName(RuntimeInformation.ProcessArchitecture),
+            "os" => RuntimeInformation.OSDescription,
+            "ismacos" => RuntimeInformation.IsOSPlatform(OSPlatform.OSX),
+            "islinux" => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
+            "iswindows" => RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+            "totalmemory" => TotalMemory(),
+            "availablememory" => AvailableMemory(),
+            "totaldiskspace" => TotalDiskspace(),
+            "availablediskspace" => AvailableDiskspace(),
+            "debug" => false,
+            _ => null
+        };
+    }
 
-                break;
-            case "arch":
-                var arch = RuntimeInformation.ProcessArchitecture;
-                return Enum.GetName(arch);
-            case "os":
-                var os = RuntimeInformation.OSDescription;
-                return os;
-            case "ismacos":
-                var isMac = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-                return isMac;
-            case "islinux":
-                var isProperOs = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-                return isProperOs;
-            case "iswindows":
-                var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                return isWindows;
-            case "availablememory":
-                GC.Collect();
-                var mem = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes - GC.GetGCMemoryInfo().MemoryLoadBytes;
-                return mem / 1000000000.0;
-            case "availablediskspace":
-                var driveInfo = DriveInfo.GetDrives().SingleOrDefault(di => di.Name == Path.GetPathRoot(curPath));
-                if (driveInfo != null)
-                {
-                    return driveInfo.AvailableFreeSpace / 1000000000.0;
-                }
+    private const string IP_HOST_NAME = "icanhazip.com";
 
-                break;
-            case "debug":
-                break;
+    private static bool IsOnline()
+    {
+        try
+        {
+            return (new Ping()).Send(IP_HOST_NAME, 3000).Status == IPStatus.Success;
         }
+        catch { }
+        return false;
+    }
 
+    private static string? PublicIPv4()
+    {
+        try
+        {
+            using var client = new HttpClient();
+            return client.GetStringAsync($"http://{IP_HOST_NAME}").Result.TrimEnd();
+        }
+        catch { }
         return null;
+    }
+
+    private static double AvailableMemory()
+    {
+        GC.Collect();
+        return (GC.GetGCMemoryInfo().TotalAvailableMemoryBytes - GC.GetGCMemoryInfo().MemoryLoadBytes) / 1_000_000_000.0;
+    }
+
+    private static double AvailableDiskspace()
+    {
+        var currentDrive = Path.GetPathRoot(Directory.GetCurrentDirectory());
+        var driveInfo = DriveInfo.GetDrives().SingleOrDefault(di => di.Name.Equals(currentDrive));
+        return (driveInfo?.AvailableFreeSpace ?? 0) / 1_000_000_000.0;
+    }
+
+    private static double TotalMemory()
+    {
+        GC.Collect();
+        return (GC.GetGCMemoryInfo().TotalAvailableMemoryBytes) / 1_000_000_000.0;
+    }
+
+    private static double TotalDiskspace()
+    {
+        var currentDrive = Path.GetPathRoot(Directory.GetCurrentDirectory());
+        var driveInfo = DriveInfo.GetDrives().SingleOrDefault(di => di.Name.Equals(currentDrive));
+        return (driveInfo?.TotalSize ?? 0) / 1_000_000_000.0;
     }
 }
