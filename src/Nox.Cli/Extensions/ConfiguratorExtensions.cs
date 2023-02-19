@@ -25,7 +25,7 @@ internal static class ConfiguratorExtensions
     public static string CacheFile => Path.Combine(CachePath, "NoxCliCache.json");
     public static string WorkflowsCachePath => Path.Combine(CachePath, "workflows");
 
-    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services)
+    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline)
     {
         var cachePath = CachePath;
 
@@ -33,19 +33,19 @@ internal static class ConfiguratorExtensions
 
         var cacheFile = CacheFile;
         
-        var cache = GetOrCreateCache(cacheFile);
+        var cache = GetOrCreateCache(cacheFile, isOnline);
 
         Dictionary<string,string> yamlFiles = new(StringComparer.OrdinalIgnoreCase);
 
-        if (cache != null)
+        if (cache != null && isOnline)
         {
-            GetOnlineWorkflows(yamlFiles, cache.Tid, cachePath, cache);
+            GetOnlineWorkflowsAndManifest(yamlFiles, cache.Tid, cachePath, cache);
         }
 
-        GetLocalWorkflows(yamlFiles);
+        GetLocalWorkflowsAndManifest(yamlFiles);
         
 #if DEBUG
-        GetLocalWorkflows(yamlFiles, "../../tests/workflows");        
+        GetLocalWorkflowsAndManifest(yamlFiles, "../../tests/workflows");        
 #endif
 
         var deserializer = new DeserializerBuilder()
@@ -68,22 +68,22 @@ internal static class ConfiguratorExtensions
             .Select(kv => deserializer.Deserialize<ManifestConfiguration>(kv.Value))
             .FirstOrDefault();
 
-        if (manifest!.Authentication != null)
+        if (manifest?.Authentication != null)
         {
             var authValidator = new CliAuthValidator();
             authValidator.ValidateAndThrow(manifest.Authentication);
             
-            services.AddSingleton<ICliAuthConfiguration>(manifest!.Authentication);
+            services.AddSingleton<ICliAuthConfiguration>(manifest.Authentication);
             services.AddNoxServerAuthentication();
             services.AddAzureAuthentication();
         }
 
-        if (manifest.LocalTaskExecutor != null)
+        if (manifest?.LocalTaskExecutor != null)
         {
             services.AddSingleton<ILocalTaskExecutorConfiguration>(manifest!.LocalTaskExecutor);
         }
         
-        if (manifest.RemoteTaskExecutor != null)
+        if (manifest?.RemoteTaskExecutor != null)
         {
             var rteValidator = new RemoteTaskExecutorValidator();
             rteValidator.ValidateAndThrow(manifest.RemoteTaskExecutor);
@@ -133,7 +133,7 @@ internal static class ConfiguratorExtensions
         return cliConfig;
     }
 
-    private static NoxCliCache? GetOrCreateCache(string cacheFile)
+    private static NoxCliCache? GetOrCreateCache(string cacheFile, bool isOnline)
     {
         NoxCliCache? cache;
 
@@ -141,12 +141,18 @@ internal static class ConfiguratorExtensions
         {
             cache = NoxCliCache.Load(cacheFile);
 
+            if(!isOnline)
+            {
+                return cache;
+            }
+
             var now = new DateTimeOffset(DateTime.UtcNow);
 
             if (cache.Expires > now)
             {
                 return cache;
             }
+
         }
 
         cache = GetCacheInfoFromAzureToken(cacheFile).Result;      
@@ -155,9 +161,9 @@ internal static class ConfiguratorExtensions
     }
     
 
-    private static void GetLocalWorkflows(Dictionary<string, string> yamlFiles, string searchPath = "")
+    private static void GetLocalWorkflowsAndManifest(Dictionary<string, string> yamlFiles, string searchPath = "")
     {
-        var files = FindWorkflows(searchPath);
+        var files = FindWorkflowsAndManifest(searchPath);
 
         var overriddenFiles = new List<string>(files.Length);
 
@@ -176,19 +182,19 @@ internal static class ConfiguratorExtensions
                 {
                     overriddenFiles.Add(pathMarkup);
                 }
-                overriddenFiles.Add(overriddenFile[..^18].EscapeMarkup());
+                overriddenFiles.Add(overriddenFile.Substring(0,overriddenFile.IndexOf('.')).EscapeMarkup());
             }
 
             yamlFiles[fileInfo.Name] = yaml;
         }
         if (overriddenFiles.Count > 0)
         {
-            AnsiConsole.MarkupLine($"[bold yellow]Warning: Local workflows {string.Join(',', overriddenFiles.Skip(1).ToArray())} in local folder {overriddenFiles.First()} overrides remote workflow(s) with the same name[/]");
+            AnsiConsole.MarkupLine($"[bold yellow]Warning: Local files {string.Join(',', overriddenFiles.Skip(1).ToArray())} in local folder {overriddenFiles.First()} overrides remote workflow(s) with the same name[/]");
         }
 
     }
 
-    private static void GetOnlineWorkflows(Dictionary<string, string> yamlFiles, string tid, string cachePath, NoxCliCache cache)
+    private static void GetOnlineWorkflowsAndManifest(Dictionary<string, string> yamlFiles, string tid, string cachePath, NoxCliCache cache)
     {
         var client = new RestClient($"https://noxorg.dev/workflows/{tid}/");
 
@@ -302,23 +308,21 @@ internal static class ConfiguratorExtensions
         return ret;
     }
 
-    private static string[] FindWorkflows(string searchPath = "")
+    private static string[] FindWorkflowsAndManifest(string searchPath = "")
     {
-        var path = new DirectoryInfo(Directory.GetCurrentDirectory());
-        
-        if (!string.IsNullOrEmpty(searchPath))
-        {
-            path = new DirectoryInfo(searchPath);
-        }
+        var searchPatterns = new string[] { FileExtension.WorflowDefinition, "*.cli.nox.yaml" };
 
-        var files = path.GetFiles(FileExtension.WorflowDefinition);
+        var path = string.IsNullOrEmpty(searchPath) 
+            ? new DirectoryInfo(Directory.GetCurrentDirectory())
+            : new DirectoryInfo(searchPath);
 
-        var lastChance = false;
+        // current or supplied folder
+        var files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.TopDirectoryOnly);
 
         while (!files.Any())
         {
             // root
-            if (path!.Parent == null)
+            if (path == null || path.Parent == null)
             {
                 files = Array.Empty<FileInfo>();
                 break;
@@ -327,28 +331,34 @@ internal static class ConfiguratorExtensions
             // Find special NOX folder
             if (Directory.GetDirectories(path.FullName, @".nox").Any())
             {
-                if (lastChance) break;
-                lastChance = true;
                 path = new DirectoryInfo(Path.Combine(path.FullName,".nox"));
-                files = path!.GetFiles(FileExtension.WorflowDefinition, SearchOption.AllDirectories);
-                continue;
+                files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.AllDirectories); ;
+                break;
             }
 
             // Stop in project root, after checking all sub-directories
             if (Directory.GetDirectories(path.FullName, @".git").Any())
             {
-                if (lastChance) break;
-                lastChance = true;
-                files = path!.GetFiles(FileExtension.WorflowDefinition, SearchOption.AllDirectories);
-                continue;
+                files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.AllDirectories); ;
+                break;
             }
 
-            path = path!.Parent;
+            path = path.Parent;
 
-            files = path!.GetFiles(FileExtension.WorflowDefinition, SearchOption.TopDirectoryOnly);
+            files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.TopDirectoryOnly); ;
         }
 
         return files.Select(f => f.FullName).ToArray();
+    }
+
+    private static FileInfo[] GetFilesWithSearchPatterns(DirectoryInfo path, string[] searchPatterns, SearchOption searchOption)
+    {
+        var files = new List<FileInfo>();
+        foreach (var pattern in searchPatterns) 
+        {
+            files.AddRange( path.GetFiles(pattern, searchOption) );
+        }
+        return files.ToArray();
     }
 }
 

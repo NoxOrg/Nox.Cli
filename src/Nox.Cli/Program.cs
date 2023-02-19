@@ -60,7 +60,7 @@ app.Configure(config =>
 
     if(!isGettingVersion && !isLoggingOut)
     {
-        config.AddNoxCommands(services);
+        config.AddNoxCommands(services, isOnline);
     }
 
     config.AddCommand<LogoutCommand>("logout")
