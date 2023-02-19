@@ -31,6 +31,8 @@ if (!isGettingVersion || args.Length == 0)
     AnsiConsole.MarkupLine(@$"");
 }
 
+var isOnline = InternetChecker.CheckForInternet();
+
 var services = new ServiceCollection();
 
 services.AddSingleton<IFileSystem, FileSystem>();
