@@ -31,6 +31,8 @@ if (!isGettingVersion || args.Length == 0)
     AnsiConsole.MarkupLine(@$"");
 }
 
+var isOnline = InternetChecker.CheckForInternet();
+
 var services = new ServiceCollection();
 
 services.AddSingleton<IFileSystem, FileSystem>();
@@ -58,7 +60,7 @@ app.Configure(config =>
 
     if(!isGettingVersion && !isLoggingOut)
     {
-        config.AddNoxCommands(services);
+        config.AddNoxCommands(services, isOnline);
     }
 
     config.AddCommand<LogoutCommand>("logout")

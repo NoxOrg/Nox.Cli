@@ -232,21 +232,21 @@ $goo.Command.Add( 'publish', {
 
     $goo.Error("This command is depricated and now handled by Github Actions.")
 
-    $goo.Console.WriteInfo("Updating version for ($script:SourceFolder\Nox.Lib) and dependancies...")
+    $goo.Console.WriteInfo("Updating version for ($script:SourceFolder\Nox.Cli) and dependancies...")
     $goo.Command.Run( 'bump-version' )
 
-    $goo.Console.WriteInfo("Compiling project ($script:SourceFolder\Nox.Lib)...")
-    $goo.Command.RunExternal('dotnet','build /clp:ErrorsOnly --warnaserror --configuration Release', "$script:SourceFolder\Nox.Lib")
+    $goo.Console.WriteInfo("Compiling project ($script:SourceFolder\Nox.Cli)...")
+    $goo.Command.RunExternal('dotnet','build /clp:ErrorsOnly --warnaserror --configuration Release', "$script:SourceFolder\Nox.Cli")
     $goo.StopIfError("Failed to build solution. (Release)")
 
-    $goo.Console.WriteInfo("Packing project ($script:SourceFolder\Nox.Lib)...")
-    $goo.Command.RunExternal('dotnet','pack /clp:ErrorsOnly --no-build --configuration Release', "$script:SourceFolder\Nox.Lib")
-    $goo.StopIfError("Failed to pack Nox.Lib (Release)")
+    $goo.Console.WriteInfo("Packing project ($script:SourceFolder\Nox.Cli)...")
+    $goo.Command.RunExternal('dotnet','pack /clp:ErrorsOnly --no-build --configuration Release', "$script:SourceFolder\Nox.Cli")
+    $goo.StopIfError("Failed to pack Nox.Cli (Release)")
 
-    $goo.Console.WriteInfo("Publishing project ($script:SourceFolder\Nox.Lib) to Nuget.org...")
-    $nupkgFile = Get-ChildItem "$script:SourceFolder\Nox.Lib\bin\Release\Nox.Lib.*.nupkg" | Sort-Object -Property LastWriteTime | Select-Object -Last 1
+    $goo.Console.WriteInfo("Publishing project ($script:SourceFolder\Nox.Cli) to Nuget.org...")
+    $nupkgFile = Get-ChildItem "$script:SourceFolder\Nox.Cli\bin\Release\Nox.Cli.*.nupkg" | Sort-Object -Property LastWriteTime | Select-Object -Last 1
     $goo.Command.RunExternal('dotnet',"nuget push $($nupkgFile.FullName) --api-key $Env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json", "$script:SourceFolder\Nox.Lib")
-    $goo.StopIfError("Failed to publish Nox.Lib to nuget. (Release)")
+    $goo.StopIfError("Failed to publish Nox.Cli to nuget. (Release)")
 
 })
 
