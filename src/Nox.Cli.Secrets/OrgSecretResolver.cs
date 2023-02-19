@@ -16,6 +16,7 @@ public class OrgSecretResolver: IOrgSecretResolver
     public async Task Resolve(IDictionary<string, object?> variables, ILocalTaskExecutorConfiguration? config)
     {
         var secretKeys = variables
+            .Where(kv => kv.Value== null)
             .Select(kv => kv.Key)
             .Where(e => e.StartsWith("org.secrets.", StringComparison.OrdinalIgnoreCase))
             .Select(e => e[12..])
@@ -24,14 +25,16 @@ public class OrgSecretResolver: IOrgSecretResolver
         if (config?.Secrets == null) return;
         
         //Default secret ttl to 30 minutes if not set
-        var ttl = new TimeSpan(0, 30, 0);
         var validFor = config.Secrets.ValidFor;
+        TimeSpan ttl = TimeSpan.Zero;
         if (validFor != null)
         {
             ttl = new TimeSpan(validFor.Days ?? 0, validFor.Hours ?? 0, validFor.Minutes ?? 0, validFor.Seconds ?? 0);
-
         }
-        if (ttl == TimeSpan.Zero) ttl = new TimeSpan(0, 30, 0);
+        if (ttl == TimeSpan.Zero)
+        {
+            ttl = new TimeSpan(0, 30, 0);
+        }
         
         var resolvedSecrets = new List<KeyValuePair<string, string>>();
         foreach (var key in secretKeys)

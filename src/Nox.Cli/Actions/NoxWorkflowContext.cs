@@ -166,7 +166,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
                     if (newAction.Display.Success != null)
                     {
-                        //newAction.Display.Success = MaskSecretsInDisplayText(newAction.Display.Success);
+                        newAction.Display.Success = MaskSecretsInDisplayText(newAction.Display.Success);
                     }
                 }
 

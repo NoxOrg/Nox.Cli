@@ -302,7 +302,7 @@ internal static class ConfiguratorExtensions
     
         ret.Save();
     
-        AnsiConsole.MarkupLine($"{Emoji.Known.CheckBoxWithCheck} Logged in as {noxIdentity.UserPrincipalName} on tenant {noxIdentity.TenantId}");
+        AnsiConsole.MarkupLine($"{Emoji.Known.GreenCircle} Logged in as {noxIdentity.UserPrincipalName} on tenant {noxIdentity.TenantId}");
         AnsiConsole.WriteLine();
     
         return ret;
