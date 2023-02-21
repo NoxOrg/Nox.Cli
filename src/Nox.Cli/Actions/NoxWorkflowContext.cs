@@ -5,6 +5,7 @@ using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
+using System.Diagnostics;
 
 namespace Nox.Cli.Actions;
 
@@ -84,15 +85,15 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _varProvider.SetVariable($"vars.{key}", value);
     }
     
-    public IDictionary<string, object> GetInputVariables(INoxAction action, bool isServer = false)
+    public async Task<IDictionary<string, object>> GetInputVariables(INoxAction action, bool isServer = false)
     {
         if (isServer)
         {
-            _varProvider.ResolveForServer();
+            await _varProvider.ResolveForServer();
         }
         else
         {
-            _varProvider.ResolveAll();
+            await _varProvider.ResolveAll();
         }    
         return _varProvider.GetInputVariables(action);        
     }
@@ -188,6 +189,9 @@ public class NoxWorkflowContext : INoxWorkflowContext
     
     private string MaskSecretsInDisplayText(string input)
     {
+#if DEBUG
+        if(Debugger.IsAttached) return input;
+#endif
         var output = input;
         var match = _secretsVariableRegex.Match(output);
         while (match.Success)

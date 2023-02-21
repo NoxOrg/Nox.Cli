@@ -10,6 +10,6 @@ public interface IClientVariableProvider
     IDictionary<string, object> GetUnresolvedInputVariables(INoxAction action);
     void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs);
 
-    void ResolveAll();
-    void ResolveForServer();
+    Task ResolveAll();
+    Task ResolveForServer();
 }

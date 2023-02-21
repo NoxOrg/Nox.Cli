@@ -117,7 +117,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
     {
         if (ctx.CurrentAction == null) return false;
 
-        var inputs = ctx.GetInputVariables(ctx.CurrentAction);
+        var inputs = await ctx.GetInputVariables(ctx.CurrentAction);
 
         var unresolved = ctx.GetUnresolvedInputVariables(ctx.CurrentAction);
 
@@ -197,7 +197,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             return false;
         }
         
-        ctx.GetInputVariables(ctx.CurrentAction, true);
+        await ctx.GetInputVariables(ctx.CurrentAction, true);
         
         if (!ctx.CurrentAction.EvaluateIf())
         {
