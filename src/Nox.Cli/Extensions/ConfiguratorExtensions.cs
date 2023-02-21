@@ -16,22 +16,20 @@ using Nox.Cli.Authentication;
 using Nox.Cli.Authentication.Azure;
 using Nox.Cli.Configuration.Validation;
 using Nox.Cli.Server.Integration;
+using Nox.Utilities.Configuration;
+using Nox.Utilities.Secrets;
 
 namespace Nox.Cli;
 
 internal static class ConfiguratorExtensions
 {
-    public static string CachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "nox");
-    public static string CacheFile => Path.Combine(CachePath, "NoxCliCache.json");
-    public static string WorkflowsCachePath => Path.Combine(CachePath, "workflows");
-
     public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline)
     {
-        var cachePath = CachePath;
+        var cachePath = WellKnownPaths.CachePath;
 
         Directory.CreateDirectory(cachePath);
 
-        var cacheFile = CacheFile;
+        var cacheFile = WellKnownPaths.CacheFile;
         
         var cache = GetOrCreateCache(cacheFile, isOnline);
 
@@ -39,7 +37,7 @@ internal static class ConfiguratorExtensions
 
         if (cache != null && isOnline)
         {
-            GetOnlineWorkflowsAndManifest(yamlFiles, cache.Tid, cachePath, cache);
+            GetOnlineWorkflowsAndManifest(yamlFiles, cache);
         }
 
         GetLocalWorkflowsAndManifest(yamlFiles);
@@ -47,7 +45,6 @@ internal static class ConfiguratorExtensions
 #if DEBUG
         GetLocalWorkflowsAndManifest(yamlFiles, "../../tests/workflows");        
 #endif
-
         var deserializer = new DeserializerBuilder()
             .WithNamingConvention(HyphenatedNamingConvention.Instance)
             .IgnoreUnmatchedProperties()
@@ -194,9 +191,9 @@ internal static class ConfiguratorExtensions
 
     }
 
-    private static void GetOnlineWorkflowsAndManifest(Dictionary<string, string> yamlFiles, string tid, string cachePath, NoxCliCache cache)
+    private static void GetOnlineWorkflowsAndManifest(Dictionary<string, string> yamlFiles, NoxCliCache cache)
     {
-        var client = new RestClient($"https://noxorg.dev/workflows/{tid}/");
+        var client = new RestClient($"https://noxorg.dev/workflows/{cache.Tid}/");
 
         var request = new RestRequest() { Method = Method.Get };
 
@@ -219,7 +216,7 @@ internal static class ConfiguratorExtensions
 
         // Read and cache the entries
 
-        var workflowCachePath = WorkflowsCachePath;
+        var workflowCachePath = WellKnownPaths.WorkflowsCachePath;
 
         Directory.CreateDirectory(workflowCachePath);
 
@@ -272,22 +269,21 @@ internal static class ConfiguratorExtensions
     {
         AnsiConsole.MarkupLine($"[bold mediumpurple3_1]Checking your credentials...[/]");
 
-        var authenticator = new AzureBasicAuthenticator();
-        var noxIdentity = await authenticator.SignIn();
+        var auth = await AzureSecretProvider.GetCredentialFromCacheOrBrowser();
     
-        if (noxIdentity == null)
+        if (auth.AuthenticationRecord == null)
         {
             AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} Unable to login to Azure AD. Continuing without login.");
             return null;
         }
         
-        if (noxIdentity!.UserPrincipalName == null)
+        if (auth.AuthenticationRecord.Username == null)
         {
             AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} User principal name (UPN) not detected. Continuing without login.");
             return null;
         }
     
-        if (noxIdentity.TenantId == null)
+        if (auth.AuthenticationRecord.TenantId == null)
         {
             AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} Tenant Id (TId) not detected. Continuing without login.");
             return null;
@@ -295,14 +291,14 @@ internal static class ConfiguratorExtensions
     
         var ret = new NoxCliCache(cacheFile) 
         { 
-            Upn = noxIdentity.UserPrincipalName, 
-            Tid = noxIdentity.TenantId, 
+            Upn = auth.AuthenticationRecord.Username, 
+            Tid = auth.AuthenticationRecord.TenantId, 
             Expires = new DateTimeOffset(DateTime.Now.AddDays(7)) 
         };
     
         ret.Save();
     
-        AnsiConsole.MarkupLine($"{Emoji.Known.GreenCircle} Logged in as {noxIdentity.UserPrincipalName} on tenant {noxIdentity.TenantId}");
+        AnsiConsole.MarkupLine($"{Emoji.Known.GreenCircle} Logged in as {auth.AuthenticationRecord.Username} on tenant {auth.AuthenticationRecord.TenantId}");
         AnsiConsole.WriteLine();
     
         return ret;
