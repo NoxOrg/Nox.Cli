@@ -18,8 +18,8 @@ public class LogoutCommand : AsyncCommand<LogoutCommand.Settings>
 
     public override Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
-        var cacheFile = Cli.ConfiguratorExtensions.CacheFile;
-        var cacheFolder = Cli.ConfiguratorExtensions.CachePath;
+        var cacheFile = Utilities.Configuration.WellKnownPaths.CacheFile;
+        var cacheFolder = Utilities.Configuration.WellKnownPaths.CachePath;
 
         // Rather be safe than sorry.
         // Make sure our Cache file exists before removing the folder ;)

@@ -92,21 +92,31 @@ public class ClientVariableProvider: IClientVariableProvider
         ResolveAllVariables(action);
     }
 
-    public void ResolveAll()
+    public async Task ResolveAll()
     {
         _variables.ResolveRunnerVariables();
-        ResolveForServer();
+        await ResolveForServer();
     }
 
-    public void ResolveForServer()
+    public async Task ResolveForServer()
     {
-        if (_lteConfig != null) _orgSecretResolver.Resolve(_variables, _lteConfig);
-        if (_projectConfig != null) _projectSecretResolver.Resolve(_variables, _projectConfig);
+        if (_lteConfig != null)
+        {
+            await _orgSecretResolver.Resolve(_variables, _lteConfig);
+        }
+
         if (_projectConfig != null)
         {
-            _variables.ResolveEnvironmentVariables();
-            _variables.ResolveProjectVariables(_projectConfig);
+            await _projectSecretResolver.Resolve(_variables, _projectConfig);
         }
+
+        if (_projectConfig != null)
+        {
+            await _variables.ResolveProjectVariables(_projectConfig);
+        }
+
+        await _variables.ResolveEnvironmentVariables();
+
     }
 
     private void Initialize(IWorkflowConfiguration workflow)

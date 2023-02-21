@@ -4,7 +4,7 @@ namespace Nox.Cli.Variables;
 
 public static class ProjectVariableResolver
 {
-    public static void ResolveProjectVariables(this IDictionary<string, object?> variables, IProjectConfiguration config)
+    public static Task ResolveProjectVariables(this IDictionary<string, object?> variables, IProjectConfiguration config)
     {
         var projectKeys = variables
             .Where(kv => kv.Value == null)
@@ -14,5 +14,7 @@ public static class ProjectVariableResolver
             .ToArray();
 
         config.WalkProperties( (name, value) => { if (projectKeys.Contains(name, StringComparer.OrdinalIgnoreCase)) { variables[$"project.{name}"] = value; } });
+
+        return Task.CompletedTask;
     }
 }
