@@ -152,7 +152,7 @@ The development project built for our [Nox](https://github.com/NoxOrg/Nox) sampl
 
 ### Defining the Project
 
-Running the `Nox new` command outlines its usage options as seen below:
+Running the `nox new` command outlines its usage options as seen below:
 
 ```powershell
 nox new
@@ -164,7 +164,7 @@ nox new
     <br/>
 </div>
 
-Let's create a folder for our project and run the `Nox new service` command from within the newly created folder:
+Let's create a folder for our project and run the `nox new service` command from within the newly created folder:
 
 ```powershell
 mkdir CurrencyConverter
@@ -196,7 +196,7 @@ The YAML file is registered with [schema.org](https://schema.org/) so we get lin
 
 ### Commissioning the Environment
 
-Now we have defined the project attributes but all we have is a simple YAML file, but no environment as yet. Well this is where the magic really starts. We'll turn our attention to the `Nox sync` command and its various options to read our project configuration file and set up the project environment as per our input.
+Now we have defined the project attributes but all we have is a simple YAML file, but no environment as yet. Well this is where the magic really starts. We'll turn our attention to the `nox sync` command and its various options to read our project configuration file and set up the project environment as per our input.
 
 ```powershell
 nox sync
