@@ -51,7 +51,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 ***
-Nox.Cli is a companion command–line tool that supports the core [Nox library](https://github.com/NoxOrg/Nox). Its *raison d'être* is to build upon Nox's strong efficiency focus by extending that vision to the entire Enterprise Software Roadmap. This includes fast–tracking of DevOps functions like deployment to multiple environments, setting up CI/CD pipelines and configuring resource permissions. This is achieved by integrating seamlessly with existing enterprise assets and services like Helm charts, Azure KeyVault and Active Directory.
+Nox.Cli is a companion command-line tool that supports the core [Nox library](https://github.com/NoxOrg/Nox). Its *raison d'être* is to build upon Nox's strong efficiency focus by extending that vision to the entire Enterprise Software Roadmap. This includes fast-tracking of DevOps functions like deployment to multiple environments, setting up CI/CD pipelines and configuring resource permissions. This is achieved by integrating seamlessly with existing enterprise assets and services like Helm charts, Azure KeyVault and Active Directory.
 
 Nox.Cli is declarative in nature with the primary aim of describing a project or solution. It uses a range of plugin technologies in the development, infrastructure and DevOps realms to rapidly configure and deploy a solution in the enterprise.
 
@@ -63,14 +63,14 @@ Nox.Cli is declarative in nature with the primary aim of describing a project or
 ### Main Features
 ---
 
-- Accelerate and simplify the development and deployment of enterprise–grade microservices**
-- Cross–platform implementation with support for Windows, Linux and MacOS
+- Accelerate and simplify the development and deployment of enterprise-grade microservices**
+- Cross-platform implementation with support for Windows, Linux and MacOS
 - Easy to install and run on developer/engineer desktop or integrate directly into DevOps pipeline
-- Workflows use YAML–syntax and is based on GitHub Actions
-- Self–documentation of project workflow to fast–track productivity of all team members that work on a project
-- Open–source plugin–based architecture allows for using/customising existing actions or developing your own
+- Workflows use YAML-syntax and is based on GitHub Actions
+- Self-documentation of project workflow to fast-track productivity of all team members that work on a project
+- Open-source plugin-based architecture allows for using/customising existing actions or developing your own
 - Users are identified based on Azure Login or other interactive authorisation service
-- Input commands (workflows) can be project–specific or organisation–centric by way of a Tenant manifest maintained by DevOps
+- Input commands (workflows) can be project-specific or organisation-centric by way of a Tenant manifest maintained by DevOps
 - Both project and Tenant KeyVaults are supported
 - Can be used both for local development environment and DevOps pipeline
 - Central management and deployment of common organisational scripts
@@ -187,7 +187,7 @@ As you can see, the service configuration file is now present in our default pro
     <br/>
 </div>
 
-The YAML file is registered with [schema.org](https://schema.org/) so we get linting and auto–completion to ensure accuracy and speed in configuring our service. The schema used to describe our sample project can be viewed [here](https://noxorg.dev/schemas/NoxConfiguration.json).
+The YAML file is registered with [schema.org](https://schema.org/) so we get linting and auto-completion to ensure accuracy and speed in configuring our service. The schema used to describe our sample project can be viewed [here](https://noxorg.dev/schemas/NoxConfiguration.json).
 
 <div align="center">
     <img src="https://noxorg.dev/docs/images/vscode_service-yaml.png" alt="Overview">
@@ -288,7 +288,7 @@ And selecting the `App.Helmchart` repo will show the relevant files.
 
 ## Anatomy of a Manifest file
 
-The manifest file is tasked with propogating the enterprise–level configurations related to our project. It is hosted in a tenant–specific folder on the Nox website and would typically be maintained by the DevOps team.
+The manifest file is tasked with propogating the enterprise-level configurations related to our project. It is hosted in a tenant-specific folder on the Nox website and would typically be maintained by the DevOps team.
 
 <div align="center">
     <img src="https://noxorg.dev/docs/images/vscode_manifest-yaml.png" alt="Overview">
@@ -298,7 +298,7 @@ The manifest file is tasked with propogating the enterprise–level configuratio
 
 Firstly, the `secrets:` section is where we link to our secrets provider and vault url.
 
-The `branches:` section is where we specify the command 'categories'—for the lack of a more tech–propriate term.
+The `branches:` section is where we specify the command 'categories'—for the lack of a more tech-propriate term.
 You'll recall from running the `nox` command previously that it listed the `new`, `sync` and `version` commands as options. We'll disregard the `logout` command for now as it's baked into the tool. You will however see how these three commands have been propogated from the manifest file.
 
 <div align="center">
@@ -333,7 +333,7 @@ And the output when running the `nox sync` command without any arguments reflect
     <br/>
 </div>
 
-Finally, the `remote-task-proxy:` section points to the url and authorisation–provide for the remote task executor which will conver in more detail later.
+Finally, the `remote-task-proxy:` section points to the url and authorisation-provide for the remote task executor which will conver in more detail later.
 
 <!-- CONTRIBUTING -->
 ## Contributing
@@ -372,8 +372,8 @@ Project Link: [https://github.com/noxorg/nox.cli](https://github.com/noxorg/nox.
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-* Nox was inspired and draws heavily from [Paul DeVito](https://github.com/pdevito3)'s very impressive [Wrapt](https://wrapt.dev/) project. Nox is essentially (a less feature–rich) Wrapt without the code generation and aims to keep developer code 100% separate from the framework, and imposes no constraints on application architechture.
-* Nox would not have been possible without the many open–source projects that it draws from. The goal is to build on top of an already rich ecosystem of great libraries and tools like Microsoft's .NetCore, YamlDotNet, NewtonSoft.Json, Hangfire, Serilog, SqlKata, ETLBox, Entity Framework, MassTransit and others.
+* Nox was inspired and draws heavily from [Paul DeVito](https://github.com/pdevito3)'s very impressive [Wrapt](https://wrapt.dev/) project. Nox is essentially (a less feature-rich) Wrapt without the code generation and aims to keep developer code 100% separate from the framework, and imposes no constraints on application architechture.
+* Nox would not have been possible without the many open-source projects that it draws from. The goal is to build on top of an already rich ecosystem of great libraries and tools like Microsoft's .NetCore, YamlDotNet, NewtonSoft.Json, Hangfire, Serilog, SqlKata, ETLBox, Entity Framework, MassTransit and others.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
