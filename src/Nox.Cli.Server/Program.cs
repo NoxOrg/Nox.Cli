@@ -1,3 +1,4 @@
+using Elastic.Apm.NetCoreAll;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
 using Nox.Cli.Secrets;
@@ -73,6 +74,7 @@ if (app.Environment.IsDevelopment())
         });    
     }
 }
+app.UseAllElasticApm(builder.Configuration);
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
