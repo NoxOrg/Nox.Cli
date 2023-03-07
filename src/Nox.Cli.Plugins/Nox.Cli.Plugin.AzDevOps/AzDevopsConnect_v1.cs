@@ -94,12 +94,6 @@ public class AzDevopsConnect_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
-        if (_connection != null)
-        {
-            _connection.Disconnect();
-            _connection.Dispose();
-        }
-
         return Task.CompletedTask;
     }
 }

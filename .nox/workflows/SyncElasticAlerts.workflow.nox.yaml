@@ -30,7 +30,7 @@ jobs:
         uses: azdevops/connect@v1
         with:
           server: ${{ project.versionControl.server }}
-          personal-access-token: ${{ secrets.AZURE_DEVOPS_PAT }}
+          personal-access-token: ${{ server.secrets.AZURE_DEVOPS_PAT }}
         display:
           success: Connected to the DevOps server
           error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
@@ -91,7 +91,7 @@ jobs:
           repository-name: elastic-alert-config
         display:
           success: Ensured that the project elastic-alert-config repository exists
-          error: There was a problem ensuring that the project elastic-alert-config repository exists. (${{ steps.ensure-nox-apm-repo.error-message }}
+          error: There was a problem ensuring that the project elastic-alert-config repository exists. ${{ steps.ensure-nox-apm-repo.error-message }}
         run-at-server: true
 
       - name: Get team email address list

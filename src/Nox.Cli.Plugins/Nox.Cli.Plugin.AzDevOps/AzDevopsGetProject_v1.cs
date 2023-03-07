@@ -80,7 +80,6 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
-        _projectClient?.Dispose();
         return Task.CompletedTask;
     }
 }

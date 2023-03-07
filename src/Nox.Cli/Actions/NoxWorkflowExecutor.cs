@@ -228,7 +228,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             }
             else
             {
-                ctx.SetErrorMessage(ctx.CurrentAction, ctx.CurrentAction.ErrorMessage);
+                ctx.SetErrorMessage(ctx.CurrentAction, executeResponse.ErrorMessage!);
                 console.MarkupLine($"{Emoji.Known.RedCircle} [indianred1]{ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}[/]");
                 return false;
             }

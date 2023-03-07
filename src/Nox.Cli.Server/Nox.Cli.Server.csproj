@@ -40,11 +40,11 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Helpers" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="..\.dockerignore">
       <Link>.dockerignore</Link>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Helpers" />
   </ItemGroup>
 </Project>

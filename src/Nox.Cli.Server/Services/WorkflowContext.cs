@@ -70,9 +70,10 @@ public class WorkflowContext: INoxWorkflowContext
                 await addin.BeginAsync(inputVars);
                 var outputs = await addin.ProcessAsync(this);
                 _varProvider.SaveOutputs(action.Id, outputs);
-                result.Outputs = outputs;
+                result.Outputs = VariableHelper.ExtractSimpleVariables(outputs);
                 await addin.EndAsync();
-                result.SetState(ActionState.Success);
+                result.SetState(_state);
+                result.ErrorMessage = _errorMessage;
             }
             catch (Exception ex)
             {
