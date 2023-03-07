@@ -49,6 +49,7 @@ team:
     - name: Dionisis Stoubos
       userName: dionisis.stoubos@iwgplc.com
       isAdmin: true
+      email: dionisis.stoubos@iwgplc.com
     - name: Andre Sharpe
       userName: andre.sharpe@iwgplc.com
       mobilePhoneNumber: +41789461056
@@ -56,3 +57,4 @@ team:
     - name: Jan Schutte
       userName: jan.schutte@iwgplc.com
       isAdmin: true
+      email: jan.schutte@iwgplc.com

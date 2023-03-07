@@ -11,10 +11,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="workflow" />
-    </ItemGroup>
-
-    <ItemGroup>
       <None Update="workflow\Manifest.cli.nox.yaml">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>

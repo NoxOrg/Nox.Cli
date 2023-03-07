@@ -1,0 +1,25 @@
+# NOX Test concatenate list property
+
+name: Test concatenate list property
+cli:
+  branch: test
+  command: concat-list-prop
+  command-alias: clp
+  description: Test concatenate list property
+  examples:
+    - ["sync concat--prop", "--path <designFolder>"]
+    - ["sync lcp", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Concat
+        id: concat
+        uses: core/concatenate-list-property@v1
+        with:
+          source-list: ${{ project.team.developers }}
+          property-name: Email
+        display:
+          success: Concatenate List Property success -> ${{ steps.concat.outputs.result-string }}
+          error: Concatenate List Property failed. (${{ steps.concat.error-message }})
