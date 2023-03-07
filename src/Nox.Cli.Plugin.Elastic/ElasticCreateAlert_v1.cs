@@ -23,29 +23,13 @@ public class ElasticCreateAlert_v1: INoxCliAddin
                     IsRequired = false
                 },
                 
-                ["alert-name"] = new NoxActionInput
+                ["alert-body"] = new NoxActionInput
                 {
-                    Id = "alert-name",
-                    Description = "The name of the alert to add, this must exist in your manifest",
+                    Id = "alert-body",
+                    Description = "The body of the alert to add",
                     Default = string.Empty,
                     IsRequired = false
-                },
-                
-                ["environment"] = new NoxActionInput
-                {
-                    Id = "environment",
-                    Description = "The environment in which to create alerts. One of dev/test/production",
-                    Default = "test",
-                    IsRequired = true
-                },
-
-                ["support-email-address"] = new NoxActionInput
-                {
-                    Id = "support-email-address",
-                    Description = "The email address where alerts will be sent",
-                    Default = string.Empty,
-                    IsRequired = true
-                },
+                }
             }
         };
     }
@@ -78,39 +62,9 @@ public class ElasticCreateAlert_v1: INoxCliAddin
             ctx.SetErrorMessage("The elastic create-alert action was not initialized");
         }
         
-        //Get the 
+        
 
-        if (_aadClient == null || string.IsNullOrEmpty(_groupName))
-        {
-            ctx.SetErrorMessage("The az active directory create-group action was not initialized");
-        }
-        else
-        {
-            if (string.IsNullOrEmpty(_groupDescription)) _groupDescription = _groupName;
-            try
-            {
-                var projectGroupName = _groupName.ToUpper();
-
-                var projectGroups = await _aadClient.Groups.Request()
-                    .Filter($"DisplayName eq '{projectGroupName}'")
-                    .Expand("Members")
-                    .GetAsync();
-
-                if (projectGroups.Count == 1)
-                {
-                    outputs["aad-group"] = projectGroups.First();
-                }
-                else
-                {
-                    outputs["aad-group"] = await CreateAdGroupAsync(projectGroupName);
-                }
-                ctx.SetState(ActionState.Success);
-            }
-            catch (Exception ex)
-            {
-                ctx.SetErrorMessage(ex.Message);
-            }
-        }
+        
 
         return outputs;
     }

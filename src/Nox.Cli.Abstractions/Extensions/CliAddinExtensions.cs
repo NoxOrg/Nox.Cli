@@ -1,3 +1,4 @@
+using System.Collections;
 using System.ComponentModel;
 
 namespace Nox.Cli.Abstractions.Extensions;
@@ -40,6 +41,11 @@ public static class CliAddinExtensions
                 {
                     var stringList = ((IList<object>)value).Select(o=>o.ToString()).ToArray();
                     result = (T)Convert.ChangeType(stringList, typeof(T));
+                }
+                else if (typeof(T).IsAssignableTo(typeof(IList<object>)))
+                {
+                    var objList = (value as IEnumerable)!.Cast<object>().ToList();
+                    result = (T)Convert.ChangeType(objList, typeof(T));
                 }
                 else
                 {

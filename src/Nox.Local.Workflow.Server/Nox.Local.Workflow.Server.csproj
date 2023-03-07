@@ -33,6 +33,9 @@
       <None Update="workflow\SyncVersionControl.workflow.nox.yaml">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <Content Remove="alerts\AnomalyDetected.alert.nox.json" />
+      <Content Remove="alerts\HighErrorRate.alert.nox.json" />
+      <Content Remove="alerts\HighP95ResponseTime.alert.nox.json" />
     </ItemGroup>
 
     <ItemGroup>
