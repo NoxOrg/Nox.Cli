@@ -1,0 +1,75 @@
+{
+  "consumer": "alerts",
+  "tags": [
+    "apm",
+    "response_time",
+    "custom",
+    "app_team"
+  ],
+  "name": "APM High P95 Response Time : <project-name>",
+  "enabled": false,
+  "throttle": null,
+  "schedule": {
+    "interval": "1m"
+  },
+  "params": {
+    "aggregationType": "95th",
+    "threshold": 5,
+    "windowSize": 5,
+    "windowUnit": "m",
+    "environment": "<environment>",
+    "serviceName": "",
+    "transactionType": "request"
+  },
+  "rule_type_id": "apm.transaction_duration",
+  "notify_when": "onActionGroupChange",
+  "actions": [
+    {
+      "group": "threshold_met",
+      "id": "elastic-cloud-email",
+      "params": {
+        "message": "{{alertName}} alert is firing because of the following conditions:\n - Service name: {{context.serviceName}}\n - Type: {{context.transactionType}}\n - Environment: {{context.environment}}\n - Latency threshold: {{context.threshold}}ms\n - Latency observed: {{context.triggerValue}} over the last {{context.interval}}\nCheck service status in APM dashboard: https://5cde49de6d934a2680f1997dd58236ce.privatelink.westeurope.azure.elastic-cloud.com/app/apm/services?comparisonEnabled=true&environment=ENVIRONMENT_ALL&rangeFrom=now-1h&rangeTo=now&offset=1d",
+        "to": [
+          "<support-email-address>"
+        ],
+        "subject": "{{alertName}} triggered"
+      }
+    },
+    {
+      "group": "recovered",
+      "id": "elastic-cloud-email",
+      "params": {
+        "message": "Recovered\nCheck service status in APM dashboard: https://5cde49de6d934a2680f1997dd58236ce.privatelink.westeurope.azure.elastic-cloud.com/app/apm/services?comparisonEnabled=true&environment=ENVIRONMENT_ALL&rangeFrom=now-1h&rangeTo=now&offset=1d",
+        "to": [
+          "{{alertName}} recovered"
+        ],
+        "subject": "{{alertName}} recovered"
+      }
+    },
+    {
+      "group": "threshold_met",
+      "id": "faca7e50-552c-11ed-826d-05677d4d3441",
+      "params": {
+        "subAction": "pushToService",
+        "subActionParams": {
+          "incident": {
+            "correlation_id": "{{rule.id}}:{{alert.id}}",
+            "urgency": "2",
+            "severity": "1",
+            "impact": "3",
+            "category": "Applications",
+            "subcategory": "Sales Apps",
+            "short_description": "{{alertName}} triggered",
+            "description": "{{alertName}} alert is firing because of the following conditions:\n - Service name: {{context.serviceName}}\n - Type: {{context.transactionType}}\n - Environment: {{context.environment}}\n - Latency threshold: {{context.threshold}}ms\n - Latency observed: {{context.triggerValue}} over the last {{context.interval}}\nCheck service status in APM dashboard: https://5cde49de6d934a2680f1997dd58236ce.privatelink.westeurope.azure.elastic-cloud.com/app/apm/services?comparisonEnabled=true&environment=ENVIRONMENT_ALL&rangeFrom=now-1h&rangeTo=now&offset=1d"
+          },
+          "comments": [
+            {
+              "commentId": "1",
+              "comment": "{{context.serviceName}}"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

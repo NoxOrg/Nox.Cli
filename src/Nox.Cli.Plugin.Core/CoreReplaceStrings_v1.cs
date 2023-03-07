@@ -2,43 +2,52 @@ using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
-namespace Nox.Cli.Plugin.File;
+namespace Nox.Cli.Plugins.Core;
 
-public class FileReplaceStrings_v1 : INoxCliAddin
+public class CoreReplaceStrings_v1: INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "file/replace-strings@v1",
+            Name = "core/replace-strings@v1",
             Author = "Jan Schutte",
-            Description = "Replace one or more strings in a file.",
+            Description = "Replace one or more strings in a source string.",
 
             Inputs =
             {
-                ["path"] = new NoxActionInput {
-                    Id = "path",
-                    Description = "The path to the file containing the strings to replace",
+                ["source-string"] = new NoxActionInput {
+                    Id = "source-string",
+                    Description = "The source string in which values will be found and replaced",
                     Default = string.Empty,
                     IsRequired = true
                 },
                 
                 ["replacements"] = new NoxActionInput {
                     Id = "replacements",
-                    Description = "a List containing strings to to find and their replacement values.",
+                    Description = "a List containing strings to find and their replacement values.",
                     Default = new Dictionary<string, string>(),
                     IsRequired = true
+                },
+            },
+
+            Outputs =
+            {
+                ["result-string"] = new NoxActionOutput
+                {
+                    Id = "result-string",
+                    Description = "The resulting string after the values have been replaced"
                 },
             }
         };
     }
-
-    private string? _path;
+    
+    private string? _source;
     private Dictionary<string, string>? _replacements;
 
-    public Task BeginAsync(IDictionary<string,object> inputs)
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _path = inputs.Value<string>("path");
+        _source = inputs.Value<string>("source");
         _replacements = inputs.Value<Dictionary<string, string>>("replacements");
         return Task.CompletedTask;
     }
@@ -49,26 +58,17 @@ public class FileReplaceStrings_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (string.IsNullOrEmpty(_path) || _replacements == null || _replacements.Count == 0)
+        if (string.IsNullOrEmpty(_source) || _replacements == null || _replacements.Count == 0)
         {
-            ctx.SetErrorMessage("The File replace-strings action was not initialized");
+            ctx.SetErrorMessage("The Core replace-strings action was not initialized");
         }
         else
         {
             try
             {
-                var fullPath = Path.GetFullPath(_path);
-                if (!System.IO.File.Exists(fullPath))
-                {
-                    ctx.SetErrorMessage($"File {fullPath} does not exist.");                    
-                }
-                else
-                {
-                    var source = System.IO.File.ReadAllText(fullPath);
-                    var result = Replace(source, _replacements);
-                    System.IO.File.WriteAllText(fullPath, result);
-                    ctx.SetState(ActionState.Success);    
-                }
+                var result = Replace(_source, _replacements);
+                outputs["result-string"] = result;
+                ctx.SetState(ActionState.Success);    
             }
             catch (Exception ex)
             {
@@ -83,7 +83,7 @@ public class FileReplaceStrings_v1 : INoxCliAddin
     {
         return Task.CompletedTask;
     }
-
+    
     private string Replace(string source, Dictionary<string, string> replacements)
     {
         var pattern = "";
@@ -111,4 +111,3 @@ public class FileReplaceStrings_v1 : INoxCliAddin
         return regex.Replace(source, eval);
     }
 }
-
