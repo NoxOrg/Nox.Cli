@@ -1,5 +1,6 @@
 using Microsoft.Graph;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -67,10 +68,10 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _groupName = (string)inputs["group-name"];
-        _groupDescription = (string)inputs["group-description"];
-        _aadClient = (GraphServiceClient)inputs["aad-client"];
-        _projectName = inputs.ContainsKey("project-name") ? (string)inputs["project-name"] : "";
+        _groupName = inputs.Value<string>("group-name");
+        _groupDescription = inputs.Value<string>("group-description");
+        _aadClient = inputs.Value<GraphServiceClient>("aad-client");
+        _projectName = inputs.ValueOrDefault<string>("project-name", this);
         return Task.CompletedTask;
     }
 
