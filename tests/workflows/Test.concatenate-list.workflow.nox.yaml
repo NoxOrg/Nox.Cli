@@ -21,5 +21,5 @@ jobs:
           source-list: ${{ project.team.developers }}
           property-name: Email
         display:
-          success: Concatenate List Property success -> ${{ steps.concat.outputs.result-string }}
+          success: Concatenate List Property success -> ${{ steps.concat.outputs.result }}
           error: Concatenate List Property failed. (${{ steps.concat.error-message }})

@@ -1,19 +1,20 @@
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevOpsPushFolder_v1 : INoxCliAddin
+public class AzDevOpsMergeFolder_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/commit-folder@v1",
+            Name = "azdevops/merge-folder@v1",
             Author = "Jan Schutte",
-            Description = "Commit a local folder to a Azure Devops repository",
+            Description = "Merge a local folder to a Azure Devops repository",
 
             Inputs =
             {
@@ -35,13 +36,6 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
                     Description = "The local path to commit to the repository (All files and folders will be added and committed)",
                     Default = string.Empty,
                     IsRequired = true
-                },
-                ["branch-name"] = new NoxActionInput
-                {
-                    Id = "branch-name", 
-                    Description = "The name of the branch to which to commit",
-                    Default = "main",
-                    IsRequired = true
                 }
             },
 
@@ -58,7 +52,6 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
     private GitHttpClient? _gitClient;
     private string? _sourcePath;
     private Guid? _repoId;
-    private string? _branchName;
     private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
@@ -67,7 +60,6 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
         _repoId = inputs.Value<Guid>("repository-id");
         _sourcePath = inputs.Value<string>("source-path");
         _gitClient = await connection!.GetClientAsync<GitHttpClient>();
-        _branchName = inputs.ValueOrDefault<string>("branch-name", this);
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -76,29 +68,28 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
+        
+        ////Process
+        //Create a new branch
+        //Push to the branch
+        //Create a PR on the branch
+        //Complete the PR
 
-        if (_gitClient == null || _repoId == null || _repoId == Guid.Empty || string.IsNullOrEmpty(_sourcePath) || string.IsNullOrEmpty(_branchName))
+        if (_gitClient == null || _repoId == null || _repoId == Guid.Empty || string.IsNullOrEmpty(_sourcePath))
         {
-            ctx.SetErrorMessage("The devops push-folder action was not initialized");
+            ctx.SetErrorMessage("The devops merge-folder action was not initialized");
         }
         else
         {
             try
             {
+                var branchName = $"Nox_Cli/{Guid.NewGuid()}";
+                
                 var commit = CreateCommit();
-                var branch = new GitRefUpdate
-                {
-                    Name = $"refs/heads/{_branchName}",
-                    RepositoryId = _repoId!.Value,
-                    OldObjectId = "0000000000000000000000000000000000000000"
-                };
-                    
-                var push = await _gitClient.CreatePushAsync(new GitPush
-                {
-                    RefUpdates = new [] { branch },
-                    Commits = new []{ commit },
-                }, _repoId!.Value);
-                outputs["commit-id"] = push.PushId;
+                var pushId = await CreatePush(branchName, commit);
+                var pr = await CreatePullRequest(branchName);
+                await CompletePullRequest(pr);
+                outputs["commit-id"] = pushId;
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
@@ -127,6 +118,45 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
         };
         return result;
     }
+
+    private async Task<int> CreatePush(string branchName, GitCommitRef commit)
+    {
+        var branch = new GitRefUpdate
+        {
+            Name = $"refs/heads/{branchName}",
+            RepositoryId = _repoId!.Value,
+            OldObjectId = "0000000000000000000000000000000000000000",
+        };
+                    
+        var push = await _gitClient.CreatePushAsync(new GitPush
+        {
+            RefUpdates = new [] { branch },
+            Commits = new []{ commit },
+        }, _repoId!.Value);
+        return push.PushId;
+    }
+
+    private async Task<GitPullRequest> CreatePullRequest(string branchName)
+    {
+        var pr = await _gitClient.CreatePullRequestAsync(new GitPullRequest
+        {
+            SourceRefName = $"refs/heads/{branchName}",
+            TargetRefName = "refs/heads/main",
+            Title = "[Nox Cli Auto Merge]"
+        }, _repoId!.Value);
+        return pr!;
+    }
+
+    private async Task CompletePullRequest(GitPullRequest pr)
+    {
+        pr.Status = PullRequestStatus.Completed;
+        pr.CompletionOptions = new GitPullRequestCompletionOptions()
+        {
+            SquashMerge = true
+        };
+        await _gitClient.UpdatePullRequestAsync(pr, _repoId!.Value, pr.PullRequestId);
+    }
+    
 
     private List<GitChange> GetFolderChanges(string path, string root = "")
     {
@@ -171,4 +201,3 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
         return result;
     }
 }
-

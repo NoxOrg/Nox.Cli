@@ -44,6 +44,7 @@ public class AzDevopsConnect_v1 : INoxCliAddin
     }
 
     private VssConnection? _connection;
+    private bool _isServerContext = false;
 
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
@@ -62,6 +63,7 @@ public class AzDevopsConnect_v1 : INoxCliAddin
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
@@ -94,6 +96,11 @@ public class AzDevopsConnect_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
+        if (!_isServerContext && _connection != null)
+        {
+            _connection.Disconnect();
+            _connection.Dispose();
+        }
         return Task.CompletedTask;
     }
 }

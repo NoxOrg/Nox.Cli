@@ -2,8 +2,11 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "sync apm",
-      "workingDirectory": "$(ProjectDir)"
-    }
+      "commandLineArgs": "test dp",
+      "workingDirectory": "$(ProjectDir)",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }    
   }
 }

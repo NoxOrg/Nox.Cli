@@ -2,6 +2,7 @@
 {
     public interface INoxWorkflowContext
     {
+        bool IsServer { get; }
         Guid InstanceId { get; }
         Guid WorkflowId { get; }
         ActionState State { get; }

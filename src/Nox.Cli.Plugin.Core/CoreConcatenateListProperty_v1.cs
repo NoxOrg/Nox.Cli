@@ -40,9 +40,9 @@ public class CoreConcatenateListProperty_v1: INoxCliAddin
 
             Outputs =
             {
-                ["result-string"] = new NoxActionOutput
+                ["result"] = new NoxActionOutput
                 {
-                    Id = "result-string",
+                    Id = "result",
                     Description = "The resulting concatenated string after the values have been replaced"
                 },
             }
@@ -103,7 +103,7 @@ public class CoreConcatenateListProperty_v1: INoxCliAddin
                     }
                 }
 
-                outputs["result-string"] = result!;
+                outputs["result"] = result!;
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

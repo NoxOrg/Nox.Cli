@@ -6,7 +6,7 @@ using Nox.Core.Configuration;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
+public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
@@ -35,8 +35,8 @@ public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
                 ["team-members"] = new NoxActionInput
                 {
                     Id = "team-members",
-                    Description = "The developers to add to the project",
-                    Default = new List<TeamMemberConfiguration>(),
+                    Description = "a Comma delimited string containing the usernames of the developers to add to the project",
+                    Default = string.Empty,
                     IsRequired = true
                 },
             }
@@ -45,25 +45,29 @@ public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
     
     private GraphHttpClient? _graphClient;
     private string? _projectName;
-    private List<TeamMemberConfiguration>? _members;
+    private string? _members;
+    private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string, object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectName = inputs.Value<string>("project-name");
-        _members = inputs.Value<List<TeamMemberConfiguration>>("team-members");
+        _members = inputs.Value<string>("team-members");
         _graphClient = await connection!.GetClientAsync<GraphHttpClient>();
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
-        if (_graphClient == null || string.IsNullOrEmpty(_projectName) || _members == null || _members!.Count == 0)
+        if (_graphClient == null || 
+            string.IsNullOrEmpty(_projectName) || 
+            string.IsNullOrEmpty(_members))
         {
-            ctx.SetErrorMessage("The devops create-repo action was not initialized");
+            ctx.SetErrorMessage("The devops add-team-members action was not initialized");
         }
         else
         {
@@ -83,7 +87,7 @@ public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
-        _graphClient?.Dispose();
+        if (!_isServerContext) _graphClient?.Dispose();
         return Task.CompletedTask;
     }
 
@@ -132,11 +136,13 @@ public class AzDevopsSyncTeamMembers_v1 : INoxCliAddin
  
         var usersInGraph = _graphClient.ListUsersAsync(new string[] {"aad"}).Result;
 
+        var members = _members!.Split(',').ToList();
+        
         while (usersInGraph.ContinuationToken is not null)
         {
             foreach (var user in usersInGraph.GraphUsers.OrderBy(u => u.DisplayName))
             {
-                var developer = _members!.FirstOrDefault(d => d.UserName.Equals(user.PrincipalName, StringComparison.OrdinalIgnoreCase));
+                var developer = members!.FirstOrDefault(d => d.Equals(user.PrincipalName, StringComparison.OrdinalIgnoreCase));
     
                 if (developer != null)
                 {

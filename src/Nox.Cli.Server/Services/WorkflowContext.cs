@@ -24,6 +24,7 @@ public class WorkflowContext: INoxWorkflowContext
         _varProvider = new ServerVariableProvider(manifest, serverSecretResolver);
     }
 
+    public bool IsServer => true;
     public Guid InstanceId => _instanceId;
     public Guid WorkflowId => _workflowId;
     public ActionState State => _state;

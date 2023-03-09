@@ -62,6 +62,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
     private string? _repoName;
     private Guid? _projectId;
     private string? _defaultBranch;
+    private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
     {
@@ -74,6 +75,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
@@ -119,7 +121,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
-        _repoClient?.Dispose();
+        if (!_isServerContext) _repoClient?.Dispose();
         return Task.CompletedTask;
     }
     

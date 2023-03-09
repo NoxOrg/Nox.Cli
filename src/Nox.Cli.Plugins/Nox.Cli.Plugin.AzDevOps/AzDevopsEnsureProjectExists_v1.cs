@@ -59,6 +59,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
     private OperationsHttpClient? _operationsClient;
     private string? _projectName;
     private string? _projectDescription;
+    private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
     {
@@ -73,6 +74,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
@@ -118,9 +120,12 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
-        _projectClient?.Dispose();
-        _processClient?.Dispose();
-        _operationsClient?.Dispose();
+        if (!_isServerContext)
+        {
+            _projectClient?.Dispose();
+            _processClient?.Dispose();
+            _operationsClient?.Dispose();    
+        }
         return Task.CompletedTask;
     }
     

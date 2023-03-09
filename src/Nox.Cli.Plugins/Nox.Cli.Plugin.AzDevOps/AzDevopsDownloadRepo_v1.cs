@@ -52,6 +52,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
     private GitHttpClient? _gitClient;
     private Guid? _repoId;
     private string? _branchName;
+    private bool _isServerContext;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
     {
@@ -63,6 +64,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
@@ -102,6 +104,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
+        if (!_isServerContext) _gitClient?.Dispose();
         return Task.CompletedTask;
     }
 
@@ -172,7 +175,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
                     {
                         throw new NoxCliException("Ratio between compressed and uncompressed data is highly suspicious, looks like a Zip Bomb Attack");
                     }
-                    outputStream.Write(buffer);
+                    outputStream.Write(buffer, 0, numBytesRead);
                 }
                 while (numBytesRead > 0);
                 outputStream.Flush();

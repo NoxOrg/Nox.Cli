@@ -19,42 +19,56 @@ jobs:
         id: locate-server
         uses: network/ping@v1
         with:
-          host: ${{ config.versionControl.server }}
+          host: ${{ project.versionControl.server }}
         display:
           success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
-          error: The DevOps server is not accesable. Are you connected to the Internet? 
+          error: The DevOps server is not accesable. Are you connected to the Internet?
+        run-at-server: true
 
       - name: Connect to the DevOps server
         id: connect-server
         uses: azdevops/connect@v1
         with:
-          server: ${{ config.versionControl.server }}
-          personal-access-token: ${{ secrets.AZURE_DEVOPS_PAT }}
+          server: ${{ project.versionControl.server }}
+          personal-access-token: ${{ server.secrets.AZURE_DEVOPS_PAT }}
         display:
           success: Connected to the DevOps server
           error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
+        run-at-server: true
 
       - name: Ensure the Team project exists
         id: ensure-project-exists
         uses: azdevops/ensure-project-exists@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
-          project-name: ${{ config.versionControl.project }}
-          project-description: ${{ config.description }}
+          project-name: ${{ project.versionControl.project }}
+          project-description: ${{ project.description }}
         display:
           success: ${{ steps.ensure-project-exists.outputs.success-message }}
           error: There was a problem creating the project (${{ steps.ensure-project-exists.error-message }})
+        run-at-server: true
+
+      - name: Extract team members
+        id: extract-team-members
+        uses: core/concatenate-list-property@v1
+        with:
+          source-list: ${{ project.team.developers }}
+          property-name: Email
+        display:
+          success: Successfully extracted team member usernames
+          error: There was a problem extracting the team member usernames (${{ steps.extract-team-members.error-message }})
 
       - name: Sync team members with the project
         id: sync-team-members
-        uses: azdevops/sync-team-members@v1
+        uses: azdevops/add-team-members@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
-          project-name: ${{ config.versionControl.project }}
-          team-members: ${{ config.team.developers }}
+          project-name: ${{ project.versionControl.project }}
+          team-members: ${{ steps.extract-team-members.outputs.result }}
         display:
           success: Synchronised project team members with the DevOps project
-          error: There was a problem syncing team members to the project (${{ steps.ensure-repo-exists.error-message }})           
+          error: There was a problem syncing team members to the project (${{ steps.sync-team-members.error-message }})
+        run-at-server: true
 
       - name: Ensure the Repository exists
         id: ensure-repo-exists
@@ -62,8 +76,9 @@ jobs:
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
           project-id: ${{ steps.ensure-project-exists.outputs.project-id }}
-          repository-name: ${{ config.versionControl.repository }}
+          repository-name: ${{ project.versionControl.repository }}
         display:
           success: ${{ steps.ensure-repo-exists.outputs.success-message }}
           error: There was a problem ensuring that the repository exists. (${{ steps.ensure-repo-exists.error-message }})
+        run-at-server: true
 

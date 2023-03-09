@@ -50,6 +50,7 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
     private GitHttpClient? _repoClient;
     private string? _repoName;
     private Guid? _projectId;
+    private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
     {
@@ -61,6 +62,7 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
@@ -89,6 +91,7 @@ public class AzDevopsGetRepo_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
+        if (!_isServerContext && _repoClient != null) _repoClient.Dispose();
         return Task.CompletedTask;
     }
 }

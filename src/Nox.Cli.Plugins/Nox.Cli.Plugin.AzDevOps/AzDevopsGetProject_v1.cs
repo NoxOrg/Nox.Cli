@@ -44,6 +44,7 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
 
     private ProjectHttpClient? _projectClient;
     private string? _projectName;
+    private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
     {
@@ -54,6 +55,7 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
@@ -80,6 +82,7 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
+        if (!_isServerContext && _projectClient != null) _projectClient.Dispose();
         return Task.CompletedTask;
     }
 }

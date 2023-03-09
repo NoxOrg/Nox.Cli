@@ -49,6 +49,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _nextAction = _steps.Select(kv => kv.Value).Where(a => a.Sequence == _currentActionSequence + 1).FirstOrDefault();
     }
 
+    public bool IsServer => false;
     public Guid InstanceId { get; }
     public Guid WorkflowId { get; init; }
     public ActionState State { get; }

@@ -33,9 +33,9 @@ public class CoreReplaceStrings_v1: INoxCliAddin
 
             Outputs =
             {
-                ["result-string"] = new NoxActionOutput
+                ["result"] = new NoxActionOutput
                 {
-                    Id = "result-string",
+                    Id = "result",
                     Description = "The resulting string after the values have been replaced"
                 },
             }
@@ -67,7 +67,7 @@ public class CoreReplaceStrings_v1: INoxCliAddin
             try
             {
                 var result = Replace(_source, _replacements);
-                outputs["result-string"] = result;
+                outputs["result"] = result;
                 ctx.SetState(ActionState.Success);    
             }
             catch (Exception ex)

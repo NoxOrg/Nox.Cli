@@ -25,10 +25,7 @@ public static class CliAddinExtensions
             {
                 if (typeof(T).IsAssignableTo(typeof(IDictionary<string, string>)))
                 {
-                    var newDictionary = ((IDictionary<object, object>)value).ToDictionary(
-                        kv => kv.Key.ToString()!, kv => kv.Value.ToString()!, StringComparer.OrdinalIgnoreCase
-                    );
-                    result = (T)Convert.ChangeType(newDictionary, typeof(T));
+                    result = (T?)value;
                 }
                 else if (typeof(T).IsAssignableTo(typeof(IDictionary<string, object>)))
                 {

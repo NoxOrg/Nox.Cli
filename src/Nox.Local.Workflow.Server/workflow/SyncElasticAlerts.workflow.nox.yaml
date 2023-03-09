@@ -12,7 +12,7 @@ cli:
     - ["sync apm", "--path <designFolder>"]
 
 jobs:
-  sync-heimdall-helm-chart:  
+  sync-elastic-apm:  
     steps:
 
       - name: Locate the DevOps server
@@ -91,7 +91,19 @@ jobs:
           repository-name: elastic-alert-config
         display:
           success: Ensured that the project elastic-alert-config repository exists
-          error: There was a problem ensuring that the project elastic-alert-config repository exists. (${{ steps.ensure-nox-apm-repo.error-message }}
+          error: There was a problem ensuring that the project elastic-alert-config repository exists. ${{ steps.ensure-nox-apm-repo.error-message }}
+        run-at-server: true
+
+      - name: Push APM repo to project
+        id: push-apm-repo-to-main
+        uses: azdevops/merge-folder@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          repository-id: ${{ steps.ensure-nox-apm-repo.outputs.repository-id }}
+          source-path: ${{ steps.download-apm-repo.outputs.local-repository-path }}
+        display:
+          success: Push elastic-alert-config to project ${{ project.name }} success
+          error: Push elastic-alert-config to project ${{ project.name }} failed. (${{ steps.push-apm-repo-to-main.error-message }})
         run-at-server: true
 
       - name: Get team email address list
@@ -103,8 +115,7 @@ jobs:
         display:
           success: Successfully created support email address list
           error: There was a problem creating the support email address list (${{ steps.get-team-email-list.error-message }})
-        run-at-server: true
-          
+
 # Replace apm_anomaly_detected.json
       - name: apm_anomaly_detected Replace
         id: replace-anomaly
@@ -114,10 +125,10 @@ jobs:
           replacements:
             "<service_name>": ${{ project.versionControl.project }},
             "<environment>": ${{ env.ASPNETCORE_ENVIRONMENT }},
-            "<support_email_address>": ${{ steps.get-team-email-list.outputs.result-string }}
+            "<support_email_address>": ${{ steps.get-team-email-list.outputs.result }}
         display:
-          success: Strings Replace in values.yaml success
-          error: Strings Replace in values.yaml failed. (${{ steps.replace-values-yaml.error-message }})
+          success: Strings successfully Replaced in anomaly alert
+          error: Strings Replace in anomaly alert failed. (${{ steps.replace-anomaly.error-message }})
         run-at-server: true
 
 # Replace apm_high_error_rate.json
@@ -129,10 +140,10 @@ jobs:
           replacements:
             "<service_name>": ${{ project.versionControl.project }},
             "<environment>": ${{ env.ASPNETCORE_ENVIRONMENT }},
-            "<support_email_address>": ${{ steps.get-team-email-list.outputs.result-string }}
+            "<support_email_address>": ${{ steps.get-team-email-list.outputs.result }}
         display:
-          success: Strings Replace values-local.yaml success
-          error: Strings Replace values-local.yaml failed. (${{ steps.replace-values-local-yaml.error-message }})
+          success: Strings successfully Replaced in high error rate alert
+          error: Strings Replace high error rate alert failed. (${{ steps.replace-high-error.error-message }})
         run-at-server: true
 
 # Replace apm_high_p95_response_time.json
@@ -144,20 +155,20 @@ jobs:
           replacements:
             "<service_name>": ${{ project.versionControl.project }},
             "<environment>": ${{ env.ASPNETCORE_ENVIRONMENT }},
-            "<support_email_address>": ${{ steps.get-team-email-list.outputs.result-string }}
+            "<support_email_address>": ${{ steps.get-team-email-list.outputs.result }}
         display:
-          success: Strings Replace values-production.yaml success
-          error: Strings Replace values-production.yaml failed. (${{ steps.replace-values-production-yaml.error-message }})
+          success: Strings successfully Replaced in p95 alert
+          error: Strings Replace p95 alert failed. (${{ steps.replace-p95.error-message }})
         run-at-server: true
 
       - name: Push updated apm repo to project apm repo repo
-        id: push-apm-repo
-        uses: azdevops/push-folder@v1
+        id: merge-apm-repo
+        uses: azdevops/merge-folder@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
           repository-id: ${{ steps.ensure-nox-apm-repo.outputs.repository-id }}
           source-path: ${{ steps.download-apm-repo.outputs.local-repository-path }}
         display:
-          success: Push updated elastic-alert-config to project helm chart repo success
-          error: Push updated elastic-alert-config to project helm chart repo failed. (${{ steps.push-apm-repo.error-message }})
+          success: Push updated elastic-alert-config to project ${{ project.name }} success
+          error: Push updated elastic-alert-config to project ${{ project.name }} failed. (${{ steps.merge-apm-repo.error-message }})
         run-at-server: true
