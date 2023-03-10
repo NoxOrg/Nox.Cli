@@ -19,33 +19,61 @@ jobs:
         id: locate-server
         uses: network/ping@v1
         with:
-          host: ${{ config.versionControl.server }}
+          host: ${{ project.versionControl.server }}
         display:
           success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
-          error: The DevOps server is not accesable. Are you connected to the Internet? 
+          error: The DevOps server is not accesable. Are you connected to the Internet?
+        run-at-server: true
 
       - name: Connect to the DevOps server
         id: connect-server
         uses: azdevops/connect@v1
         with:
-          server: ${{ config.versionControl.server }}
-          personal-access-token: ${{ secrets.AZURE_DEVOPS_PAT }}
+          server: ${{ project.versionControl.server }}
+          personal-access-token: ${{ server.secrets.AZURE_DEVOPS_PAT }}
         display:
           success: Connected to the DevOps server
           error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
+        run-at-server: true
+
+      - name: Get the Nox Team project
+        id: get-nox-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: ${{ project.versionControl.project }}
+        display:
+          success: Got the ${{ project.versionControl.project }} DevOps project
+          error: There was a problem getting the ${{ project.versionControl.project }} project. (${{ steps.get-nox-project.error-message }})
+        run-at-server: true
+
+      - name: Ensure the Project helm-chart Repository exists
+        id: ensure-nox-helm-repo
+        uses: azdevops/ensure-repo-exists@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-id: ${{ steps.get-nox-project.outputs.project-id }}
+          repository-name: App.Helmchart
+        display:
+          success: Ensured that the project helm-chart repository exists
+          error: There was a problem ensuring that the project helm-chart repository exists. ${{ steps.ensure-nox-helm-repo.error-message }}
+        run-at-server: true
 
       - name: Get the Heimdall project
         id: get-heimdall-project
+        if: '"${{ steps.ensure-nox-helm-repo.outputs.is-found }}" == "False"'
         uses: azdevops/get-project@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
           project-name: Heimdall.Microservices
         display:
           success: Got the Heimdall.Microservices project
-          error: There was a problem getting the Heimdall.Microservices project (${{ steps.get-heimdall-project.error-message }})  
+          error: There was a problem getting the Heimdall.Microservices project (${{ steps.get-heimdall-project.error-message }})
+        run-at-server: true
 
       - name: Get the Heimdall Helmchart repo
         id: get-helm-chart-repo
+        if: '"${{ steps.ensure-nox-helm-repo.outputs.is-found }}" == "False"'
         uses: azdevops/get-repo@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
@@ -53,108 +81,132 @@ jobs:
           repository-name: App.Helmchart
         display:
           success: Successfully got the Heimdall App.HelmChart repo
-          error: There was a problem getting the Heimdall App.HelmChart repository (${{ steps.get-repo.error-message }})
+          error: There was a problem getting the Heimdall App.HelmChart repository (${{ steps.get-helm-chart-repo.error-message }})
+        run-at-server: true
 
       - name: Download the heimdall helm chart repo
         id: download-helm-chart-repo
-        uses: azdevops/download-repo@v1
+        if: '"${{ steps.ensure-nox-helm-repo.outputs.is-found }}" == "False"'
+        uses: azdevops/download-repo-branch@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
           repository-id: ${{ steps.get-helm-chart-repo.outputs.repository-id }}
           branch-name: main
         display:
           success: Successfully downloaded branch 'main' of the Heimdall helm chart to ${{ steps.download-helm-chart-repo.outputs.local-repository-path }}
-          error: There was a problem downloading the repository (${{ steps.download-helm-chart-repo.error-message }})          
+          error: There was a problem downloading the repository (${{ steps.download-helm-chart-repo.error-message }})
+        run-at-server: true
 
-      - name: Get the Nox Team project
-        id: get-nox-project
-        uses: azdevops/get-project@v1
+      - name: Push Helm-chart repo to project main branch
+        id: push-helm-repo-to-main
+        if: '"${{ steps.ensure-nox-helm-repo.outputs.is-found }}" == "False"'
+        uses: azdevops/push-folder@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
-          project-name: ${{ config.versionControl.project }}
+          repository-id: ${{ steps.ensure-nox-helm-repo.outputs.repository-id }}
+          source-path: ${{ steps.download-helm-chart-repo.outputs.local-repository-path }}
         display:
-          success: Got the ${{ config.versionControl.project }} DevOps project
-          error: There was a problem getting the ${{ config.versionControl.project }} project. (${{ steps.get-nox-project.error-message }})
+          success: Push helm-chart to project ${{ project.name }} success
+          error: Push helm-chart to project ${{ project.name }} failed. (${{ steps.push-helm-repo-to-main.error-message }})
+        run-at-server: true
 
-      - name: Ensure the Project Helm Chart Repository exists
-        id: ensure-nox-helm-chart-repo
-        uses: azdevops/ensure-repo-exists@v1
+      - name: Create new helm-chart branch
+        id: create-new-helm-branch
+        uses: azdevops/create-branch@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
-          project-id: ${{ steps.get-nox-project.outputs.project-id }}
-          repository-name: App.Helmchart
+          repository-id: ${{ steps.ensure-nox-helm-repo.outputs.repository-id }}
         display:
-          success: Ensured that the project App.Helmchart repository exists
-          error: There was a problem ensuring that the project App.Helmchart repository exists. (${{ steps.ensure-repo.error-message }}
+          success: Successfully created new helm-chart branch -> ${{ steps.create-new-helm-branch.outputs.branch-name }}
+          error: Failed to create new helm-chart branch -> ${{ steps.create-new-helm-branch.outputs.branch-name }}
+        run-at-server: true
+
+      - name: Download the new helm-chart branch
+        id: download-helm-branch
+        uses: azdevops/download-repo-branch@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          repository-id: ${{ steps.ensure-nox-helm-repo.outputs.repository-id }}
+          branch-name: ${{ steps.create-new-helm-branch.outputs.branch-name }}
+        display:
+          success: Successfully downloaded branch '${{ steps.create-new-helm-branch.outputs.branch-name }}' of the repo to ${{ steps.download-helm-branch.outputs.local-repository-path }}
+          error: There was a problem downloading the project helm-chart branch (${{ steps.download-helm-branch.error-message }})
+        run-at-server: true
 
 # Replace values.yaml
       - name: Values.yaml Replace
         id: replace-values-yaml
         uses: file/replace-strings@v1
         with:
-          path: ${{ steps.download-helm-chart-repo.outputs.local-repository-path }}/values.yaml
+          path: ${{ steps.download-helm-branch.outputs.local-repository-path }}/values.yaml
           replacements:
-            "app": ${{ config.versionControl.project }}
+            "app": ${{ project.versionControl.project }}
         display:
           success: Strings Replace in values.yaml success
           error: Strings Replace in values.yaml failed. (${{ steps.replace-values-yaml.error-message }})
+        run-at-server: true
 
 # Replace values-local.yaml
       - name: Values-local.yaml Replace
         id: replace-values-local-yaml
         uses: file/replace-strings@v1
         with:
-          path: ${{ steps.download-helm-chart-repo.outputs.local-repository-path }}/values-local.yaml
+          path: ${{ steps.download-helm-branch.outputs.local-repository-path }}/values-local.yaml
           replacements:
-            "app": ${{ config.versionControl.project }}
+            "app": ${{ project.versionControl.project }}
         display:
           success: Strings Replace values-local.yaml success
           error: Strings Replace values-local.yaml failed. (${{ steps.replace-values-local-yaml.error-message }})
+        run-at-server: true
 
 # Replace values-production.yaml
       - name: Values-production.yaml Replace
         id: replace-values-production-yaml
         uses: file/replace-strings@v1
         with:
-          path: ${{ steps.download-helm-chart-repo.outputs.local-repository-path }}/values-production.yaml
+          path: ${{ steps.download-helm-branch.outputs.local-repository-path }}/values-production.yaml
           replacements:
-            "app": ${{ config.versionControl.project }}
+            "app": ${{ project.versionControl.project }}
         display:
           success: Strings Replace values-production.yaml success
           error: Strings Replace values-production.yaml failed. (${{ steps.replace-values-production-yaml.error-message }})
+        run-at-server: true
 
 # Replace values-test.yaml
       - name: Values-test.yaml Replace
         id: replace-values-test-yaml
         uses: file/replace-strings@v1
         with:
-          path: ${{ steps.download-helm-chart-repo.outputs.local-repository-path }}/values-test.yaml
+          path: ${{ steps.download-helm-branch.outputs.local-repository-path }}/values-test.yaml
           replacements:
-            "app": ${{ config.versionControl.project }}
+            "app": ${{ project.versionControl.project }}
         display:
           success: Strings Replace values-test.yaml success
-          error: Strings Replace values-test.yaml failed. (${{ steps.replace-values-test-yaml.error-message }})          
+          error: Strings Replace values-test.yaml failed. (${{ steps.replace-values-test-yaml.error-message }})
+        run-at-server: true
 
 # Replace values-uat.yaml
       - name: Values-uat.yaml Replace
         id: replace-values-uat-yaml
         uses: file/replace-strings@v1
         with:
-          path: ${{ steps.download-helm-chart-repo.outputs.local-repository-path }}/values-uat.yaml
+          path: ${{ steps.download-helm-branch.outputs.local-repository-path }}/values-uat.yaml
           replacements:
-            "app": ${{ config.versionControl.project }}
+            "app": ${{ project.versionControl.project }}
         display:
           success: Strings Replace values-uat.yaml success
           error: Strings Replace values-uat.yaml failed. (${{ steps.replace-values-uat-yaml.error-message }})
-                 
+        run-at-server: true
 
-      - name: Push updated helm chart to project helm chart repo
-        id: push-helm-chart
-        uses: azdevops/push-folder@v1
+      - name: Push updated helm branch to project helm-chart repo
+        id: merge-helm-repo
+        uses: azdevops/merge-folder@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
-          repository-id: ${{ steps.ensure-nox-helm-chart-repo.outputs.repository-id }}
-          source-path: ${{ steps.download-helm-chart-repo.outputs.local-repository-path }}
+          repository-id: ${{ steps.ensure-nox-helm-repo.outputs.repository-id }}
+          branch-name: ${{ steps.create-new-helm-branch.outputs.branch-name }}
+          source-path: ${{ steps.download-helm-branch.outputs.local-repository-path }}
         display:
-          success: Push updated helm chart to project helm chart repo success
-          error: Push updated helm chart to project helm chart repo failed. (${{ steps.push-helm-chart.error-message }})
+          success: Push updated helm-chart to project ${{ project.name }} success
+          error: Push updated helm-chart to project ${{ project.name }} failed. (${{ steps.merge-helm-repo.error-message }})
+        run-at-server: true
