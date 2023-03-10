@@ -7,15 +7,15 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsDownloadRepo_v1 : INoxCliAddin
+public class AzDevopsDownloadRepoBranch_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/download-repo@v1",
+            Name = "azdevops/download-repo-branch@v1",
             Author = "Jan Schutte",
-            Description = "Download an Azure Devops repository",
+            Description = "Download a branch from an Azure Devops repository",
 
             Inputs =
             {
@@ -71,7 +71,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
 
         if (_gitClient == null || _repoId == null || _repoId == Guid.Empty || string.IsNullOrEmpty(_branchName))
         {
-            ctx.SetErrorMessage("The devops download-repo action was not initialized");
+            ctx.SetErrorMessage("The devops download-repo-branch action was not initialized");
         }
         else
         {
@@ -89,7 +89,7 @@ public class AzDevopsDownloadRepo_v1 : INoxCliAddin
                 }
                 else
                 {
-                    ctx.SetErrorMessage("Unable to download remote repository to local zip file.");
+                    ctx.SetErrorMessage("Unable to download remote repository branch to local zip file.");
                 }               
                 
             }

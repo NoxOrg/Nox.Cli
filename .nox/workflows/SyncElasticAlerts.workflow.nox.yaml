@@ -36,41 +36,6 @@ jobs:
           error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
         run-at-server: true
 
-      - name: Get the IWG.APM project
-        id: get-apm-project
-        uses: azdevops/get-project@v1
-        with:
-          connection: ${{ steps.connect-server.outputs.connection }}
-          project-name: IWG.APM
-        display:
-          success: Got the IWG.APM project
-          error: There was a problem getting the IWG.APM project (${{ steps.get-apm-project.error-message }})
-        run-at-server: true
-
-      - name: Get the APM alert config repo
-        id: get-apm-alert-repo
-        uses: azdevops/get-repo@v1
-        with:
-          connection: ${{ steps.connect-server.outputs.connection }}
-          project-id: ${{ steps.get-apm-project.outputs.project-id }}
-          repository-name: elastic-alert-config
-        display:
-          success: Successfully got the APM alert config repo
-          error: There was a problem getting the APM alert config repository (${{ steps.get-apm-alert-repo.error-message }})
-        run-at-server: true
-
-      - name: Download the APM alert config repo
-        id: download-apm-repo
-        uses: azdevops/download-repo@v1
-        with:
-          connection: ${{ steps.connect-server.outputs.connection }}
-          repository-id: ${{ steps.get-apm-alert-repo.outputs.repository-id }}
-          branch-name: main
-        display:
-          success: Successfully downloaded branch 'main' of the APM alert config repo to ${{ steps.download-apm-repo.outputs.local-repository-path }}
-          error: There was a problem downloading the repository (${{ steps.download-apm-repo.error-message }})
-        run-at-server: true
-
       - name: Get the Nox Team project
         id: get-nox-project
         uses: azdevops/get-project@v1
@@ -94,6 +59,80 @@ jobs:
           error: There was a problem ensuring that the project elastic-alert-config repository exists. ${{ steps.ensure-nox-apm-repo.error-message }}
         run-at-server: true
 
+      - name: Get the IWG.APM project
+        id: get-apm-project
+        if: '"${{ steps.ensure-nox-apm-repo.outputs.is-found }}" == "False"'
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: IWG.APM
+        display:
+          success: Got the IWG.APM project
+          error: There was a problem getting the IWG.APM project (${{ steps.get-apm-project.error-message }})
+        run-at-server: true
+
+      - name: Get the APM alert config repo
+        id: get-apm-alert-repo
+        if: '"${{ steps.ensure-nox-apm-repo.outputs.is-found }}" == "False"'
+        uses: azdevops/get-repo@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-id: ${{ steps.get-apm-project.outputs.project-id }}
+          repository-name: elastic-alert-config
+        display:
+          success: Successfully got the APM alert config repo
+          error: There was a problem getting the APM alert config repository (${{ steps.get-apm-alert-repo.error-message }})
+        run-at-server: true
+
+      - name: Download the APM alert config repo
+        id: download-apm-repo
+        if: '"${{ steps.ensure-nox-apm-repo.outputs.is-found }}" == "False"'
+        uses: azdevops/download-repo-branch@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          repository-id: ${{ steps.get-apm-alert-repo.outputs.repository-id }}
+          branch-name: main
+        display:
+          success: Successfully downloaded branch 'main' of the APM alert config repo to ${{ steps.download-apm-repo.outputs.local-repository-path }}
+          error: There was a problem downloading the repository (${{ steps.download-apm-repo.error-message }})
+        run-at-server: true
+
+      - name: Push APM repo to project main branch
+        id: push-apm-repo-to-main
+        if: '"${{ steps.ensure-nox-apm-repo.outputs.is-found }}" == "False"'
+        uses: azdevops/push-folder@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          repository-id: ${{ steps.ensure-nox-apm-repo.outputs.repository-id }}
+          source-path: ${{ steps.download-apm-repo.outputs.local-repository-path }}
+        display:
+          success: Push elastic-alert-config to project ${{ project.name }} success
+          error: Push elastic-alert-config to project ${{ project.name }} failed. (${{ steps.push-apm-repo-to-main.error-message }})
+        run-at-server: true
+
+      - name: Create new APM alerts branch
+        id: create-new-apm-branch
+        uses: azdevops/create-branch@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          repository-id: ${{ steps.ensure-nox-apm-repo.outputs.repository-id }}
+        display:
+          success: Successfully created new APM alerts branch -> ${{ steps.create-new-apm-branch.outputs.branch-name }}
+          error: Failed to create new APM alerts branch -> ${{ steps.create-new-apm-branch.outputs.branch-name }}
+        run-at-server: true
+
+      - name: Download the new APM alerts branch
+        id: download-apm-branch
+        uses: azdevops/download-repo-branch@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          repository-id: ${{ steps.ensure-nox-apm-repo.outputs.repository-id }}
+          branch-name: ${{ steps.create-new-apm-branch.outputs.branch-name }}
+        display:
+          success: Successfully downloaded branch '${{ steps.create-new-apm-branch.outputs.branch-name }}' of the project APM alert config repo to ${{ steps.download-project-apm-repo.outputs.local-repository-path }}
+          error: There was a problem downloading the project APM config branch (${{ steps.download-apm-branch.error-message }})
+        run-at-server: true
+
       - name: Get team email address list
         id: get-team-email-list
         uses: core/concatenate-list-property@v1
@@ -103,13 +142,14 @@ jobs:
         display:
           success: Successfully created support email address list
           error: There was a problem creating the support email address list (${{ steps.get-team-email-list.error-message }})
-          
+
+
 # Replace apm_anomaly_detected.json
       - name: apm_anomaly_detected Replace
         id: replace-anomaly
         uses: file/replace-strings@v1
         with:
-          path: ${{ steps.download-apm-repo.outputs.local-repository-path }}/apm_anomaly_detected.json
+          path: ${{ steps.download-apm-branch.outputs.local-repository-path }}/apm_anomaly_detected.json
           replacements:
             "<service_name>": ${{ project.versionControl.project }},
             "<environment>": ${{ env.ASPNETCORE_ENVIRONMENT }},
@@ -124,7 +164,7 @@ jobs:
         id: replace-high-error
         uses: file/replace-strings@v1
         with:
-          path: ${{ steps.download-apm-repo.outputs.local-repository-path }}/apm_high_error_rate.json
+          path: ${{ steps.download-apm-branch.outputs.local-repository-path }}/apm_high_error_rate.json
           replacements:
             "<service_name>": ${{ project.versionControl.project }},
             "<environment>": ${{ env.ASPNETCORE_ENVIRONMENT }},
@@ -139,7 +179,7 @@ jobs:
         id: replace-p95
         uses: file/replace-strings@v1
         with:
-          path: ${{ steps.download-apm-repo.outputs.local-repository-path }}/apm_high_p95_response_time.json
+          path: ${{ steps.download-apm-branch.outputs.local-repository-path }}/apm_high_p95_response_time.json
           replacements:
             "<service_name>": ${{ project.versionControl.project }},
             "<environment>": ${{ env.ASPNETCORE_ENVIRONMENT }},
@@ -149,13 +189,14 @@ jobs:
           error: Strings Replace p95 alert failed. (${{ steps.replace-p95.error-message }})
         run-at-server: true
 
-      - name: Push updated apm repo to project apm repo repo
+      - name: Push updated apm branch to project apm repo
         id: merge-apm-repo
         uses: azdevops/merge-folder@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
           repository-id: ${{ steps.ensure-nox-apm-repo.outputs.repository-id }}
-          source-path: ${{ steps.download-apm-repo.outputs.local-repository-path }}
+          branch-name: ${{ steps.create-new-apm-branch.outputs.branch-name }}
+          source-path: ${{ steps.download-apm-branch.outputs.local-repository-path }}
         display:
           success: Push updated elastic-alert-config to project ${{ project.name }} success
           error: Push updated elastic-alert-config to project ${{ project.name }} failed. (${{ steps.merge-apm-repo.error-message }})

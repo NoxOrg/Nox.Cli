@@ -73,8 +73,8 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
         {
             try
             {
-                await AddTeamMembers(ctx);
-                ctx.SetState(ActionState.Success);
+                var result = await AddTeamMembers(ctx);
+                if (result) ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {
@@ -91,7 +91,7 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
         return Task.CompletedTask;
     }
 
-    private async Task AddTeamMembers(INoxWorkflowContext ctx)
+    private async Task<bool> AddTeamMembers(INoxWorkflowContext ctx)
     {
         var tries = 0;
 
@@ -131,7 +131,7 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
         {
             ctx.SetState(ActionState.Error);
             ctx.SetErrorMessage($"Unable to find group '\\{_projectName} Team' that should automatically have been created with the project");
-            return;
+            return false;
         }
  
         var usersInGraph = _graphClient.ListUsersAsync(new string[] {"aad"}).Result;
@@ -156,7 +156,7 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
             usersInGraph = await _graphClient.ListUsersAsync(new string[] {"aad"}, continuationToken: usersInGraph.ContinuationToken.FirstOrDefault());
         }
 
-        return;
+        return true;
 
     }
 }

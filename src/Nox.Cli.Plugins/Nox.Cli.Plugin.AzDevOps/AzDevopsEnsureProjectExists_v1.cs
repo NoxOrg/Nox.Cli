@@ -103,7 +103,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
                     if (project != null)
                     {
                         outputs["project-id"] = project.Id;
-                        outputs["success-message"] = $"Succesfully created project {_projectName} ({project.Id})";
+                        outputs["success-message"] = $"Successfully created project {_projectName} ({project.Id})";
 
                         ctx.SetState(ActionState.Success);
                     }

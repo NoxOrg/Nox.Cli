@@ -50,6 +50,10 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
                     Id = "repository-id",
                     Description = "The Azure devops repository id",
                 },
+                ["is-found"] = new NoxActionOutput {
+                    Id = "is-found",
+                    Description = "A boolean indicating if the repo was found or created, true->found, false->created ",
+                },
                 ["success-message"] = new NoxActionOutput {
                     Id = "success-message",
                     Description = "A message specifying if the repo was found or created",
@@ -82,7 +86,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
 
         if (_repoClient == null || string.IsNullOrEmpty(_repoName) || _projectId == null || _projectId == Guid.Empty)
         {
-            ctx.SetErrorMessage("The devops create-repo action was not initialized");
+            ctx.SetErrorMessage("The devops ensure-repo-exists action was not initialized");
         }
         else
         {
@@ -92,6 +96,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
                 if(repo != null)
                 {
                     outputs["repository-id"] = repo.Id;
+                    outputs["is-found"] = true;
                     outputs["success-message"] = $"Found existing repo {_repoName} ({repo.Id})";
                     ctx.SetState(ActionState.Success);
                 }
@@ -105,6 +110,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
                     if (repo != null)
                     {
                         outputs["repository-id"] = repo.Id;
+                        outputs["is-found"] = false;
                         outputs["success-message"] = $"Created repo {_repoName} ({repo.Id})";
                         ctx.SetState(ActionState.Success);
                     }
