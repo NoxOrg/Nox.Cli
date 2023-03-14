@@ -57,6 +57,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
     private ProjectHttpClient? _projectClient;
     private ProcessHttpClient? _processClient;
     private OperationsHttpClient? _operationsClient;
+    
     private string? _projectName;
     private string? _projectDescription;
     private bool _isServerContext = false;

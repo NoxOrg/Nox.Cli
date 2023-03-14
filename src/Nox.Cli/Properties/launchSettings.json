@@ -2,7 +2,7 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "test fb",
+      "commandLineArgs": "test ckv",
       "workingDirectory": "$(ProjectDir)",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
