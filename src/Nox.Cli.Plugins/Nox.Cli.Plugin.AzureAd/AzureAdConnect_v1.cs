@@ -75,7 +75,8 @@ public class AzureAdConnect_v1 : INoxCliAddin
         try
         {
             var userScopes = new string[] { @"https://graph.microsoft.com/.default" };
-            var credentials = new ClientSecretCredential(_tenantId, _clientId, _clientSecret);
+            //var credentials = new ClientSecretCredential(_tenantId, _clientId, _clientSecret);
+            var credentials = new DefaultAzureCredential();
             var client = new GraphServiceClient(credentials, userScopes);
             outputs["aad-client"] = client;
             ctx.SetState(ActionState.Success);

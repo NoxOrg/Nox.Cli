@@ -1,5 +1,4 @@
 using Azure;
-using Azure.Core;
 using Azure.ResourceManager.KeyVault;
 using Azure.ResourceManager.KeyVault.Models;
 using Azure.ResourceManager.Resources;
@@ -38,6 +37,14 @@ public class ArmCreateKeyVault_v1 : INoxCliAddin
                     Default = string.Empty,
                     IsRequired = true
                 }
+            },
+            
+            Outputs =
+            {
+                ["key-vault"] = new NoxActionOutput {
+                    Id = "key-vault",
+                    Description = "The Azure Key Vault instance that was created.",
+                },
             }
         };
     }
@@ -72,33 +79,24 @@ public class ArmCreateKeyVault_v1 : INoxCliAddin
         {
             try
             {
-                var rgs = _sub.GetResourceGroups();
-                var rgResponse = await rgs.GetAsync(_rgName);
-                if (rgResponse.HasValue)
-                {
-                    var rg = rgResponse.Value;
-                    var vaults = rg.GetKeyVaults();
-                    var location = rg.Data.Location;
-                    var sku = new KeyVaultSku(KeyVaultSkuFamily.A, KeyVaultSkuName.Standard);
-                    var kvProps = new KeyVaultProperties(_sub.Data.TenantId.Value, sku)
-                    {
-                        CreateMode = KeyVaultCreateMode.Default,
-                        TenantId = _sub.Data.TenantId.Value,
-                        EnablePurgeProtection = true,
-                        EnableSoftDelete = true,
-                    };
-                    await vaults.CreateOrUpdateAsync(WaitUntil.Completed, _kvName, new KeyVaultCreateOrUpdateContent(location, kvProps));
-                    var vaultResponse = await vaults.GetAsync(_kvName);
-                    if (vaultResponse.HasValue)
-                    {
-                        outputs["key-vault"] = vaultResponse.Value;
-                    }
-                    ctx.SetState(ActionState.Success);
-                }
-                else
+                var rg = await GetResourceGroup();
+                if (rg == null)
                 {
                     ctx.SetErrorMessage("Unable to connect to the specified Resource Group");
                 }
+                else
+                {
+                    if (await CreateVault(rg) != null)
+                    {
+                        ctx.SetState(ActionState.Success);    
+                    }
+                    else
+                    {
+                        ctx.SetErrorMessage("Unable to create the specified Key Vault!");
+                    }
+                          
+                }
+              
             }
             catch (Exception ex)
             {
@@ -113,5 +111,29 @@ public class ArmCreateKeyVault_v1 : INoxCliAddin
     public Task EndAsync()
     {
         return Task.CompletedTask;
+    }
+
+    private async Task<ResourceGroupResource?> GetResourceGroup()
+    {
+        var rgs = _sub.GetResourceGroups();
+        var rgResponse = await rgs.GetAsync(_rgName);
+        return rgResponse.HasValue ? rgResponse.Value : null;
+    }
+
+    private async Task<KeyVaultResource?> CreateVault(ResourceGroupResource rg)
+    {
+        var vaults = rg.GetKeyVaults();
+        var location = rg.Data.Location;
+        var sku = new KeyVaultSku(KeyVaultSkuFamily.A, KeyVaultSkuName.Standard);
+        var kvProps = new KeyVaultProperties(_sub.Data.TenantId.Value, sku)
+        {
+            CreateMode = KeyVaultCreateMode.Default,
+            TenantId = _sub.Data.TenantId.Value,
+            EnablePurgeProtection = true,
+            EnableSoftDelete = true,
+        };
+        await vaults.CreateOrUpdateAsync(WaitUntil.Completed, _kvName, new KeyVaultCreateOrUpdateContent(location, kvProps));
+        var vaultResponse = await vaults.GetAsync(_kvName);
+        return vaultResponse.HasValue ? vaultResponse.Value : null;
     }
 }

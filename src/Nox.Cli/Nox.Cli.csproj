@@ -65,6 +65,7 @@
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Postgres\Nox.Cli.Plugin.Postgres.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Powershell\Nox.Cli.Plugin.Powershell.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Console\Nox.Cli.Plugin.Console.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Project\Nox.Cli.Plugin.Project.csproj" />
     <ProjectReference Include="..\Nox.Cli.Server.Integration\Nox.Cli.Server.Integration.csproj" />
     <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
   </ItemGroup>

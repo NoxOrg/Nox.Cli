@@ -78,11 +78,10 @@ public class AzureAdAddTeamMembersToGroup_v1 : INoxCliAddin
                     var users = await _aadClient.Users.Request()
                         .Filter($"UserPrincipalName eq '{developer.UserName}'")
                         .GetAsync();
-
+                    
                     if (users.Count == 1)
                     {
                         var user = users.First();
-
                         if (_group.Members is null || _group.Members.FirstOrDefault(u => u.Id.Equals(user.Id)) is null)
                         {
                             await _aadClient.Groups[_group.Id].Members.References.Request().AddAsync(user);
