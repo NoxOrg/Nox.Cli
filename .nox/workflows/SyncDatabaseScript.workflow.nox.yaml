@@ -94,7 +94,7 @@ jobs:
         id: connect-db
         uses: postgres/connect@v1
         with:
-          server: ${{ config.NOX_PG_SERVER }}
+          server: ${{ secrets.NOX_PG_SERVER }}
           port: 5432
           user: ${{ secrets.NOX_PG_ADMIN_USER }}
           password: ${{ secrets.NOX_PG_ADMIN_PASSWORD }}

@@ -6,15 +6,15 @@ using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzureAdAddTeamMembersToGroup_v1 : INoxCliAddin
+public class AzureAdAddUsersToGroup_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azuread/add-team-members-to-group@v1",
+            Name = "azuread/add-users-to-group@v1",
             Author = "Jan Schutte",
-            Description = "Add project team members to an Azure Active Directory group",
+            Description = "Add a list of users to an Azure Active Directory group",
 
             Inputs =
             {
@@ -35,11 +35,11 @@ public class AzureAdAddTeamMembersToGroup_v1 : INoxCliAddin
                 },
 
                 
-                ["team-members"] = new NoxActionInput
+                ["user-names"] = new NoxActionInput
                 {
-                    Id = "team-members",
-                    Description = "The developers to add to the project",
-                    Default = new List<TeamMemberConfiguration>(),
+                    Id = "user-names",
+                    Description = "The comma separated string of AAD user names to add to the group",
+                    Default = string.Empty,
                     IsRequired = true
                 },
             },
@@ -49,13 +49,13 @@ public class AzureAdAddTeamMembersToGroup_v1 : INoxCliAddin
 
     private Group? _group;
     private GraphServiceClient? _aadClient;
-    private List<TeamMemberConfiguration>? _members;
+    private string? _userNames;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _group = inputs.Value<Group>("group");
         _aadClient = inputs.Value<GraphServiceClient>("aad-client");
-        _members = inputs.Value<List<TeamMemberConfiguration>>("team-members");
+        _userNames = inputs.Value<string>("user-names");
         return Task.CompletedTask;
     }
 
@@ -65,18 +65,21 @@ public class AzureAdAddTeamMembersToGroup_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_aadClient == null || _group == null || _members == null)
+        if (_aadClient == null || 
+            _group == null || 
+            string.IsNullOrEmpty(_userNames))
         {
-            ctx.SetErrorMessage("The az active directory add-team-members action was not initialized");
+            ctx.SetErrorMessage("The az active directory add-users-to-group action was not initialized");
         }
         else
         {
             try
             {
-                foreach (var developer in _members)
+                var userNames = _userNames.Split(',');
+                foreach (var userName in userNames)
                 {
                     var users = await _aadClient.Users.Request()
-                        .Filter($"UserPrincipalName eq '{developer.UserName}'")
+                        .Filter($"UserPrincipalName eq '{userName}'")
                         .GetAsync();
                     
                     if (users.Count == 1)
@@ -89,7 +92,7 @@ public class AzureAdAddTeamMembersToGroup_v1 : INoxCliAddin
                     }
                     else
                     {
-                        ctx.SetErrorMessage($"AAD User {developer.UserName} not found.");
+                        ctx.SetErrorMessage($"AAD User {userName} not found.");
                     }
                 }
                 ctx.SetState(ActionState.Success);

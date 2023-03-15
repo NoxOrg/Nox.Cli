@@ -19,13 +19,12 @@ jobs:
         id: connect
         uses: azuread/connect@v1
         with:
-          tenant-id: ${{ server.secrets.AZURE_TENANT_ID }}
-          client-id: ${{ server.secrets.AZURE_CLIENT_ID }}
-          client-secret: ${{ server.secrets.AZURE_CLIENT_SECRET }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
         display:
           success: Successfully connected to Azure Active Directory
           error: Unable to connect to Azure Active Directory
-        run-at-server: true
           
       - name: Create the project AAD group
         id: create-project-group
@@ -37,7 +36,6 @@ jobs:
         display:
           success: Created the Project AAD group
           error: Unable to create the Project AAD group
-        run-at-server: true
           
       - name: Create an AAD security group
         id: create-security-group
@@ -49,7 +47,6 @@ jobs:
         display:
           success: Created the AAD security group
           error: Unable to create the AAD security group
-        run-at-server: true
           
       - name: Add project group as a member of security group
         id: add-project-group-to-security-group
@@ -61,7 +58,6 @@ jobs:
         display:
           success: Added the project group to the security group
           error: Unable to add the project group to the security group
-        run-at-server: true
           
       - name: Add project team members to project group
         id: add-project-team
@@ -72,5 +68,4 @@ jobs:
           team-members: ${{ config.team.developers }}
         display:
           success: Added project team members to project group
-          error: Unable to add project team members to project group
-        run-at-server: true
+          error: Unable to add project team members to project group                  

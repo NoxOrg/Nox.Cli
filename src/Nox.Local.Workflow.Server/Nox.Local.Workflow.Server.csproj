@@ -32,6 +32,12 @@
       <Content Remove="alerts\AnomalyDetected.alert.nox.json" />
       <Content Remove="alerts\HighErrorRate.alert.nox.json" />
       <Content Remove="alerts\HighP95ResponseTime.alert.nox.json" />
+      <None Update="workflow\SyncInfrastructure.workflow.nox.yaml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="workflow\SyncElasticAlerts.workflow.nox.yaml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>
