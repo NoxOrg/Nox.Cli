@@ -1,0 +1,38 @@
+# NOX Test Find Key Vault
+
+name: Test find key vault
+
+cli:
+  branch: test
+  command: find-key-vault
+  command-alias: fkv
+  description: Test find key vault
+  examples:
+    - ["sync find-key-vault", "--path <designFolder>"]
+    - ["sync fkv", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Connect to the Arm Client
+        id: connect-arm
+        uses: arm/connect@v1
+        with:
+          subscription-id: 33f91226-e87e-4cdf-9480-7b467a1dae4e
+        display:
+          success: Connected to the Azure Subscription
+          error: There was a problem connecting to the Azure Subscription. (${{ steps.connect-arm.error-message }})
+        run-at-server: true
+
+      - name: Find the we-key-Nox-02 key vault
+        id: find-kv
+        uses: arm/find-key-vault@v1
+        with:
+          subscription: ${{ steps.connect-arm.outputs.subscription }}
+          resource-group-name: RG_APPS_NOX_TEST
+          key-vault-name: we-key-nox-02
+        display:
+          success: Found the Key Vault
+          error: There was a problem finding the Key Vaule (${{ steps.find-kv.error-message }})
+        run-at-server: true

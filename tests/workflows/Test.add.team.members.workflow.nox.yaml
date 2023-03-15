@@ -1,0 +1,25 @@
+# NOX Test add team members
+
+name: Test add team members
+cli:
+  branch: test
+  command: add-team-memebers
+  command-alias: atm
+  description: Test add team members
+  examples:
+    - ["sync add-team-memebers", "--path <designFolder>"]
+    - ["sync atm", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+      - name: AddTeamMembers
+        id: add-members
+        uses: azdevops/add-team-members@v1
+        with:
+          connection: VssConnection
+          project-name: TestProject
+          team-members: jan.schutte@iwgplc.com,andre.sharpe@iwgplc.com
+        display:
+          success: Add Team Members success
+          error: Add Team Members failed. (${{ steps.add-members.error-message }})
