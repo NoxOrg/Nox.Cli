@@ -23,11 +23,11 @@ public class ArmEnsureKeyVaultUsers_v1 : INoxCliAddin
                     Default = null!,
                     IsRequired = true
                 },
-                ["user-object-id-list"] = new NoxActionInput
+                ["user-object-ids"] = new NoxActionInput
                 {
-                    Id = "user-object-id-list",
+                    Id = "user-object-ids",
                     Description = "a comma separated list of the user object-id's to add to the key vault",
-                    Default = new List<string>(),
+                    Default = string.Empty,
                     IsRequired = true
                 },
                 ["is-admin"] = new NoxActionInput
@@ -42,14 +42,14 @@ public class ArmEnsureKeyVaultUsers_v1 : INoxCliAddin
     }
 
     private KeyVaultResource? _keyVault;
-    private List<string>? _userObjectIds;
+    private string? _userObjectIds;
     private bool? _isAdmin;
     private bool _isServerContext = false;
 
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _keyVault = inputs.Value<KeyVaultResource>("key-vault");
-        _userObjectIds = inputs.Value<List<string>>("user-object-ids");
+        _userObjectIds = inputs.Value<string>("user-object-ids");
         _isAdmin = inputs.ValueOrDefault<bool>("is-admin", this);
         return Task.CompletedTask;
     }
@@ -62,8 +62,7 @@ public class ArmEnsureKeyVaultUsers_v1 : INoxCliAddin
         ctx.SetState(ActionState.Error);
 
         if (_keyVault == null || 
-            _userObjectIds == null ||
-            _userObjectIds.Count == 0 ||
+            string.IsNullOrEmpty(_userObjectIds) ||
             _isAdmin == null)
         {
             ctx.SetErrorMessage("The arm ensure-key-vault-users action was not initialized");
@@ -92,7 +91,9 @@ public class ArmEnsureKeyVaultUsers_v1 : INoxCliAddin
                 
                 var patchProps = new KeyVaultPatchProperties();
                 var policies = _keyVault.Data.Properties.AccessPolicies;
-                foreach (var userObjectId in _userObjectIds)
+                var userObjectIdList = _userObjectIds.Split(',');
+                
+                foreach (var userObjectId in userObjectIdList)
                 {
                     var existingPolicy = policies.FirstOrDefault(p => p.ObjectId == userObjectId);
 

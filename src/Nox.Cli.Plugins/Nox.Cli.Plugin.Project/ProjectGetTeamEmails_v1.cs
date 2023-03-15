@@ -16,10 +16,10 @@ public class ProjectGetTeamEmails_v1: INoxCliAddin
 
             Inputs =
             {
-                ["project-config"] = new NoxActionInput {
-                    Id = "project-config",
-                    Description = "The Nox project configuration",
-                    Default = new ProjectConfiguration(),
+                ["team-members"] = new NoxActionInput {
+                    Id = "team-members",
+                    Description = "The list of developers on the project",
+                    Default = new List<TeamMemberConfiguration>(),
                     IsRequired = true
                 },
                 
@@ -39,22 +39,22 @@ public class ProjectGetTeamEmails_v1: INoxCliAddin
 
             Outputs =
             {
-                ["result"] = new NoxActionOutput
+                ["team-emails"] = new NoxActionOutput
                 {
-                    Id = "result",
+                    Id = "team-emails",
                     Description = "The resulting concatenated string of team member email addresses."
                 },
             }
         };
     }
 
-    private ProjectConfiguration? _config;
+    private List<TeamMemberConfiguration>? _members;
     private bool? _includeAdmin;
     private string? _delimiter;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _config = inputs.Value<ProjectConfiguration>("project-config");
+        _members = inputs.Value<List<TeamMemberConfiguration>>("team-members");
         _includeAdmin = inputs.ValueOrDefault<bool>("include-admin", this);
         _delimiter = inputs.ValueOrDefault<string>("delimiter", this);
         return Task.CompletedTask;
@@ -66,7 +66,8 @@ public class ProjectGetTeamEmails_v1: INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_config == null || 
+        if (_members == null || 
+            _members.Count == 0 ||
             _includeAdmin == null ||
             string.IsNullOrEmpty(_delimiter))
         {
@@ -77,8 +78,9 @@ public class ProjectGetTeamEmails_v1: INoxCliAddin
             try
             {
                 var result = "";
-                foreach (var item in _config.Team.Developers)
+                foreach (var item in _members)
                 {
+                    if (item.IsAdmin && !_includeAdmin == true) continue;
                     if (!string.IsNullOrEmpty(item.Email))
                     {
                         if (string.IsNullOrEmpty(result))
@@ -92,7 +94,7 @@ public class ProjectGetTeamEmails_v1: INoxCliAddin
                     }
                 }
 
-                outputs["result"] = result!;
+                outputs["team-emails"] = result!;
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

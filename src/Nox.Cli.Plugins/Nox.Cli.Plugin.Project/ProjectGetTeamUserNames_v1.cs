@@ -4,22 +4,22 @@ using Nox.Core.Configuration;
 
 namespace Nox.Cli.Plugin.Project;
 
-public class ProjectGetTeamUsernames_v1: INoxCliAddin
+public class ProjectGetTeamUserNames_v1: INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "project/get-team-usernames@v1",
+            Name = "project/get-team-user-names@v1",
             Author = "Jan Schutte",
             Description = "Get a list of team member usernames from the Nox Project Definition",
 
             Inputs =
             {
-                ["project-config"] = new NoxActionInput {
-                    Id = "project-config",
-                    Description = "The Nox project configuration",
-                    Default = new ProjectConfiguration(),
+                ["team-members"] = new NoxActionInput {
+                    Id = "team-members",
+                    Description = "The list of developers on the project",
+                    Default = new List<TeamMemberConfiguration>(),
                     IsRequired = true
                 },
                 
@@ -39,22 +39,22 @@ public class ProjectGetTeamUsernames_v1: INoxCliAddin
 
             Outputs =
             {
-                ["result"] = new NoxActionOutput
+                ["team-user-names"] = new NoxActionOutput
                 {
-                    Id = "result",
+                    Id = "team-user-names",
                     Description = "The resulting concatenated string of team member usernames."
                 },
             }
         };
     }
 
-    private ProjectConfiguration? _config;
+    private List<TeamMemberConfiguration>? _members;
     private bool? _includeAdmin;
     private string? _delimiter;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _config = inputs.Value<ProjectConfiguration>("project-config");
+        _members = inputs.Value<List<TeamMemberConfiguration>>("team-members");
         _includeAdmin = inputs.ValueOrDefault<bool>("include-admin", this);
         _delimiter = inputs.ValueOrDefault<string>("delimiter", this);
         return Task.CompletedTask;
@@ -66,19 +66,21 @@ public class ProjectGetTeamUsernames_v1: INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_config == null || 
+        if (_members == null || 
+            _members.Count == 0 || 
             _includeAdmin == null ||
             string.IsNullOrEmpty(_delimiter))
         {
-            ctx.SetErrorMessage("The Project get-team-usernames action was not initialized");
+            ctx.SetErrorMessage("The Project get-team-user-names action was not initialized");
         }
         else
         {
             try
             {
                 var result = "";
-                foreach (var item in _config.Team.Developers)
+                foreach (var item in _members)
                 {
+                    if (item.IsAdmin && !_includeAdmin == true) continue;
                     if (!string.IsNullOrEmpty(item.UserName))
                     {
                         if (string.IsNullOrEmpty(result))
@@ -92,7 +94,7 @@ public class ProjectGetTeamUsernames_v1: INoxCliAddin
                     }
                 }
 
-                outputs["result"] = result!;
+                outputs["team-user-names"] = result!;
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

@@ -49,7 +49,7 @@ public class ArmCreateKeyVault_v1 : INoxCliAddin
         };
     }
 
-    private SubscriptionResource _sub;
+    private SubscriptionResource? _sub;
     private string? _rgName;
     private string? _kvName;
     private bool _isServerContext = false;
@@ -115,7 +115,7 @@ public class ArmCreateKeyVault_v1 : INoxCliAddin
 
     private async Task<ResourceGroupResource?> GetResourceGroup()
     {
-        var rgs = _sub.GetResourceGroups();
+        var rgs = _sub!.GetResourceGroups();
         var rgResponse = await rgs.GetAsync(_rgName);
         return rgResponse.HasValue ? rgResponse.Value : null;
     }
@@ -125,7 +125,7 @@ public class ArmCreateKeyVault_v1 : INoxCliAddin
         var vaults = rg.GetKeyVaults();
         var location = rg.Data.Location;
         var sku = new KeyVaultSku(KeyVaultSkuFamily.A, KeyVaultSkuName.Standard);
-        var kvProps = new KeyVaultProperties(_sub.Data.TenantId.Value, sku)
+        var kvProps = new KeyVaultProperties(_sub!.Data.TenantId!.Value, sku)
         {
             CreateMode = KeyVaultCreateMode.Default,
             TenantId = _sub.Data.TenantId.Value,

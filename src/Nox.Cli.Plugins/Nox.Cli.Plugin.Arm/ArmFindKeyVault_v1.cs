@@ -52,7 +52,7 @@ public class ArmFindKeyVault_v1 : INoxCliAddin
         };
     }
 
-    private SubscriptionResource _sub;
+    private SubscriptionResource? _sub;
     private string? _rgName;
     private string? _kvName;
     private bool _isServerContext = false;

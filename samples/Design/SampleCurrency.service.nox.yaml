@@ -48,7 +48,7 @@ team:
   developers:
     - name: Dionisis Stoubos
       userName: dionisis.stoubos@iwgplc.com
-      isAdmin: true
+      isAdmin: false
       email: dionisis.stoubos@iwgplc.com
     - name: Andre Sharpe
       userName: andre.sharpe@iwgplc.com

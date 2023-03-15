@@ -4,22 +4,22 @@ using Nox.Core.Configuration;
 
 namespace Nox.Cli.Plugin.Project;
 
-public class ProjectGetAdminUsernames_v1: INoxCliAddin
+public class ProjectGetAdminUserNames_v1: INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "project/get-admin-usernames@v1",
+            Name = "project/get-admin-user-names@v1",
             Author = "Jan Schutte",
             Description = "Get a list of admin team member usernames from the Nox Project Definition",
 
             Inputs =
             {
-                ["project-config"] = new NoxActionInput {
-                    Id = "project-config",
-                    Description = "The Nox project configuration",
-                    Default = new ProjectConfiguration(),
+                ["team-members"] = new NoxActionInput {
+                    Id = "team-members",
+                    Description = "The list of developers on the project",
+                    Default = new List<TeamMemberConfiguration>(),
                     IsRequired = true
                 },
                 
@@ -33,21 +33,21 @@ public class ProjectGetAdminUsernames_v1: INoxCliAddin
 
             Outputs =
             {
-                ["result"] = new NoxActionOutput
+                ["team-admin-user-names"] = new NoxActionOutput
                 {
-                    Id = "result",
+                    Id = "team-admin-user-names",
                     Description = "The resulting concatenated string of admin team member usernames."
                 },
             }
         };
     }
 
-    private ProjectConfiguration? _config;
+    private List<TeamMemberConfiguration>? _members;
     private string? _delimiter;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _config = inputs.Value<ProjectConfiguration>("project-config");
+        _members = inputs.Value<List<TeamMemberConfiguration>>("team-members");
         _delimiter = inputs.ValueOrDefault<string>("delimiter", this);
         return Task.CompletedTask;
     }
@@ -58,17 +58,18 @@ public class ProjectGetAdminUsernames_v1: INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_config == null || 
+        if (_members == null || 
+            _members.Count == 0 || 
             string.IsNullOrEmpty(_delimiter))
         {
-            ctx.SetErrorMessage("The Project get-admin-usernames action was not initialized");
+            ctx.SetErrorMessage("The Project get-admin-user-names action was not initialized");
         }
         else
         {
             try
             {
                 var result = "";
-                foreach (var item in _config.Team.Developers)
+                foreach (var item in _members)
                 {
                     if (!string.IsNullOrEmpty(item.UserName) && item.IsAdmin)
                     {
@@ -83,7 +84,7 @@ public class ProjectGetAdminUsernames_v1: INoxCliAddin
                     }
                 }
 
-                outputs["result"] = result!;
+                outputs["team-admin-user-names"] = result!;
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

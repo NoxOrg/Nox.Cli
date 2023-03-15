@@ -16,10 +16,10 @@ public class ProjectGetAdminEmails_v1: INoxCliAddin
 
             Inputs =
             {
-                ["project-config"] = new NoxActionInput {
-                    Id = "project-config",
-                    Description = "The Nox project configuration",
-                    Default = new ProjectConfiguration(),
+                ["team-members"] = new NoxActionInput {
+                    Id = "team-members",
+                    Description = "The list of developers on the project",
+                    Default = new List<TeamMemberConfiguration>(),
                     IsRequired = true
                 },
                 
@@ -33,21 +33,21 @@ public class ProjectGetAdminEmails_v1: INoxCliAddin
 
             Outputs =
             {
-                ["result"] = new NoxActionOutput
+                ["team-admin-emails"] = new NoxActionOutput
                 {
-                    Id = "result",
+                    Id = "team-admin-emails",
                     Description = "The resulting concatenated string of admin team member email addresses."
                 },
             }
         };
     }
 
-    private ProjectConfiguration? _config;
+    private List<TeamMemberConfiguration>? _members;
     private string? _delimiter;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _config = inputs.Value<ProjectConfiguration>("project-config");
+        _members = inputs.Value<List<TeamMemberConfiguration>>("team-members");
         _delimiter = inputs.ValueOrDefault<string>("delimiter", this);
         return Task.CompletedTask;
     }
@@ -58,7 +58,8 @@ public class ProjectGetAdminEmails_v1: INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_config == null || 
+        if (_members == null || 
+            _members.Count == 0 || 
             string.IsNullOrEmpty(_delimiter))
         {
             ctx.SetErrorMessage("The Project get-admin-emails action was not initialized");
@@ -68,7 +69,7 @@ public class ProjectGetAdminEmails_v1: INoxCliAddin
             try
             {
                 var result = "";
-                foreach (var item in _config.Team.Developers)
+                foreach (var item in _members)
                 {
                     if (!string.IsNullOrEmpty(item.Email) && item.IsAdmin)
                     {
@@ -83,7 +84,7 @@ public class ProjectGetAdminEmails_v1: INoxCliAddin
                     }
                 }
 
-                outputs["result"] = result!;
+                outputs["team-admin-emails"] = result!;
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

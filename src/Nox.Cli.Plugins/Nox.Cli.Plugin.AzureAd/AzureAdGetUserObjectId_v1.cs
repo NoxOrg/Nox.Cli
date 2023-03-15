@@ -1,7 +1,6 @@
 using Microsoft.Graph;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Core.Configuration;
 using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -30,7 +29,7 @@ public class AzureAdGetUserObjectId_v1 : INoxCliAddin
                 {
                     Id = "user-name",
                     Description = "The AAD username of the user to find",
-                    Default = new Group(),
+                    Default = string.Empty,
                     IsRequired = true
                 }
             },

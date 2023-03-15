@@ -6,6 +6,7 @@ using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
 using System.Diagnostics;
+using Nox.Core.Exceptions;
 
 namespace Nox.Cli.Actions;
 
@@ -36,7 +37,6 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _workflow = workflow;
         _varProvider = new ClientVariableProvider(workflow, projectSecretResolver, orgSecretResolver, projectConfig, lteConfig);
         _steps = ParseSteps();
-        ValidateSteps();
         _currentActionSequence = 0;
         NextStep();
     }
@@ -119,6 +119,11 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
             foreach (var step in stepConfiguration.Steps)
             {
+                if (steps.ContainsKey(step.Id))
+                {
+                    throw new NoxException($"Step Id {step.Id} exists more than once in your workflow configuration. Step Ids must be unique in a workflow configuration");
+                }
+                
                 sequence++;
 
                 if (string.IsNullOrWhiteSpace(step.Uses))
@@ -178,14 +183,6 @@ public class NoxWorkflowContext : INoxWorkflowContext
         }
 
         return steps;
-    }
-
-    private void ValidateSteps()
-    {
-        // if (_steps.Any(s => s.Value.RunAtServer == true) && _serverIntegration == null || !_serverIntegration.IsConfigured)
-        // {
-        //     throw new Exception("You have set one of the steps in the workflow to run on the cli server, but the server has not been defined in the Manifest.cli.nox.yaml file.");
-        // }
     }
     
     private string MaskSecretsInDisplayText(string input)
