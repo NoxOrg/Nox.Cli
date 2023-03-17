@@ -1,0 +1,79 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "NOX Command Workflow",
+    "description": "Defines a NOX command workflow",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["name", "cli", "jobs"],
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "Description of the command"
+        },
+        "cli": {
+            "type": "object",
+            "$ref": "./schemas/Cli.json"
+        },
+        "jobs": {
+            "properties": {
+                "new-service": {
+                    "type": "object",
+                    "properties": {
+                        "steps": {
+                            "type": "array",
+                            "items": { "$ref": "./schemas/Step.json" }
+                        }
+                    }
+                },
+                "sync-database": {
+                    "type": "object",
+                    "properties": {
+                        "steps": {
+                            "type": "array",
+                            "items": { "$ref": "./schemas/Step.json" }
+                        }
+                    }
+                },
+                "sync-directory-service": {
+                    "type": "object",
+                    "properties": {
+                        "steps": {
+                            "type": "array",
+                            "items": { "$ref": "./schemas/Step.json" }
+                        }
+                    }
+                },
+                "sync-heimdall-helm-chart": {
+                    "type": "object",
+                    "properties": {
+                        "steps": {
+                            "type": "array",
+                            "items": { "$ref": "./schemas/Step.json" }
+                        }
+                    }
+                },
+                "sync-versionControl": {
+                    "type": "object",
+                    "properties": {
+                        "steps": {
+                            "type": "array",
+                            "items": { "$ref": "./schemas/Step.json" }
+                        }
+                    }
+                }
+            },
+            "anyOf": [
+                { "required":
+                    [ "new-service" ] },
+                { "required":
+                    [ "sync-database" ] },
+                { "required":
+                    [ "sync-directory-service" ] },
+                { "required":
+                    [ "sync-heimdall-helm-chart" ] },                
+                { "required":
+                    [ "sync-versionControl" ] }
+            ]
+        }
+    }
+}
