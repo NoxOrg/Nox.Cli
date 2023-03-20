@@ -1,4 +1,5 @@
 using Microsoft.Graph;
+using Microsoft.Graph.Chats;
 using Microsoft.Graph.Models;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
@@ -6,15 +7,15 @@ using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugin.Teams;
 
-public class TeamsAddMembers_v1: INoxCliAddin
+public class TeamsFindChannel_v1: INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "teams/add-members@v1",
+            Name = "teams/find-channel@v1",
             Author = "Jan Schutte",
-            Description = "Add AAD users to an MS Teams team, using their AAD objectId",
+            Description = "Find a channel in an MS Teams, team",
 
             Inputs =
             {
@@ -25,43 +26,42 @@ public class TeamsAddMembers_v1: INoxCliAddin
                     Default = new GraphServiceClient(new HttpClient()),
                     IsRequired = true
                 },
-                
+
                 ["team-id"] = new NoxActionInput {
                     Id = "team-id",
-                    Description = "The AAD Id of the team",
+                    Description = "The Azure AD Id of the team",
                     Default = string.Empty,
                     IsRequired = true
                 },
                 
-                ["user-object-ids"] = new NoxActionInput
-                {
-                    Id = "user-object-ids",
-                    Description = "a Comma separated string of AAD user Object Ids to add to the team",
+                ["channel-name"] = new NoxActionInput {
+                    Id = "channel-name",
+                    Description = "The name of the channel to find",
                     Default = string.Empty,
                     IsRequired = true
-                },
-                
-                ["is-owner"] = new NoxActionInput {
-                    Id = "is-owner",
-                    Description = "Indicator set if the users being added are to be owners of the team",
-                    Default = false,
-                    IsRequired = false
                 }
+            },
+
+            Outputs =
+            {
+                ["channel-id"] = new NoxActionOutput
+                {
+                    Id = "channel-id",
+                    Description = "The Id of the found channel. This will be null if the channel does not exist."
+                },
             }
         };
     }
 
     private GraphServiceClient? _aadClient;
     private string? _teamId;
-    private string? _objectIds;
-    private bool? _isOwner;
+    private string? _channelName;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _aadClient = inputs.Value<GraphServiceClient>("aad-client");
         _teamId = inputs.Value<string>("team-id");
-        _objectIds = inputs.Value<string>("user-object-ids");
-        _isOwner = inputs.ValueOrDefault<bool>("is-owner", this);
+        _channelName = inputs.Value<string>("channel-name");
         return Task.CompletedTask;
     }
 
@@ -73,37 +73,24 @@ public class TeamsAddMembers_v1: INoxCliAddin
 
         if (_aadClient == null || 
             string.IsNullOrEmpty(_teamId) ||
-            string.IsNullOrEmpty(_objectIds) ||
-            _isOwner == null)
+            string.IsNullOrEmpty(_channelName))
         {
-            ctx.SetErrorMessage("The Teams add-members action was not initialized");
+            ctx.SetErrorMessage("The Teams find-channel action was not initialized");
         }
         else
         {
             try
             {
-                List<string>? roles = null;
-                if (_isOwner == true)
+                var channels = await _aadClient.Teams[_teamId].Channels.GetAsync((config) =>
                 {
-                    roles.Add("owner");
-                }
+                    config.QueryParameters.Count = true;
+                    config.QueryParameters.Filter = $"DisplayName eq '{_channelName}'";
+                });
 
-                var objectIdList = _objectIds.Split(',');
-
-                foreach (var objectId in objectIdList)
+                if (channels != null && channels.Value.Count == 1)
                 {
-                    var request = new ConversationMember
-                    {
-                        OdataType = "#microsoft.graph.aadUserConversationMember",
-                        Roles = roles,
-                        AdditionalData = new Dictionary<string, object>
-                        {
-                            { "user@odata.bind", $"https://graph.microsoft.com/v1.0/users('{objectId}')" }
-                        }
-                    };
-                    var response = await _aadClient.Teams[_teamId].Members.PostAsync(request);
+                    outputs["channel-id"] = channels.Value!.First().Id!;
                 }
-
                 
                 ctx.SetState(ActionState.Success);
             }

@@ -6,15 +6,15 @@ using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugin.Teams;
 
-public class TeamsAddMembers_v1: INoxCliAddin
+public class TeamsAddChannelMembers_v1: INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "teams/add-members@v1",
+            Name = "teams/add-channel-members@v1",
             Author = "Jan Schutte",
-            Description = "Add AAD users to an MS Teams team, using their AAD objectId",
+            Description = "Add AAD users to an MS Teams channel, using their AAD objectId",
 
             Inputs =
             {
@@ -29,6 +29,13 @@ public class TeamsAddMembers_v1: INoxCliAddin
                 ["team-id"] = new NoxActionInput {
                     Id = "team-id",
                     Description = "The AAD Id of the team",
+                    Default = string.Empty,
+                    IsRequired = true
+                },
+                
+                ["channel-id"] = new NoxActionInput {
+                    Id = "channel-id",
+                    Description = "The AAD Id of the channel",
                     Default = string.Empty,
                     IsRequired = true
                 },
@@ -53,6 +60,7 @@ public class TeamsAddMembers_v1: INoxCliAddin
 
     private GraphServiceClient? _aadClient;
     private string? _teamId;
+    private string? _channelId;
     private string? _objectIds;
     private bool? _isOwner;
 
@@ -60,6 +68,7 @@ public class TeamsAddMembers_v1: INoxCliAddin
     {
         _aadClient = inputs.Value<GraphServiceClient>("aad-client");
         _teamId = inputs.Value<string>("team-id");
+        _channelId = inputs.Value<string>("channel-id");
         _objectIds = inputs.Value<string>("user-object-ids");
         _isOwner = inputs.ValueOrDefault<bool>("is-owner", this);
         return Task.CompletedTask;
@@ -72,11 +81,12 @@ public class TeamsAddMembers_v1: INoxCliAddin
         ctx.SetState(ActionState.Error);
 
         if (_aadClient == null || 
+            string.IsNullOrEmpty(_channelId) ||
             string.IsNullOrEmpty(_teamId) ||
             string.IsNullOrEmpty(_objectIds) ||
             _isOwner == null)
         {
-            ctx.SetErrorMessage("The Teams add-members action was not initialized");
+            ctx.SetErrorMessage("The Teams add-channel-members action was not initialized");
         }
         else
         {
@@ -101,7 +111,7 @@ public class TeamsAddMembers_v1: INoxCliAddin
                             { "user@odata.bind", $"https://graph.microsoft.com/v1.0/users('{objectId}')" }
                         }
                     };
-                    var response = await _aadClient.Teams[_teamId].Members.PostAsync(request);
+                    var response = await _aadClient.Teams[_teamId].Channels[_channelId].Members.PostAsync(request);
                 }
 
                 

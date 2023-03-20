@@ -25,8 +25,8 @@ public class ProjectGetTeamUserNames_v1: INoxCliAddin
                 
                 ["include-admin"] = new NoxActionInput {
                     Id = "include-admin",
-                    Description = "flag to indicate if admin team members must be included in the list",
-                    Default = true,
+                    Description = "Flag to indicate if admin team members must be included in the list",
+                    Default = false,
                     IsRequired = true
                 },
                 ["delimiter"] = new NoxActionInput {

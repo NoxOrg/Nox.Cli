@@ -26,34 +26,35 @@ public class AzureAdAddGroupToGroup_v1 : INoxCliAddin
                     IsRequired = true
                 },
                 
-                ["child-group"] = new NoxActionInput
+                ["parent-group-id"] = new NoxActionInput
                 {
-                    Id = "child-group",
-                    Description = "The group to add as a member of the parent-group",
-                    Default = new Group(),
+                    Id = "parent-group-id",
+                    Description = "The Id of the group into which to add the child-group as a member",
+                    Default = string.Empty,
                     IsRequired = true
                 },
-
-                ["parent-group"] = new NoxActionInput
+                
+                ["child-group-id"] = new NoxActionInput
                 {
-                    Id = "parent-group",
-                    Description = "The group into which to add the child-group as a member",
-                    Default = new Group(),
+                    Id = "child-group-id",
+                    Description = "The Id of the group to add as a member of the parent-group",
+                    Default = string.Empty,
                     IsRequired = true
                 },
+               
             }
         };
     }
 
-    private Group? _childGroup;
-    private Group? _parentGroup;
+    private string? _parentGroupId;
+    private string? _childGroupId;
     private GraphServiceClient? _aadClient;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _aadClient = inputs.Value<GraphServiceClient>("aad-client");
-        _childGroup = inputs.Value<Group>("child-group");
-        _parentGroup = inputs.Value<Group>("parent-group");
+        _parentGroupId = inputs.Value<string>("parent-group-id");
+        _childGroupId = inputs.Value<string>("child-group-id");
         return Task.CompletedTask;
     }
 
@@ -63,7 +64,9 @@ public class AzureAdAddGroupToGroup_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_aadClient == null || _childGroup == null || _parentGroup == null)
+        if (_aadClient == null || 
+            string.IsNullOrEmpty(_childGroupId) || 
+            string.IsNullOrEmpty(_parentGroupId))
         {
             ctx.SetErrorMessage("The az active directory add-group-to-group action was not initialized");
         }
@@ -71,44 +74,27 @@ public class AzureAdAddGroupToGroup_v1 : INoxCliAddin
         {
             try
             {
-                var parentGroups = await _aadClient.Groups.GetAsync((requestConfiguration) =>
-                    {
-                        requestConfiguration.QueryParameters.Count = true;
-                        requestConfiguration.QueryParameters.Filter = $"DisplayName eq '{_parentGroup.DisplayName}'";
-                    });
+                var parentGroup = await _aadClient.Groups[_parentGroupId].GetAsync();
+                if (parentGroup == null)
+                {
+                    ctx.SetErrorMessage("Parent group does not exist in Azure AD.");
+                    return outputs;
+                }
                 
-                if (parentGroups.Value.Count == 1)
+                var childGroup = await _aadClient.Groups[_childGroupId].GetAsync();
+                if (childGroup == null)
                 {
-                    var parentGroup = parentGroups.Value.First();
-                    
-                    Group? childGroup;
-                    
-                    var childGroups = await _aadClient.Groups.GetAsync((requestConfiguration) =>
-                    {
-                        requestConfiguration.QueryParameters.Count = true;
-                        requestConfiguration.QueryParameters.Filter = $"DisplayName eq '{_childGroup.DisplayName}'";
-                        requestConfiguration.QueryParameters.Expand = new[] { "Members" };
-                    }); 
-                    if (childGroups.Value.Count == 1)
-                    {
-                        childGroup = childGroups.Value.First();
-                        if (parentGroup.Members is null || parentGroup.Members.FirstOrDefault(u => u.Id.Equals(childGroup.Id)) is null)
-                        {
-                            await _aadClient.Groups[parentGroup.Id].PatchAsync(childGroup);
-                            // await _aadClient.Groups[parentGroup.Id].Members.
-                            // await _aadClient.Groups[parentGroup.Id].Members.References.Request().AddAsync(childGroup);
-                        }
-                        ctx.SetState(ActionState.Success);
-                    }
-                    else
-                    {
-                        ctx.SetErrorMessage($"The group {_childGroup} does not exist in your Azure Active Directory");
-                    }
+                    ctx.SetErrorMessage("Child group does not exist in Azure AD.");
+                    return outputs;
                 }
-                else
+
+                var request = new ReferenceCreate
                 {
-                    ctx.SetErrorMessage($"The group {_parentGroup} does not exist in your Azure Active Directory");
-                }
+                    OdataId = $"https://graph.microsoft.com/v1.0/directoryObjects/{_childGroupId}",
+                };
+
+                await _aadClient.Groups[_parentGroupId].Members.Ref.PostAsync(request);
+                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {

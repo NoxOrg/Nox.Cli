@@ -6,15 +6,15 @@ using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugin.Teams;
 
-public class TeamsAddMembers_v1: INoxCliAddin
+public class TeamsAddChannelMember_v1: INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "teams/add-members@v1",
+            Name = "teams/add-channel-member@v1",
             Author = "Jan Schutte",
-            Description = "Add AAD users to an MS Teams team, using their AAD objectId",
+            Description = "Add AAD users to an MS Teams channel, using their AAD objectId",
 
             Inputs =
             {
@@ -33,17 +33,24 @@ public class TeamsAddMembers_v1: INoxCliAddin
                     IsRequired = true
                 },
                 
-                ["user-object-ids"] = new NoxActionInput
+                ["channel-id"] = new NoxActionInput {
+                    Id = "channel-id",
+                    Description = "The AAD Id of the channel",
+                    Default = string.Empty,
+                    IsRequired = true
+                },
+                
+                ["object-id"] = new NoxActionInput
                 {
-                    Id = "user-object-ids",
-                    Description = "a Comma separated string of AAD user Object Ids to add to the team",
+                    Id = "object-id",
+                    Description = "The AAD object id of the user to tadd to the team.",
                     Default = string.Empty,
                     IsRequired = true
                 },
                 
                 ["is-owner"] = new NoxActionInput {
                     Id = "is-owner",
-                    Description = "Indicator set if the users being added are to be owners of the team",
+                    Description = "Indicator set if the users being added are to be owners of the channel",
                     Default = false,
                     IsRequired = false
                 }
@@ -53,14 +60,16 @@ public class TeamsAddMembers_v1: INoxCliAddin
 
     private GraphServiceClient? _aadClient;
     private string? _teamId;
-    private string? _objectIds;
+    private string? _channelId;
+    private string? _objectId;
     private bool? _isOwner;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _aadClient = inputs.Value<GraphServiceClient>("aad-client");
         _teamId = inputs.Value<string>("team-id");
-        _objectIds = inputs.Value<string>("user-object-ids");
+        _channelId = inputs.Value<string>("channel-id");
+        _objectId = inputs.Value<string>("object-id");
         _isOwner = inputs.ValueOrDefault<bool>("is-owner", this);
         return Task.CompletedTask;
     }
@@ -73,10 +82,11 @@ public class TeamsAddMembers_v1: INoxCliAddin
 
         if (_aadClient == null || 
             string.IsNullOrEmpty(_teamId) ||
-            string.IsNullOrEmpty(_objectIds) ||
+            string.IsNullOrEmpty(_channelId) ||
+            string.IsNullOrEmpty(_objectId) ||
             _isOwner == null)
         {
-            ctx.SetErrorMessage("The Teams add-members action was not initialized");
+            ctx.SetErrorMessage("The Teams add-channel-member action was not initialized");
         }
         else
         {
@@ -88,23 +98,16 @@ public class TeamsAddMembers_v1: INoxCliAddin
                     roles.Add("owner");
                 }
 
-                var objectIdList = _objectIds.Split(',');
-
-                foreach (var objectId in objectIdList)
+                var request = new ConversationMember
                 {
-                    var request = new ConversationMember
+                    OdataType = "#microsoft.graph.aadUserConversationMember",
+                    Roles = roles,
+                    AdditionalData = new Dictionary<string, object>
                     {
-                        OdataType = "#microsoft.graph.aadUserConversationMember",
-                        Roles = roles,
-                        AdditionalData = new Dictionary<string, object>
-                        {
-                            { "user@odata.bind", $"https://graph.microsoft.com/v1.0/users('{objectId}')" }
-                        }
-                    };
-                    var response = await _aadClient.Teams[_teamId].Members.PostAsync(request);
-                }
-
-                
+                        { "user@odata.bind", $"https://graph.microsoft.com/v1.0/users('{_objectId}')" }
+                    }
+                };
+                var response = await _aadClient.Teams[_teamId].Channels[_channelId].Members.PostAsync(request);
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

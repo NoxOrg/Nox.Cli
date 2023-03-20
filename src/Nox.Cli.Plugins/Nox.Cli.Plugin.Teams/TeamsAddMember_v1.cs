@@ -12,16 +12,16 @@ public class TeamsAddMember_v1: INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "teams/add-members@v1",
+            Name = "teams/add-member@v1",
             Author = "Jan Schutte",
             Description = "Add AAD users to an MS Teams team, using their AAD objectId",
 
             Inputs =
             {
-                ["teams-client"] = new NoxActionInput
+                ["aad-client"] = new NoxActionInput
                 {
-                    Id = "teams-client",
-                    Description = "The Teams client, normally this is the result of teams/connect@v1",
+                    Id = "aad-client",
+                    Description = "The AAD client, typically the result of azuread/connect@v1",
                     Default = new GraphServiceClient(new HttpClient()),
                     IsRequired = true
                 },
@@ -51,14 +51,14 @@ public class TeamsAddMember_v1: INoxCliAddin
         };
     }
 
-    private GraphServiceClient? _teamsClient;
+    private GraphServiceClient? _aadClient;
     private string? _teamId;
     private string? _objectId;
     private bool? _isOwner;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _teamsClient = inputs.Value<GraphServiceClient>("teams-client");
+        _aadClient = inputs.Value<GraphServiceClient>("aad-client");
         _teamId = inputs.Value<string>("team-id");
         _objectId = inputs.Value<string>("object-id");
         _isOwner = inputs.ValueOrDefault<bool>("is-owner", this);
@@ -71,7 +71,7 @@ public class TeamsAddMember_v1: INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_teamsClient == null || 
+        if (_aadClient == null || 
             string.IsNullOrEmpty(_teamId) ||
             string.IsNullOrEmpty(_objectId) ||
             _isOwner == null)
@@ -97,7 +97,7 @@ public class TeamsAddMember_v1: INoxCliAddin
                         { "user@odata.bind", $"https://graph.microsoft.com/v1.0/users('{_objectId}')" }
                     }
                 };
-                var response = await _teamsClient.Teams[_teamId].Members.PostAsync(request);
+                var response = await _aadClient.Teams[_teamId].Members.PostAsync(request);
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
