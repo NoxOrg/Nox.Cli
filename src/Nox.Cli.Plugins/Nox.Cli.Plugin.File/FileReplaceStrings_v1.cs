@@ -49,7 +49,9 @@ public class FileReplaceStrings_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (string.IsNullOrEmpty(_path) || _replacements == null || _replacements.Count == 0)
+        if (string.IsNullOrEmpty(_path) || 
+            _replacements == null || 
+            _replacements.Count == 0)
         {
             ctx.SetErrorMessage("The File replace-strings action was not initialized");
         }

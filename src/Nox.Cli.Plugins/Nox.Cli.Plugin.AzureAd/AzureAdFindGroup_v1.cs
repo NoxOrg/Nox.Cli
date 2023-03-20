@@ -1,19 +1,20 @@
 using Microsoft.Graph;
+using Microsoft.Graph.Models;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzureAdGetUserObjectId_v1 : INoxCliAddin
+public class AzureAdFindGroup_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azuread/get-user-object-id@v1",
+            Name = "azuread/find-group@v1",
             Author = "Jan Schutte",
-            Description = "Get the Object Id of an Azure user entity",
+            Description = "Find an Azure Active Directory group using the group name",
 
             Inputs =
             {
@@ -25,34 +26,33 @@ public class AzureAdGetUserObjectId_v1 : INoxCliAddin
                     IsRequired = true
                 },
                 
-                ["user-name"] = new NoxActionInput
+                ["group-name"] = new NoxActionInput
                 {
-                    Id = "user-name",
-                    Description = "The AAD username of the user to find",
+                    Id = "group-name",
+                    Description = "The name of the aad group to create",
                     Default = string.Empty,
                     IsRequired = true
                 }
             },
-            
+
             Outputs =
             {
-                ["object-id"] = new NoxActionOutput
+                ["group-id"] = new NoxActionOutput
                 {
-                    Id = "object-id",
-                    Description = "The Object Id of the AAD user",
+                    Id = "group-id",
+                    Description = "The Id of the AAD group that was searched. Will return null if group is not found.",
                 },
             }
-
         };
     }
 
+    private string? _groupName;
     private GraphServiceClient? _aadClient;
-    private string? _username;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
+        _groupName = inputs.Value<string>("group-name");
         _aadClient = inputs.Value<GraphServiceClient>("aad-client");
-        _username = inputs.Value<string>("user-name");
         return Task.CompletedTask;
     }
 
@@ -62,29 +62,25 @@ public class AzureAdGetUserObjectId_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_aadClient == null || 
-            string.IsNullOrEmpty(_username))
+        if (_aadClient == null || string.IsNullOrEmpty(_groupName))
         {
-            ctx.SetErrorMessage("The az active directory get-user-object-id action was not initialized");
+            ctx.SetErrorMessage("The az active directory find-group action was not initialized");
         }
         else
         {
             try
             {
-                var users = await _aadClient.Users.GetAsync((requestConfiguration) =>
+                var projectGroupName = _groupName.ToUpper();
+
+                var groups = await _aadClient.Groups.GetAsync((requestConfiguration) =>
                 {
                     requestConfiguration.QueryParameters.Count = true;
-                    requestConfiguration.QueryParameters.Filter = $"UserPrincipalName eq '{_username}'";
+                    requestConfiguration.QueryParameters.Filter = $"DisplayName eq '{projectGroupName}'";
                 });
                 
-                if (users.Value.Count == 1)
+                if (groups.Value.Count == 1)
                 {
-                    var user = users.Value.First();
-                    outputs["object-id"] = user.Id;
-                }
-                else
-                {
-                    ctx.SetErrorMessage($"AAD User {_username} not found.");
+                    outputs["group-id"] = groups.Value.First().Id!;
                 }
                 ctx.SetState(ActionState.Success);
             }

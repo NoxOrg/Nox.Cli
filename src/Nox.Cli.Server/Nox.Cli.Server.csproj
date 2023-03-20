@@ -27,16 +27,31 @@
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.AzureAd\Nox.Cli.Plugin.AzureAd.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugin.Core\Nox.Cli.Plugin.Core.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.File\Nox.Cli.Plugin.File.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Hcl\Nox.Cli.Plugin.Hcl.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Network\Nox.Cli.Plugin.Network.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Postgres\Nox.Cli.Plugin.Postgres.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Powershell\Nox.Cli.Plugin.Powershell.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Console\Nox.Cli.Plugin.Console.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Project\Nox.Cli.Plugin.Project.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Teams\Nox.Cli.Plugin.Teams.csproj" />
     <ProjectReference Include="..\Nox.Cli.Server.Cache\Nox.Cli.Server.Cache.csproj" />
     <ProjectReference Include="..\Nox.Cli.Shared.DTO\Nox.Cli.Shared.DTO.csproj" />
     <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="localhost.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Templates\terraform\heimdall-ms-microservice.tf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Templates\terraform\heimdall-ms-microservice-prod-vars.tf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Templates\terraform\heimdall-ms-microservice-test-vars.tf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Templates\terraform\heimdall-ms-microservice-uat-vars.tf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

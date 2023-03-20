@@ -3,42 +3,33 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugin.File;
 
-public class FilePurgeFolder_v1 : INoxCliAddin
+public class FileDeleteFile_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "file/purge-folder@v1",
+            Name = "file/delete-file@v1",
             Author = "Jan Schutte",
-            Description = "Delete all files and folders inside a folder.",
+            Description = "Delete a file in a folder.",
 
             Inputs =
             {
                 ["path"] = new NoxActionInput {
                     Id = "path",
-                    Description = "The path to the folder to purge",
+                    Description = "The path to the file to delete",
                     Default = string.Empty,
                     IsRequired = true
-                },
-                
-                ["include-root"] = new NoxActionInput {
-                    Id = "include-root",
-                    Description = "Indicate whether the root of the path must also be deleted.",
-                    Default = false,
-                    IsRequired = false
-                },
+                }
             }
         };
     }
 
     private string? _path;
-    private bool? _includeRoot;
     
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _path = inputs.Value<string>("path");
-        _includeRoot = inputs.ValueOrDefault<bool>("include-root", this);
         return Task.CompletedTask;
     }
 
@@ -50,7 +41,7 @@ public class FilePurgeFolder_v1 : INoxCliAddin
 
         if (string.IsNullOrEmpty(_path))
         {
-            ctx.SetErrorMessage("The File purge-folder action was not initialized");
+            ctx.SetErrorMessage("The File delete-file action was not initialized");
         }
         else
         {
@@ -63,23 +54,7 @@ public class FilePurgeFolder_v1 : INoxCliAddin
                 }
                 else
                 {
-                    var di = new DirectoryInfo(_path);
-
-                    foreach (var file in di.GetFiles())
-                    {
-                        file.Delete();
-                    }
-
-                    foreach (var dir in di.GetDirectories())
-                    {
-                        dir.Delete(true);
-                    }
-
-                    if (_includeRoot!.Value)
-                    {
-                        Directory.Delete(fullPath);
-                    }
-
+                    System.IO.File.Delete(fullPath);
                     ctx.SetState(ActionState.Success);
                 }
             }
@@ -97,4 +72,3 @@ public class FilePurgeFolder_v1 : INoxCliAddin
         return Task.CompletedTask;
     }
 }
-

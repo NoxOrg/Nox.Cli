@@ -74,7 +74,6 @@ public class FileFindFile_v1 : INoxCliAddin
                 }
                 else
                 {
-                    var di = new DirectoryInfo(_path);
                     var fullFilename = Path.Combine(_path, _filename);
                     if (System.IO.File.Exists(fullFilename))
                     {

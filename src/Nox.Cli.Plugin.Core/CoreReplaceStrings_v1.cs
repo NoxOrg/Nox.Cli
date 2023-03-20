@@ -47,7 +47,7 @@ public class CoreReplaceStrings_v1: INoxCliAddin
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _source = inputs.Value<string>("source");
+        _source = inputs.Value<string>("source-string");
         _replacements = inputs.Value<Dictionary<string, string>>("replacements");
         return Task.CompletedTask;
     }

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Octopus.CoreParsers.Hcl" Version="1.1.599" />
+      <PackageReference Include="Nox.Core" Version="6.0.40" />
+    </ItemGroup>
+
+    
+</Project>

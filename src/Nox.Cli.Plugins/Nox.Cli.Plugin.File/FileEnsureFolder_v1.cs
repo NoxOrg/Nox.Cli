@@ -3,29 +3,29 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugin.File;
 
-public class FilePurgeFolder_v1 : INoxCliAddin
+public class FileEnsureFolder_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "file/purge-folder@v1",
+            Name = "file/ensure-folder@v1",
             Author = "Jan Schutte",
-            Description = "Delete all files and folders inside a folder.",
+            Description = "Create a sub folder for a path if it does not exist.",
 
             Inputs =
             {
                 ["path"] = new NoxActionInput {
                     Id = "path",
-                    Description = "The path to the folder to purge",
+                    Description = "The path where the new folder must be created",
                     Default = string.Empty,
                     IsRequired = true
                 },
                 
-                ["include-root"] = new NoxActionInput {
-                    Id = "include-root",
-                    Description = "Indicate whether the root of the path must also be deleted.",
-                    Default = false,
+                ["folder-name"] = new NoxActionInput {
+                    Id = "directory-name",
+                    Description = "The name of the folder to create.",
+                    Default = string.Empty,
                     IsRequired = false
                 },
             }
@@ -33,12 +33,12 @@ public class FilePurgeFolder_v1 : INoxCliAddin
     }
 
     private string? _path;
-    private bool? _includeRoot;
+    private string? _folderName;
     
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _path = inputs.Value<string>("path");
-        _includeRoot = inputs.ValueOrDefault<bool>("include-root", this);
+        _folderName = inputs.Value<string>("folder-name");
         return Task.CompletedTask;
     }
 
@@ -48,9 +48,10 @@ public class FilePurgeFolder_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (string.IsNullOrEmpty(_path))
+        if (string.IsNullOrEmpty(_path) ||
+            string.IsNullOrEmpty(_folderName))
         {
-            ctx.SetErrorMessage("The File purge-folder action was not initialized");
+            ctx.SetErrorMessage("The File create-folder action was not initialized");
         }
         else
         {
@@ -63,23 +64,8 @@ public class FilePurgeFolder_v1 : INoxCliAddin
                 }
                 else
                 {
-                    var di = new DirectoryInfo(_path);
-
-                    foreach (var file in di.GetFiles())
-                    {
-                        file.Delete();
-                    }
-
-                    foreach (var dir in di.GetDirectories())
-                    {
-                        dir.Delete(true);
-                    }
-
-                    if (_includeRoot!.Value)
-                    {
-                        Directory.Delete(fullPath);
-                    }
-
+                    fullPath = Path.Combine(fullPath, _folderName);
+                    Directory.CreateDirectory(fullPath);
                     ctx.SetState(ActionState.Success);
                 }
             }
@@ -97,4 +83,3 @@ public class FilePurgeFolder_v1 : INoxCliAddin
         return Task.CompletedTask;
     }
 }
-

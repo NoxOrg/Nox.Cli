@@ -1,4 +1,5 @@
 using Microsoft.Graph;
+using Microsoft.Graph.Models;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using Nox.Core.Configuration;
@@ -26,36 +27,45 @@ public class AzureAdAddUsersToGroup_v1 : INoxCliAddin
                     IsRequired = true
                 },
                 
-                ["group"] = new NoxActionInput
+                ["group-id"] = new NoxActionInput
                 {
-                    Id = "group",
-                    Description = "The aad group to which to add the team members",
-                    Default = new Group(),
-                    IsRequired = true
-                },
-
-                
-                ["user-names"] = new NoxActionInput
-                {
-                    Id = "user-names",
-                    Description = "The comma separated string of AAD user names to add to the group",
+                    Id = "group-id",
+                    Description = "The Id of the aad group to which to add the team members",
                     Default = string.Empty,
                     IsRequired = true
                 },
+
+                ["user-object-ids"] = new NoxActionInput
+                {
+                    Id = "user-object-ids",
+                    Description = "a Comma separated string of AAD user Object Ids to add to the group",
+                    Default = string.Empty,
+                    IsRequired = true
+                },
+                
+                ["is-owner"] = new NoxActionInput
+                {
+                    Id = "is-owner",
+                    Description = "Indicator set if the users being added are to be owners of the group",
+                    Default = false,
+                    IsRequired = false
+                } 
             },
 
         };
     }
 
-    private Group? _group;
+    private string? _groupId;
     private GraphServiceClient? _aadClient;
-    private string? _userNames;
+    private string? _userObjectIds;
+    private bool? _isOwner;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _group = inputs.Value<Group>("group");
+        _groupId = inputs.Value<string>("group-id");
         _aadClient = inputs.Value<GraphServiceClient>("aad-client");
-        _userNames = inputs.Value<string>("user-names");
+        _userObjectIds = inputs.Value<string>("user-object-ids");
+        _isOwner = inputs.ValueOrDefault<bool>("is-owner", this);
         return Task.CompletedTask;
     }
 
@@ -66,8 +76,9 @@ public class AzureAdAddUsersToGroup_v1 : INoxCliAddin
         ctx.SetState(ActionState.Error);
 
         if (_aadClient == null || 
-            _group == null || 
-            string.IsNullOrEmpty(_userNames))
+            string.IsNullOrEmpty(_groupId) || 
+            string.IsNullOrEmpty(_userObjectIds) ||
+            _isOwner == null)
         {
             ctx.SetErrorMessage("The az active directory add-users-to-group action was not initialized");
         }
@@ -75,26 +86,34 @@ public class AzureAdAddUsersToGroup_v1 : INoxCliAddin
         {
             try
             {
-                var userNames = _userNames.Split(',');
-                foreach (var userName in userNames)
+                var objectIds = _userObjectIds.Split(',');
+                var members = new List<string>();
+                foreach (var objectId in objectIds)
                 {
-                    var users = await _aadClient.Users.Request()
-                        .Filter($"UserPrincipalName eq '{userName}'")
-                        .GetAsync();
-                    
-                    if (users.Count == 1)
+                    members.Add($"https://graph.microsoft.com/v1.0/directoryObjects/{objectId}");
+                }
+
+                var request = new Group
+                {
+                    AdditionalData = new Dictionary<string, object>
                     {
-                        var user = users.First();
-                        if (_group.Members is null || _group.Members.FirstOrDefault(u => u.Id.Equals(user.Id)) is null)
-                        {
-                            await _aadClient.Groups[_group.Id].Members.References.Request().AddAsync(user);
-                        }
+                        { "members@odata.bind", members }
                     }
-                    else
+                };
+                await _aadClient.Groups[_groupId].PatchAsync(request);
+
+                if (_isOwner == true)
+                {
+                    foreach (var objectId in objectIds)
                     {
-                        ctx.SetErrorMessage($"AAD User {userName} not found.");
+                        var ownerRequest = new ReferenceCreate
+                        {
+                            OdataId = $"https://graph.microsoft.com/v1.0/users/{objectId}"
+                        };
+                        await _aadClient.Groups[_groupId].Owners.Ref.PostAsync(ownerRequest);
                     }
                 }
+                
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

@@ -84,12 +84,14 @@ public class AzureAdGetUsersObjectIdList_v1 : INoxCliAddin
                 var userNameList = _userNames.Split(_delimiter);
                 foreach (var username in userNameList)
                 {
-                    var users = await _aadClient.Users.Request()
-                        .Filter($"UserPrincipalName eq '{username}'")
-                        .GetAsync();
+                    var users = await _aadClient.Users.GetAsync((requestConfiguration) =>
+                    {
+                        requestConfiguration.QueryParameters.Count = true;
+                        requestConfiguration.QueryParameters.Filter = $"UserPrincipalName eq '{username}'";
+                    });
 
-                    if (users.Count != 1) continue;
-                    var user = users.First();
+                    if (users.Value.Count != 1) continue;
+                    var user = users.Value.First();
                     if (string.IsNullOrEmpty(result))
                     {
                         result = user.Id;

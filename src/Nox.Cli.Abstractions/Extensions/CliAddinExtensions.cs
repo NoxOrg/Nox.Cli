@@ -25,7 +25,11 @@ public static class CliAddinExtensions
             {
                 if (typeof(T).IsAssignableTo(typeof(IDictionary<string, string>)))
                 {
-                    result = (T?)value;
+                    //result = (T?)value;
+                    var newDictionary = ((IDictionary<string, string>)value).ToDictionary( 
+                        kv => kv.Key.ToString()!, kv => kv.Value.ToString(), StringComparer.OrdinalIgnoreCase
+                    );
+                    result = (T)Convert.ChangeType(newDictionary, typeof(T));
                 }
                 else if (typeof(T).IsAssignableTo(typeof(IDictionary<string, object>)))
                 {
@@ -36,7 +40,7 @@ public static class CliAddinExtensions
                 }
                 else if (typeof(T).IsAssignableTo(typeof(IList<string>)))
                 {
-                    var stringList = ((IList<object>)value).Select(o=>o.ToString()).ToArray();
+                    var stringList = ((IList<object>)value).Select(o=>o.ToString()).ToList();
                     result = (T)Convert.ChangeType(stringList, typeof(T));
                 }
                 else if (typeof(T).IsAssignableTo(typeof(IList<object>)))

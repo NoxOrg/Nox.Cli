@@ -62,7 +62,7 @@ jobs:
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
           project-id: ${{ steps.ensure-project-exists.outputs.project-id }}
-          repository-name: ${{ config.versionControl.repository }}
+          repository-name: ${{ project.versionControl.repository }}
         display:
           success: ${{ steps.ensure-repo-exists.outputs.success-message }}
           error: There was a problem ensuring that the repository exists. (${{ steps.ensure-repo-exists.error-message }})

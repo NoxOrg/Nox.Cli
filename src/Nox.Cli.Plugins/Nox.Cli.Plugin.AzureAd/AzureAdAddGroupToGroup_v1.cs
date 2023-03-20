@@ -1,4 +1,5 @@
 using Microsoft.Graph;
+using Microsoft.Graph.Models;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
@@ -70,27 +71,32 @@ public class AzureAdAddGroupToGroup_v1 : INoxCliAddin
         {
             try
             {
-                Group? parentGroup;
-                var parentGroups = await _aadClient.Groups.Request()
-                    .Filter($"DisplayName eq '{_parentGroup.DisplayName}'")
-                    .Expand("Members")
-                    .GetAsync();
+                var parentGroups = await _aadClient.Groups.GetAsync((requestConfiguration) =>
+                    {
+                        requestConfiguration.QueryParameters.Count = true;
+                        requestConfiguration.QueryParameters.Filter = $"DisplayName eq '{_parentGroup.DisplayName}'";
+                    });
                 
-                if (parentGroups.Count == 1)
+                if (parentGroups.Value.Count == 1)
                 {
-                    parentGroup = parentGroups.First();
+                    var parentGroup = parentGroups.Value.First();
                     
                     Group? childGroup;
-                    var childGroups = await _aadClient.Groups.Request()
-                        .Filter($"DisplayName eq '{_childGroup.DisplayName}'")
-                        .Expand("Members")
-                        .GetAsync();
-                    if (childGroups.Count == 1)
+                    
+                    var childGroups = await _aadClient.Groups.GetAsync((requestConfiguration) =>
                     {
-                        childGroup = childGroups.First();
+                        requestConfiguration.QueryParameters.Count = true;
+                        requestConfiguration.QueryParameters.Filter = $"DisplayName eq '{_childGroup.DisplayName}'";
+                        requestConfiguration.QueryParameters.Expand = new[] { "Members" };
+                    }); 
+                    if (childGroups.Value.Count == 1)
+                    {
+                        childGroup = childGroups.Value.First();
                         if (parentGroup.Members is null || parentGroup.Members.FirstOrDefault(u => u.Id.Equals(childGroup.Id)) is null)
                         {
-                            await _aadClient.Groups[parentGroup.Id].Members.References.Request().AddAsync(childGroup);
+                            await _aadClient.Groups[parentGroup.Id].PatchAsync(childGroup);
+                            // await _aadClient.Groups[parentGroup.Id].Members.
+                            // await _aadClient.Groups[parentGroup.Id].Members.References.Request().AddAsync(childGroup);
                         }
                         ctx.SetState(ActionState.Success);
                     }
