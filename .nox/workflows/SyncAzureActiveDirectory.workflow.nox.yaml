@@ -56,8 +56,8 @@ jobs:
         uses: azuread/add-group-to-group@v1
         with:
           aad-client: ${{ steps.connect.outputs.aad-client }}
-          child-group: ${{ steps.create-project-group.outputs.group-id }}
-          parent-group: ${{ steps.create-security-group.outputs.group-id }}
+          child-group-id: ${{ steps.create-project-group.outputs.group-id }}
+          parent-group-id: ${{ steps.create-security-group.outputs.group-id }}
         display:
           success: Added the project group to the security group
           error: Unable to add the project group to the security group (${{ steps.add-project-group-to-security-group.error-message }})

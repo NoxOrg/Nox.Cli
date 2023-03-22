@@ -6,9 +6,9 @@
 
 #
 
-name: SampleCurrency
+name: CliDemo
 
-description: A sample currency conversion microservice
+description: A Cli Demo Nox Configuration
 
 autoMigrations: false
 
@@ -41,14 +41,14 @@ dataSources:
 versionControl:
   provider: azureDevOps
   server: https://dev.azure.com/iwgplc
-  project: Nox.SampleCurrency
-  repository: SampleCurrency.Api.V1
+  project: Nox.CliDemo
+  repository: CliDemo.Project.V1
 
 team:
   developers:
     - name: Dionisis Stoubos
       userName: dionisis.stoubos@iwgplc.com
-      isAdmin: false
+      isAdmin: true
       email: dionisis.stoubos@iwgplc.com
     - name: Andre Sharpe
       userName: andre.sharpe@iwgplc.com
@@ -58,3 +58,19 @@ team:
       userName: jan.schutte@iwgplc.com
       isAdmin: true
       email: jan.schutte@iwgplc.com
+    - name: Anton Du Plessis
+      userName: anton.duplessis@iwgplc.com
+      isAdmin: false
+      email: anton.duplessis@iwgplc.com
+    - name: Morne Van Zyl
+      userName: morne.vanzyl@iwgplc.com
+      isAdmin: false
+      email: morne.vanzyl@iwgplc.com
+    - name: Dmytro Dorodnykh
+      userName: dmytro.dorodnykh@iwgplc.com
+      isAdmin: false
+      email: dmytro.dorodnykh@iwgplc.com
+    - name: Oleksandr Vlasenko
+      userName: oleksandr.vlasenko@regus.com
+      isAdmin: false
+      email: oleksandr.vlasenko@regus.com
