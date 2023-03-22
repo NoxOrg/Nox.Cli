@@ -85,7 +85,7 @@ public class TeamsAddMembers_v1: INoxCliAddin
                 List<string>? roles = null;
                 if (_isOwner == true)
                 {
-                    roles.Add("owner");
+                    roles = new List<string> { "owner" };
                 }
 
                 var objectIdList = _objectIds.Split(',');

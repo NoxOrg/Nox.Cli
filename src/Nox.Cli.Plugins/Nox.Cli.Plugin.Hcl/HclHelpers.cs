@@ -1,3 +1,4 @@
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Core.Exceptions;
 using Octopus.CoreParsers.Hcl;
 
@@ -10,10 +11,12 @@ public static class HclHelpers
         var pathValues = valuePath.Split('/');
         if (pathValues.Length == 0) throw new NoxException("Node path is invalid!");
         var foundNode = template.Child;
+        if (foundNode == null) throw new NoxCliException("HCL template contains no children.");
         for (var i = 0; i < pathValues.Length; i++)
         {
             try
             {
+                if (foundNode == null) throw new NoxCliException($"$Unable to find node {pathValues[i - 1]}");
                 if (i == pathValues.Length - 1)
                 {
                     foundNode = FindChildProcessedValue(foundNode, pathValues[i]);
@@ -38,10 +41,12 @@ public static class HclHelpers
     {
         var pathValues = path.Split('/');
         var foundNode = template.Child;
+        if (foundNode == null) throw new NoxCliException("HCL template contains no children.");
         for (var i = 0; i < pathValues.Length; i++)
         {
             try
             {
+                if (foundNode == null) throw new NoxCliException($"$Unable to find node {pathValues[i - 1]}");
                 foundNode = FindChildNode(foundNode, pathValues[i]);
 
             }

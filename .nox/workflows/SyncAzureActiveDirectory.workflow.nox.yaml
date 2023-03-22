@@ -19,9 +19,9 @@ jobs:
         id: connect
         uses: azuread/connect@v1
         with:
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          tenant-id: ${{ server.secrets.AZURE_TENANT_ID }}
+          client-id: ${{ server.secrets.AZURE_CLIENT_ID }}
+          client-secret: ${{ server.secrets.AZURE_CLIENT_SECRET }}
         display:
           success: Successfully connected to Azure Active Directory
           error: Unable to connect to Azure Active Directory
@@ -36,7 +36,7 @@ jobs:
           group-description: ${{ project.description }}
         display:
           success: Created the Project AAD group
-          error: Unable to create the Project AAD group
+          error: Unable to create the Project AAD group (${{ steps.create-project-group.error-message }})
         run-at-server: true
           
       - name: Create an AAD security group
@@ -48,7 +48,7 @@ jobs:
           group-description: Nox Projects - Security Group
         display:
           success: Created the AAD security group
-          error: Unable to create the AAD security group
+          error: Unable to create the AAD security group (${{ steps.create-security-group.error-message }})
         run-at-server: true
           
       - name: Add project group as a member of security group
@@ -60,7 +60,7 @@ jobs:
           parent-group: ${{ steps.create-security-group.outputs.group-id }}
         display:
           success: Added the project group to the security group
-          error: Unable to add the project group to the security group
+          error: Unable to add the project group to the security group (${{ steps.add-project-group-to-security-group.error-message }})
         run-at-server: true
       
       - name: Create an MS teams, team for the project
@@ -78,7 +78,7 @@ jobs:
       
       - name: Get the Team Member user name list
         id: get-team-uname-list
-        uses: project/get-team-user-names
+        uses: project/get-team-user-names@v1
         with:
           team-members: ${{ project.team.developers }}
         display:
@@ -97,13 +97,13 @@ jobs:
         run-at-server: true
 
       - name: Get the Team Admins user name list
-        id: get-team-admin-uname-list
-        uses: project/get-team-admin-user-names
+        id: get-project-admin-uname-list
+        uses: project/get-admin-user-names@v1
         with:
           team-members: ${{ project.team.developers }}
         display:
-          success: Got the team admins user name list
-          error: Unable to get the team admins user name list (${{ steps.get-team-admin-list.error-message }})
+          success: Got the project admins user name list
+          error: Unable to get the project admins user name list (${{ steps.get-project-admin-list.error-message }})
 
       - name: Get the team admins user object Id list
         id: get-team-admin-obj-id-list
@@ -207,7 +207,7 @@ jobs:
 
       - name: Create a channel on the MS Team
         id: create-cli-channel
-        uses: teams/create-channel
+        uses: teams/create-channel@v1
         with:
           aad-client: ${{ steps.connect.outputs.aad-client }}
           team-id: ${{ steps.create-ms-team.outputs.team-id }}
@@ -274,7 +274,7 @@ jobs:
 
       - name: Create a DevOps channel on the MS Team
         id: create-devops-channel
-        uses: teams/create-channel
+        uses: teams/create-channel@v1
         with:
           aad-client: ${{ steps.connect.outputs.aad-client }}
           team-id: ${{ steps.create-ms-team.outputs.team-id }}

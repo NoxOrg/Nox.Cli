@@ -73,7 +73,7 @@ public class TeamsFindTeam_v1: INoxCliAddin
             try
             {
                 var team = await _aadClient.Teams[_teamName].GetAsync();
-                if (team != null) outputs["team-id"] = team.Id;
+                if (team != null) outputs["team-id"] = team.Id!;
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

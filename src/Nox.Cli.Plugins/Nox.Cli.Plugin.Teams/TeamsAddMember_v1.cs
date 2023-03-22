@@ -85,7 +85,7 @@ public class TeamsAddMember_v1: INoxCliAddin
                 List<string>? roles = null;
                 if (_isOwner == true)
                 {
-                    roles.Add("owner");
+                    roles = new List<string> { "owner" };
                 }
 
                 var request = new ConversationMember

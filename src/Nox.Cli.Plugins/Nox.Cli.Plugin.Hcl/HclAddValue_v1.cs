@@ -66,7 +66,7 @@ public class HclAddValue_v1 : INoxCliAddin
         return Task.CompletedTask;
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string, object>();
 
@@ -98,7 +98,7 @@ public class HclAddValue_v1 : INoxCliAddin
             }
         }
 
-        return outputs;
+        return Task.FromResult<IDictionary<string, object>>(outputs);
     }
 
     public Task EndAsync()

@@ -77,10 +77,10 @@ public class AzureAdGetUserObjectId_v1 : INoxCliAddin
                     requestConfiguration.QueryParameters.Filter = $"UserPrincipalName eq '{_username}'";
                 });
                 
-                if (users.Value.Count == 1)
+                if (users != null && users.Value!.Count == 1)
                 {
                     var user = users.Value.First();
-                    outputs["object-id"] = user.Id;
+                    outputs["object-id"] = user.Id!;
                 }
                 else
                 {

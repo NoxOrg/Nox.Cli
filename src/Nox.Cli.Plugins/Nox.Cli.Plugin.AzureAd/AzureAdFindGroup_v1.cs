@@ -78,7 +78,7 @@ public class AzureAdFindGroup_v1 : INoxCliAddin
                     requestConfiguration.QueryParameters.Filter = $"DisplayName eq '{projectGroupName}'";
                 });
                 
-                if (groups.Value.Count == 1)
+                if (groups != null &&  groups.Value!.Count == 1)
                 {
                     outputs["group-id"] = groups.Value.First().Id!;
                 }

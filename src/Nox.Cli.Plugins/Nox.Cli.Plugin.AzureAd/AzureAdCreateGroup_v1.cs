@@ -96,11 +96,11 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
                 var projectGroups = await _aadClient.Groups.GetAsync((requestConfiguration) =>
                 {
                     requestConfiguration.QueryParameters.Count = true;
-                    requestConfiguration.QueryParameters.Filter = $"DisplayName eq '{projectGroupName}'";
-                    requestConfiguration.QueryParameters.Expand = new[] { "Members" };
+                    requestConfiguration.QueryParameters.Filter = $"displayName eq '{projectGroupName}'";
+                    requestConfiguration.QueryParameters.Select = new string []{ "id","displayName" };
                 });
                 
-                if (projectGroups.Value.Count == 1)
+                if (projectGroups != null && projectGroups.Value!.Count == 1)
                 {
                     outputs["group-id"] = projectGroups.Value.First().Id!;
                 }

@@ -7,8 +7,8 @@ cli:
   command-alias: cmst
   description: Test Create an MS Teams team
   examples:
-    - ["sync create-ms-team", "--path <designFolder>"]
-    - ["sync cmst", "--path <designFolder>"]
+    - ["test create-ms-team", "--path <designFolder>"]
+    - ["test cmst", "--path <designFolder>"]
 
 jobs:
   sync-test:  

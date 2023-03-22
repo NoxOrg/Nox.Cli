@@ -98,7 +98,7 @@ public class TeamsCreateTeam_v1: INoxCliAddin
                     {
                         { "template@odata.bind", "https://graph.microsoft.com/v1.0/teamsTemplates('standard')" }
                     },
-                    Group =
+                    Group = new Group
                     {
                         Id = _groupId
                     }

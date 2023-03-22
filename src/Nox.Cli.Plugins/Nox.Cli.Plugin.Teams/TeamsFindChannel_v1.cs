@@ -87,7 +87,7 @@ public class TeamsFindChannel_v1: INoxCliAddin
                     config.QueryParameters.Filter = $"DisplayName eq '{_channelName}'";
                 });
 
-                if (channels != null && channels.Value.Count == 1)
+                if (channels != null && channels.Value!.Count == 1)
                 {
                     outputs["channel-id"] = channels.Value!.First().Id!;
                 }
