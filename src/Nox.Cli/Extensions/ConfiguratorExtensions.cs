@@ -23,7 +23,7 @@ namespace Nox.Cli;
 
 internal static class ConfiguratorExtensions
 {
-    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline)
+    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline, string? onlineWorkflowUrl = null)
     {
         var cachePath = WellKnownPaths.CachePath;
 
@@ -37,7 +37,7 @@ internal static class ConfiguratorExtensions
 
         if (cache != null && isOnline)
         {
-            GetOnlineWorkflowsAndManifest(yamlFiles, cache);
+            GetOnlineWorkflowsAndManifest(yamlFiles, cache, onlineWorkflowUrl);
         }
 
         GetLocalWorkflowsAndManifest(yamlFiles);
@@ -191,9 +191,11 @@ internal static class ConfiguratorExtensions
 
     }
 
-    private static void GetOnlineWorkflowsAndManifest(Dictionary<string, string> yamlFiles, NoxCliCache cache)
+    private static void GetOnlineWorkflowsAndManifest(IDictionary<string, string> yamlFiles, NoxCliCache cache, string? onlineWorkflowUrl = null)
     {
-        var client = new RestClient($"https://noxorg.dev/workflows/{cache.Tid}/");
+        if (string.IsNullOrEmpty(onlineWorkflowUrl)) onlineWorkflowUrl = "https://noxorg.dev/workflows";
+        
+        var client = new RestClient($"{onlineWorkflowUrl}/{cache.Tid}/");
 
         var request = new RestRequest() { Method = Method.Get };
 
@@ -328,7 +330,7 @@ internal static class ConfiguratorExtensions
             if (Directory.GetDirectories(path.FullName, @".nox").Any())
             {
                 path = new DirectoryInfo(Path.Combine(path.FullName,".nox"));
-                files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.AllDirectories); ;
+                files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.AllDirectories);
                 break;
             }
 

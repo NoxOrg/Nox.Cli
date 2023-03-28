@@ -1,24 +1,25 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.Core;
 
-public class CoreToSnakeCase_v1: INoxCliAddin
+public class CoreToDashCase_v1: INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "core/to-snake-case@v1",
+            Name = "core/to-dash-case@v1",
             Author = "Jan Schutte",
-            Description = "Convert a string to snake case.",
+            Description = "Convert a string to dash case.",
 
             Inputs =
             {
                 ["source-string"] = new NoxActionInput {
                     Id = "source-string",
-                    Description = "The source string which to convert to snake case",
+                    Description = "The source string which to convert to dash case",
                     Default = string.Empty,
                     IsRequired = true
                 }
@@ -29,7 +30,7 @@ public class CoreToSnakeCase_v1: INoxCliAddin
                 ["result"] = new NoxActionOutput
                 {
                     Id = "result",
-                    Description = "The resulting snake case string."
+                    Description = "The resulting dash case string."
                 },
             }
         };
@@ -51,7 +52,7 @@ public class CoreToSnakeCase_v1: INoxCliAddin
 
         if (string.IsNullOrEmpty(_source))
         {
-            ctx.SetErrorMessage("The Core to-snake-case action was not initialized");
+            ctx.SetErrorMessage("The Core to-dash-case action was not initialized");
         }
         else
         {
@@ -62,21 +63,10 @@ public class CoreToSnakeCase_v1: INoxCliAddin
                 }
                 else
                 {
-                    var sb = new StringBuilder();
-                    sb.Append(char.ToLowerInvariant(_source[0]));
-                    for(int i = 1; i < _source.Length; ++i) {
-                        char c = _source[i];
-                        if (c != '.')
-                        {
-                            if(char.IsUpper(c)) {
-                                sb.Append('_');
-                                sb.Append(char.ToLowerInvariant(c));
-                            } else {
-                                sb.Append(c);
-                            }    
-                        }
-                    }
-                    outputs["result"] = sb.ToString();    
+                    //If there are periods then replace them with dashes
+                    var result = _source.Replace('.', '-');
+                    result = Regex.Replace(result, @"(?<!^)(?<!-)((?<=\p{Ll})\p{Lu}|\p{Lu}(?=\p{Ll}))", "-$1").ToLower();
+                    outputs["result"] = result;
                 }
                 
                 ctx.SetState(ActionState.Success);    

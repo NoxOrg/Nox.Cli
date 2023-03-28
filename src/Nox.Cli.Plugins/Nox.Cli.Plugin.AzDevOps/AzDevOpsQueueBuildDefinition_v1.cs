@@ -1,19 +1,20 @@
 using Microsoft.TeamFoundation.Build.WebApi;
+using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsFindBuildDefinition_v1 : INoxCliAddin
+public class AzDevOpsQueueBuildDefinition_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/find-build-definition@v1",
+            Name = "azdevops/queue-build-definition@v1",
             Author = "Jan Schutte",
-            Description = "Find an Azure Devops Build Definition",
+            Description = "Queue an Azure Devops Build Definition for execution.",
 
             Inputs =
             {
@@ -30,40 +31,29 @@ public class AzDevopsFindBuildDefinition_v1 : INoxCliAddin
                     IsRequired = true
                 },
                 
-                ["build-name"] = new NoxActionInput { 
-                    Id = "project-name", 
-                    Description = "The DevOps build definition name",
-                    Default = string.Empty,
+                ["build-definition-id"] = new NoxActionInput { 
+                    Id = "build-definition-id", 
+                    Description = "The DevOps Build Definition Identifier",
+                    Default = 0,
                     IsRequired = true
-                },
-            },
-
-            Outputs =
-            {
-                ["is-found"] = new NoxActionOutput {
-                    Id =  "is-found",
-                    Description = "Indicates if the build definition exists"
-                },
-                
-                ["build-definition-id"] = new NoxActionOutput {
-                    Id = "build-id",
-                    Description = "The Id of the Azure devops build. Will return null if it does not exist.",
-                },
+                }
             }
         };
     }
 
     private BuildHttpClient? _buildClient;
+    private ProjectHttpClient? _projectClient;
     private Guid? _projectId;
-    private string? _buildName;
+    private int? _buildId;
     private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectId = inputs.Value<Guid>("project-id");
-        _buildName = inputs.Value<string>("build-name");
+        _buildId = inputs.Value<int>("build-definition-id");
         _buildClient = await connection!.GetClientAsync<BuildHttpClient>();
+        _projectClient = await connection!.GetClientAsync<ProjectHttpClient>();
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -74,26 +64,38 @@ public class AzDevopsFindBuildDefinition_v1 : INoxCliAddin
         ctx.SetState(ActionState.Error);
 
         if (_buildClient == null ||
+            _projectClient == null ||
             _projectId == null ||
             _projectId == Guid.Empty ||
-            string.IsNullOrEmpty(_buildName))
+            _buildId is null or 0)
         {
-            ctx.SetErrorMessage("The devops find-build-definition action was not initialized");
+            ctx.SetErrorMessage("The devops queue-build-definition action was not initialized");
         }
         else
         {
             try
             {
-                var buildDefinitions = await _buildClient.GetDefinitionsAsync(_projectId.Value);
-                var build = buildDefinitions.FirstOrDefault(bd => String.Equals(bd.Name, _buildName, StringComparison.OrdinalIgnoreCase));
-                outputs["is-found"] = false;
-                if (build != null)
+                var project = await _projectClient.GetProject(_projectId.Value.ToString());
+                if (project == null)
                 {
-                    outputs["is-found"] = true;
-                    outputs["build-definition-id"] = build.Id;
+                    ctx.SetErrorMessage("Unable to find project in DevOps");
+                }
+                else
+                {
+                    var buildDefinition = await _buildClient.GetDefinitionAsync(_projectId.Value, _buildId.Value);
+                    if (buildDefinition != null)
+                    {
+                        var build = new Build
+                        {
+                            Definition = buildDefinition,
+                            Project = project
+                        };
+                        await _buildClient.QueueBuildAsync(build);
+                    }
+                
+                    ctx.SetState(ActionState.Success);    
                 }
                 
-                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {

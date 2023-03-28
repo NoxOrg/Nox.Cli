@@ -54,6 +54,15 @@
     <None Update="Templates\terraform\heimdall-ms-microservice-uat-vars.tf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Templates\pipelines\nox-project-pipeline\azure-pipelines.yml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Templates\pipelines\nox-project-pipeline\global.yaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Templates\pipelines\nox-project-pipeline\preprod-we-test.yaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\.dockerignore">
@@ -62,5 +71,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Helpers" />
+    <Folder Include="Templates\helmchart" />
   </ItemGroup>
 </Project>

@@ -70,7 +70,7 @@ public class FileFindFile_v1 : INoxCliAddin
                 var fullPath = Path.GetFullPath(_path);
                 if (!Directory.Exists(fullPath))
                 {
-                    ctx.SetErrorMessage($"Directory {fullPath} does not exist!");
+                    outputs["is-found"] = false;
                 }
                 else
                 {
@@ -84,8 +84,8 @@ public class FileFindFile_v1 : INoxCliAddin
                         outputs["is-found"] = false;
                     }
 
-                    ctx.SetState(ActionState.Success);
                 }
+                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {

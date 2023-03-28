@@ -59,6 +59,8 @@ public class FileWriteText_v1: INoxCliAddin
             try
             {
                 var fullPath = Path.GetFullPath(_path);
+                var directory = Path.GetDirectoryName(fullPath);
+                Directory.CreateDirectory(directory);
                 await System.IO.File.WriteAllTextAsync(fullPath, _textToWrite);
                 ctx.SetState(ActionState.Success);    
             }

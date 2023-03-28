@@ -13,7 +13,7 @@ public class AzDevopsCreateBuildDefinition_v1 : INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/clone-build-definition@v1",
+            Name = "azdevops/create-build-definition@v1",
             Author = "Jan Schutte",
             Description = "Create an Azure Devops Build Definition from a json build definition file",
 
@@ -61,6 +61,14 @@ public class AzDevopsCreateBuildDefinition_v1 : INoxCliAddin
                     Default = string.Empty,
                     IsRequired = true
                 }
+            },
+
+            Outputs =
+            {
+                ["build-definition-id"] = new NoxActionOutput {
+                    Id = "build-id",
+                    Description = "The Id of the Azure devops build. Will return null if it does not exist.",
+                },
             }
         };
     }
@@ -105,7 +113,7 @@ public class AzDevopsCreateBuildDefinition_v1 : INoxCliAddin
             string.IsNullOrEmpty(_buildName) ||
             string.IsNullOrEmpty(_agentPool))
         {
-            ctx.SetErrorMessage("The devops clone-build-definition action was not initialized");
+            ctx.SetErrorMessage("The devops create-build-definition action was not initialized");
         }
         else
         {
@@ -128,7 +136,7 @@ public class AzDevopsCreateBuildDefinition_v1 : INoxCliAddin
                         Url = new Uri(repo.Url),
                         Type = RepositoryTypes.TfsGit
                     },
-                    Name = repo.Name,
+                    Name = _buildName,
                     Queue = new AgentPoolQueue
                     {
                         Name = _agentPool
@@ -139,7 +147,8 @@ public class AzDevopsCreateBuildDefinition_v1 : INoxCliAddin
                 
                 newBuild.Triggers.Add(ciTrigger);
                 
-                await _buildClient.CreateDefinitionAsync(newBuild, _projectId.Value);
+                var build = await _buildClient.CreateDefinitionAsync(newBuild, _projectId.Value);
+                outputs["build-definition-id"] = build.Id;
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

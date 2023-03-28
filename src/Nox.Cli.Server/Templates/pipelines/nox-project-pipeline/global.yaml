@@ -1,0 +1,20 @@
+variables:
+  # SonarCloud related
+  - name: SonarcloudProjectKey
+    value: 'CHANGE_ME'
+  - name: SourceFolder
+    value: 'CHANGE_ME\CHANGE_ME'
+
+  # ACR repo name | Don't rename the variable because it's linked with CD template
+  - name: service_name
+    value: '<project-dash-name>'
+
+  # Docker related
+  - name: buildContext
+    value: './src'
+  - name: dockerfilePath
+    value: '$(Build.SourcesDirectory)/src/Dockerfile'
+
+  # Helm Chart name
+  - name: helm_chart_name
+    value: <project-dash-name>
