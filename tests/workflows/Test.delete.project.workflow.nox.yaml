@@ -41,7 +41,7 @@ jobs:
         uses: azdevops/get-project@v1
         with:
           connection: ${{ steps.connect-server.outputs.connection }}
-          project-name: Nox.SampleCurrency
+          project-name: Nox.Demo
         display:
           success: Got the DevOps project
           error: There was a problem getting the project (${{ steps.get-project.error-message }})

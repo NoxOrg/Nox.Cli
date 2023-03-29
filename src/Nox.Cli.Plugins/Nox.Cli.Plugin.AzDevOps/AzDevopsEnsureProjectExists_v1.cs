@@ -168,7 +168,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
             Name = _projectName,
             Description = _projectDescription,
             Capabilities = capabilities,
-            Visibility = ProjectVisibility.Private
+            Visibility = ProjectVisibility.Private,
         };
 
         TeamProject project = null!;

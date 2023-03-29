@@ -42,6 +42,13 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
                     Default = "main",
                     IsRequired = false
                 },
+                ["do-initialize"] = new NoxActionInput
+                {
+                    Id = "do-initialize",
+                    Description = "When this flag is set to true, the repo will be initialized with a README.md placeholder file.",
+                    Default = false,
+                    IsRequired = false
+                }
             },
 
             Outputs =
@@ -62,10 +69,11 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
         };
     }
 
-    private GitHttpClient? _repoClient;
+    private GitHttpClient? _gitClient;
     private string? _repoName;
     private Guid? _projectId;
     private string? _defaultBranch;
+    private bool? _doInit;
     private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
@@ -74,7 +82,8 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
         _projectId = inputs.Value<Guid>("project-id");
         _repoName = inputs.Value<string>("repository-name");
         _defaultBranch = inputs.ValueOrDefault<string>("default-branch", this);
-        _repoClient = await connection!.GetClientAsync<GitHttpClient>();
+        _doInit = inputs.ValueOrDefault<bool>("do-initialize", this);
+        _gitClient = await connection!.GetClientAsync<GitHttpClient>();
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -84,7 +93,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_repoClient == null || string.IsNullOrEmpty(_repoName) || _projectId == null || _projectId == Guid.Empty)
+        if (_gitClient == null || string.IsNullOrEmpty(_repoName) || _projectId == null || _projectId == Guid.Empty)
         {
             ctx.SetErrorMessage("The devops ensure-repo-exists action was not initialized");
         }
@@ -92,7 +101,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
         {
             try
             {
-                var repo = await _repoClient.GetRepositoryAsync(_projectId.Value, _repoName);
+                var repo = await _gitClient.GetRepositoryAsync(_projectId.Value, _repoName);
                 if(repo != null)
                 {
                     outputs["repository-id"] = repo.Id;
@@ -127,7 +136,7 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
-        if (!_isServerContext) _repoClient?.Dispose();
+        if (!_isServerContext) _gitClient?.Dispose();
         return Task.CompletedTask;
     }
     
@@ -145,7 +154,12 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
 
         try
         {
-            repo = await _repoClient!.CreateRepositoryAsync(repo);
+            repo = await _gitClient!.CreateRepositoryAsync(repo);
+            if (_doInit == true)
+            {
+                var commit = CreateCommit();
+                var pushId = await CreatePush(repo.Id, _defaultBranch!, commit);    
+            }
             return repo;
         }
         catch (Exception ex)
@@ -154,6 +168,56 @@ public class AzDevopsEnsureRepoExists_v1 : INoxCliAddin
         }
 
         return null;
+    }
+    
+    private GitCommitRef CreateCommit()
+    {
+        var changes = GetInitFiles();
+        var result = new GitCommitRef
+        {
+            Comment = $"Nox Cli commit {DateTime.Now:yyyy-MM-dd HH:mm:ss}",
+            Changes = changes
+        };
+        return result;
+    }
+
+    private async Task<int> CreatePush(Guid repoId, string branchName, GitCommitRef commit)
+    {
+        //var serverBranches = await _gitClient!.GetRefsAsync(_repoId!.Value.ToString(), filter: $"heads/{branchName}");
+        //if (serverBranches.Count != 1) throw new NoxException($"Unable to locate branch {branchName}");
+        
+        var branch = new GitRefUpdate
+        {
+            Name = $"refs/heads/{branchName}",
+            RepositoryId = repoId,
+            OldObjectId = "0000000000000000000000000000000000000000",
+        };
+                    
+        var push = await _gitClient!.CreatePushAsync(new GitPush
+        {
+            RefUpdates = new [] { branch },
+            Commits = new []{ commit },
+        }, repoId);
+        return push.PushId;
+    }
+
+    private List<GitChange> GetInitFiles()
+    {
+        var result = new List<GitChange>();
+        result.Add(new GitChange
+        {
+            ChangeType = VersionControlChangeType.Add,
+            Item = new GitItem
+            {
+                Path = "/README.md",
+            },
+            NewContent = new ItemContent
+            {
+                Content = $"Placeholder for Repository {_repoName} readme file.",
+                ContentType = ItemContentType.RawText
+            }
+        });
+        return result;
     }
 }
 

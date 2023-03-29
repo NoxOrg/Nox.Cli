@@ -33,9 +33,9 @@ public class ProjectGetAdminUserNames_v1: INoxCliAddin
 
             Outputs =
             {
-                ["team-admin-user-names"] = new NoxActionOutput
+                ["user-names"] = new NoxActionOutput
                 {
-                    Id = "team-admin-user-names",
+                    Id = "user-names",
                     Description = "The resulting concatenated string of admin team member usernames."
                 },
             }
@@ -84,7 +84,7 @@ public class ProjectGetAdminUserNames_v1: INoxCliAddin
                     }
                 }
 
-                outputs["team-admin-user-names"] = result!;
+                outputs["user-names"] = result!;
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

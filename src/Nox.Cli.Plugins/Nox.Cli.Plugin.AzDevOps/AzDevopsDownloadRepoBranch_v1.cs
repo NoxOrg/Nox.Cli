@@ -45,6 +45,10 @@ public class AzDevopsDownloadRepoBranch_v1 : INoxCliAddin
                     Id = "local-repository-path",
                     Description = "The path to the locally downloaded repository",
                 },
+                ["download-date-time"] = new NoxActionOutput {
+                    Id = "download-date-time",
+                    Description = "The date time this repo was downloaded. This is typically the reference-date-time input of azdevops/merge-folder@v1",
+                },
             }
         };
     }
@@ -85,6 +89,7 @@ public class AzDevopsDownloadRepoBranch_v1 : INoxCliAddin
                     var extractFolder = UnzipRepo(repoId, zipFilePath, repoPath);
                     File.Delete(zipFilePath);
                     outputs["local-repository-path"] = extractFolder;
+                    outputs["download-date-time"] = DateTime.Now;
                     ctx.SetState(ActionState.Success);    
                 }
                 else

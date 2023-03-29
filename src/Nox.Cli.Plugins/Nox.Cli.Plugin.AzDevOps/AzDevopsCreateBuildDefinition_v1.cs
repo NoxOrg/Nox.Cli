@@ -1,5 +1,6 @@
 using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
+using Microsoft.VisualStudio.Services.ServiceEndpoints.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;

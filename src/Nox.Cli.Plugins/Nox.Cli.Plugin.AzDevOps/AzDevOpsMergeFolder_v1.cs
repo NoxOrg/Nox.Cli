@@ -43,6 +43,13 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
                     Description = "The local path to commit to the repository (All files and folders will be added and committed)",
                     Default = string.Empty,
                     IsRequired = true
+                },
+                ["reference-date-time"] = new NoxActionInput
+                {
+                    Id = "reference-date-time",
+                    Description = "This date time will be used to compare with files in the repo in order to determine which files are edits and which files are new additions. Typically the download-date-time output from azdevops/download-repo-branch@v1",
+                    Default = DateTime.Now,
+                    IsRequired = false
                 }
             },
 
@@ -60,6 +67,7 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
     private string? _sourcePath;
     private Guid? _repoId;
     private string? _branchName;
+    private DateTime? _refDateTime;
     private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
@@ -68,6 +76,7 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
         _repoId = inputs.Value<Guid>("repository-id");
         _sourcePath = inputs.Value<string>("source-path");
         _branchName = inputs.Value<string>("branch-name");
+        _refDateTime = inputs.ValueOrDefault<DateTime>("reference-date-time", this);
         _gitClient = await connection!.GetClientAsync<GitHttpClient>();
     }
 
@@ -81,6 +90,7 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
         if (_gitClient == null || 
             _repoId == null || 
             _repoId == Guid.Empty || 
+            _refDateTime == null ||
             string.IsNullOrEmpty(_sourcePath) ||
             string.IsNullOrEmpty(_branchName))
         {
@@ -195,9 +205,13 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
         {
             foreach (var file in files)
             {
+                var changeType = VersionControlChangeType.Edit;
+                //If the file was created in the last minute it has to be an Add
+                var fileInfo = new FileInfo(file);
+                if (fileInfo.CreationTime > _refDateTime) changeType = VersionControlChangeType.Add;
                 result.Add(new GitChange
                 {
-                    ChangeType = VersionControlChangeType.Edit,
+                    ChangeType = changeType,
                     Item = new GitItem
                     {
                         Path = $"{relativePath}/{Path.GetFileName(file)}"

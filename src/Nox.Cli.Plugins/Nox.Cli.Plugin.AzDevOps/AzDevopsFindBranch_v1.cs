@@ -75,9 +75,15 @@ public class AzDevopsFindBranch_v1 : INoxCliAddin
         {
             try
             {
-                var repoId = Guid.NewGuid();
                 var branches = await _gitClient.GetBranchesAsync(_repoId.Value.ToString());
-                outputs["is-found"] = branches.Any(b => String.Equals(b.Name, _branchName, StringComparison.OrdinalIgnoreCase));
+                if (branches == null)
+                {
+                    outputs["is-found"] = false;    
+                }
+                else
+                {
+                    outputs["is-found"] = branches.Any(b => String.Equals(b.Name, _branchName, StringComparison.OrdinalIgnoreCase));    
+                }
             }
             catch
             {

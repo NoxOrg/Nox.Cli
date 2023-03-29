@@ -87,6 +87,7 @@ public class AzDevOpsCreateBranch_v1 : INoxCliAddin
         {
             try
             {
+                
                 //Get the source branch object id
                 var sourceBranches = await _gitClient.GetRefsAsync(_repoId!.Value.ToString(), filter: $"heads/{_fromBranch}");
                 if (sourceBranches.Count != 1)

@@ -9,7 +9,8 @@ namespace Nox.Cli.Variables;
 
 public class ServerVariableProvider: IServerVariableProvider
 {
-    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    //private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>\b(vars|project|steps|server|env|runner)\b[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private readonly IManifestConfiguration _manifest;
     private readonly List<ServerVariable> _variables;
@@ -118,7 +119,7 @@ public class ServerVariableProvider: IServerVariableProvider
                 if (match.Success)
                 {
                     //Find the variable value
-                    var lookupValue = LookupValue(match.Groups[1].Value);
+                    var lookupValue = LookupValue(match.Groups[2].Value);
                     if (lookupValue != null) item.Value = lookupValue;
                 }
             }
