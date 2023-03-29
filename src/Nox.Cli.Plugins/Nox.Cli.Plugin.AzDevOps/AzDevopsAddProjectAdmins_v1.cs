@@ -1,3 +1,4 @@
+using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.VisualStudio.Services.Graph.Client;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
@@ -24,11 +25,11 @@ public class AzDevopsAddProjectAdmins_v1 : INoxCliAddin
                     Default = new VssConnection(new Uri("https://localhost"), null),
                     IsRequired = true
                 },
-                ["project-name"] = new NoxActionInput
+                ["project-id"] = new NoxActionInput
                 {
-                    Id = "project-name",
-                    Description = "The DevOps project name",
-                    Default = string.Empty,
+                    Id = "project-id",
+                    Description = "The DevOps project Id",
+                    Default = Guid.Empty,
                     IsRequired = true
                 },
                 ["admins"] = new NoxActionInput
@@ -41,16 +42,16 @@ public class AzDevopsAddProjectAdmins_v1 : INoxCliAddin
             }
         };
     }
-    
+
     private GraphHttpClient? _graphClient;
-    private string? _projectName;
+    private Guid? _projectId;
     private string? _admins;
     private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string, object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
-        _projectName = inputs.Value<string>("project-name");
+        _projectId = inputs.Value<Guid>("project-id");
         _admins = inputs.Value<string>("admins");
         _graphClient = await connection!.GetClientAsync<GraphHttpClient>();
     }
@@ -61,9 +62,10 @@ public class AzDevopsAddProjectAdmins_v1 : INoxCliAddin
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
-
+        
         if (_graphClient == null || 
-            string.IsNullOrEmpty(_projectName) ||  
+            _projectId == null ||
+            _projectId == Guid.Empty ||
             string.IsNullOrEmpty(_admins))
         {
             ctx.SetErrorMessage("The devops add-project-admins action was not initialized");
@@ -81,8 +83,6 @@ public class AzDevopsAddProjectAdmins_v1 : INoxCliAddin
                 {
                     if (await AddAdmins(ctx, adminList)) ctx.SetState(ActionState.Success);
                 }
-                
-                
             }
             catch (Exception ex)
             {
@@ -101,39 +101,28 @@ public class AzDevopsAddProjectAdmins_v1 : INoxCliAddin
 
     private async Task<bool> AddAdmins(INoxWorkflowContext ctx, List<string> usernames)
     {
-        var tries = 0;
-
         List<GraphGroup> graphGroups = new();
 
         GraphGroup? graphGroup = null;
 
-        while (tries++ <= 2)
+        var projectDescriptor = await _graphClient!.GetDescriptorAsync(_projectId!.Value);
+        var groupsInGraph = await _graphClient!.ListGroupsAsync(projectDescriptor.Value);
+
+        foreach (var group in groupsInGraph.GraphGroups)
         {
-            var groupsInGraph = await _graphClient!.ListGroupsAsync();
-
-            while (groupsInGraph.ContinuationToken is not null)
-            {
-                foreach (var group in groupsInGraph.GraphGroups)
-                {
-                    if (group.PrincipalName.StartsWith($"[{_projectName}]", StringComparison.OrdinalIgnoreCase))
-                    {
-                        graphGroups.Add(group);
-                    }
-                }
-                groupsInGraph = await _graphClient.ListGroupsAsync(continuationToken: groupsInGraph.ContinuationToken.FirstOrDefault());
-            }
-
-            graphGroup = graphGroups.FirstOrDefault(g => g.PrincipalName.Contains($"\\Project Administrators", StringComparison.OrdinalIgnoreCase));
-
-            if (graphGroup == null)
-            {
-                // try again;
-                await Task.Delay(3000);
-                continue;
-            }
-
-            break;
+            graphGroups.Add(group);
         }
+            
+        while (groupsInGraph.ContinuationToken is not null)
+        {
+            groupsInGraph = await _graphClient.ListGroupsAsync(continuationToken: groupsInGraph.ContinuationToken.FirstOrDefault());
+            foreach (var group in groupsInGraph.GraphGroups)
+            {
+                graphGroups.Add(group);
+            }
+        }
+
+        graphGroup = graphGroups.FirstOrDefault(g => g.PrincipalName.Contains($"\\Project Administrators", StringComparison.OrdinalIgnoreCase));
 
         if (graphGroup == null || _graphClient == null)
         {

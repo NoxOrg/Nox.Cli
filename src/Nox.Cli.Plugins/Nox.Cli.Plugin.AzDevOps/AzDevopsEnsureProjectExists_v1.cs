@@ -89,13 +89,13 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
             try
             {
                 var project = await _projectClient.GetProject(_projectName);
-                
+
                 outputs["project-id"] = project.Id;
                 outputs["success-message"] = $"Found existing project {_projectName} ({project.Id})";
 
                 ctx.SetState(ActionState.Success);
             }
-            catch
+            catch (ProjectDoesNotExistWithNameException)
             {
                 try
                 {
@@ -109,10 +109,14 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
                         ctx.SetState(ActionState.Success);
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     ctx.SetErrorMessage(ex.Message);
                 }
+            }
+            catch (Exception ex)
+            {
+                ctx.SetErrorMessage(ex.Message);
             }
         }
 

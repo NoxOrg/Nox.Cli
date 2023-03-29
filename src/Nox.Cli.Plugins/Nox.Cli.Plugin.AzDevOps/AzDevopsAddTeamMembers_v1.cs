@@ -25,11 +25,11 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
                     Default = new VssConnection(new Uri("https://localhost"), null),
                     IsRequired = true
                 },
-                ["project-name"] = new NoxActionInput
+                ["project-id"] = new NoxActionInput
                 {
-                    Id = "project-name",
-                    Description = "The DevOps project name",
-                    Default = string.Empty,
+                    Id = "project-id",
+                    Description = "The DevOps project Id",
+                    Default = Guid.Empty,
                     IsRequired = true
                 },
                 ["team-members"] = new NoxActionInput
@@ -44,14 +44,14 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
     }
     
     private GraphHttpClient? _graphClient;
-    private string? _projectName;
+    private Guid? _projectId;
     private string? _members;
     private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string, object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
-        _projectName = inputs.Value<string>("project-name");
+        _projectId = inputs.Value<Guid>("project-id");
         _members = inputs.Value<string>("team-members");
         _graphClient = await connection!.GetClientAsync<GraphHttpClient>();
     }
@@ -64,7 +64,8 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
         ctx.SetState(ActionState.Error);
 
         if (_graphClient == null || 
-            string.IsNullOrEmpty(_projectName) || 
+            _projectId == null ||
+            _projectId == Guid.Empty ||
             string.IsNullOrEmpty(_members))
         {
             ctx.SetErrorMessage("The devops add-team-members action was not initialized");
@@ -93,44 +94,33 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
 
     private async Task<bool> AddTeamMembers(INoxWorkflowContext ctx)
     {
-        var tries = 0;
-
         List<GraphGroup> graphGroups = new();
 
         GraphGroup? graphGroup = null;
 
-        while (tries++ <= 2)
+        var projectDescriptor = await _graphClient!.GetDescriptorAsync(_projectId!.Value);
+        var groupsInGraph = await _graphClient!.ListGroupsAsync(projectDescriptor.Value);
+        
+        foreach (var group in groupsInGraph.GraphGroups)
         {
-            var groupsInGraph = await _graphClient!.ListGroupsAsync();
-
-            while (groupsInGraph.ContinuationToken is not null)
-            {
-                foreach (var group in groupsInGraph.GraphGroups)
-                {
-                    if (group.PrincipalName.StartsWith($"[{_projectName}]", StringComparison.OrdinalIgnoreCase))
-                    {
-                        graphGroups.Add(group);
-                    }
-                }
-                groupsInGraph = await _graphClient.ListGroupsAsync(continuationToken: groupsInGraph.ContinuationToken.FirstOrDefault());
-            }
-
-            graphGroup = graphGroups.FirstOrDefault(g => g.PrincipalName.Contains($"\\{_projectName} Team", StringComparison.OrdinalIgnoreCase));
-
-            if (graphGroup == null)
-            {
-                // try again;
-                await Task.Delay(3000);
-                continue;
-            }
-
-            break;
+            graphGroups.Add(group);
         }
 
+        while (groupsInGraph.ContinuationToken is not null)
+        {
+            groupsInGraph = await _graphClient.ListGroupsAsync(continuationToken: groupsInGraph.ContinuationToken.FirstOrDefault());
+            foreach (var group in groupsInGraph.GraphGroups)
+            {
+                graphGroups.Add(group);
+            }
+        }
+
+        graphGroup = graphGroups.FirstOrDefault(g => g.Description.Contains($"default", StringComparison.OrdinalIgnoreCase) && g.Description.Contains($"project team", StringComparison.OrdinalIgnoreCase));
+        
         if (graphGroup == null || _graphClient == null)
         {
             ctx.SetState(ActionState.Error);
-            ctx.SetErrorMessage($"Unable to find group '\\{_projectName} Team' that should automatically have been created with the project");
+            ctx.SetErrorMessage($"Unable to find the default project Team' that should automatically have been created with the project");
             return false;
         }
  

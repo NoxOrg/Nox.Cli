@@ -96,7 +96,7 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
                 }
                 else
                 {
-                    ctx.SetErrorMessage($"Project creation operation failed: {completedOperation.ResultMessage}");
+                    ctx.SetErrorMessage($"Project delete operation failed: {completedOperation.ResultMessage}");
                 }
                 
                 
