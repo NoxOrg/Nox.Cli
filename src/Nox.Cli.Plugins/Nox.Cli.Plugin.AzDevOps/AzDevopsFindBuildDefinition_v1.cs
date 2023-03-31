@@ -84,9 +84,9 @@ public class AzDevopsFindBuildDefinition_v1 : INoxCliAddin
         {
             try
             {
+                outputs["is-found"] = false;
                 var buildDefinitions = await _buildClient.GetDefinitionsAsync(_projectId.Value);
                 var build = buildDefinitions.FirstOrDefault(bd => String.Equals(bd.Name, _buildName, StringComparison.OrdinalIgnoreCase));
-                outputs["is-found"] = false;
                 if (build != null)
                 {
                     outputs["is-found"] = true;

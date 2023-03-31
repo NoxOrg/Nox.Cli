@@ -99,6 +99,7 @@ public class AzDevopsCreateBuildDefinition_v1 : INoxCliAddin
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        
         _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 

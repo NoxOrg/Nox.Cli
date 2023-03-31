@@ -92,7 +92,7 @@ public class AzDevOpsQueueBuildDefinition_v1 : INoxCliAddin
                         };
                         await _buildClient.QueueBuildAsync(build);
                     }
-                
+                    
                     ctx.SetState(ActionState.Success);    
                 }
                 
