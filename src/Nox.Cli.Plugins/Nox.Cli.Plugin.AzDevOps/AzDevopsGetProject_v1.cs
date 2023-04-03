@@ -1,4 +1,5 @@
 using Microsoft.TeamFoundation.Core.WebApi;
+using Microsoft.VisualStudio.Services.ExtensionManagement.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
@@ -51,6 +52,7 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
         var connection = inputs.Value<VssConnection>("connection");
         _projectName = inputs.Value<string>("project-name");
         _projectClient = await connection!.GetClientAsync<ProjectHttpClient>();
+        
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)

@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Plugins.AzDevops.Helpers;
 using Nox.Core.Exceptions;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -205,6 +206,26 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
         {
             foreach (var file in files)
             {
+                ItemContent itemContent;
+                var fileExt = Path.GetExtension(file);
+                if (FileExtensionHelper.IsBinaryFile(fileExt))
+                {
+                    var fileContent = File.ReadAllBytes(file);
+                    itemContent = new ItemContent
+                    {
+                        Content = Convert.ToBase64String(fileContent),
+                        ContentType = ItemContentType.Base64Encoded
+                    };
+                }
+                else
+                {
+                    itemContent = new ItemContent
+                    {
+                        Content = File.ReadAllText(file),
+                        ContentType = ItemContentType.RawText
+                    };
+                }
+                
                 var changeType = VersionControlChangeType.Edit;
                 //If the file was created in the last minute it has to be an Add
                 var fileInfo = new FileInfo(file);
@@ -216,11 +237,7 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
                     {
                         Path = $"{relativePath}/{Path.GetFileName(file)}"
                     },
-                    NewContent = new ItemContent
-                    {
-                        Content = File.ReadAllText(file),
-                        ContentType = ItemContentType.RawText
-                    }
+                    NewContent = itemContent
                 });
             }    
         }

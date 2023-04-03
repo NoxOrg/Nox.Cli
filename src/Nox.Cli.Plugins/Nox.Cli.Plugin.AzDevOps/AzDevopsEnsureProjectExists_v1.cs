@@ -1,8 +1,13 @@
+using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.Core.WebApi;
+using Microsoft.VisualStudio.Services.ExtensionManagement.WebApi;
 using Microsoft.VisualStudio.Services.Operations;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
+using RestSharp;
+using RestSharp.Authenticators;
+using RestSharp.Authenticators.OAuth2;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -89,10 +94,8 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
             try
             {
                 var project = await _projectClient.GetProject(_projectName);
-
                 outputs["project-id"] = project.Id;
                 outputs["success-message"] = $"Found existing project {_projectName} ({project.Id})";
-
                 ctx.SetState(ActionState.Success);
             }
             catch (ProjectDoesNotExistWithNameException)
@@ -137,7 +140,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
     private async Task<TeamProject?> CreateProjectAsync(INoxWorkflowContext ctx)
     {
         var processName = "Agile";
-
+        
         // Setup version control properties
 
         var versionControlProperties = new Dictionary<string, string>
@@ -161,7 +164,6 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
         var capabilities = new Dictionary<string, Dictionary<string, string>>
         {
             [TeamProjectCapabilitiesConstants.VersionControlCapabilityName] = versionControlProperties,
-
             [TeamProjectCapabilitiesConstants.ProcessTemplateCapabilityName] = processProperties
         };
 
@@ -174,7 +176,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
             Capabilities = capabilities,
             Visibility = ProjectVisibility.Private,
         };
-
+        
         TeamProject project = null!;
         try
         {
@@ -231,5 +233,17 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
             }
         }
     }
+
+    // private async Task<bool> UnSetEnforceJobAuthScope(string basePath)
+    // {
+    //     var result = false;
+    //     var client = new RestClient($"{basePath}/_apis/Contribution/HierarchyQuery");
+    //     var request = new RestRequest() { Method = Method.Post };
+    //     request.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator();
+    //     request.AddStringBody("{\"contributionIds\":[\"ms.vss-build-web.pipelines-general-settings-data-provider\"],\"dataProviderContext\":{\"properties\":{\"enforceJobAuthScope\":\"false\",\"sourcePage\":{\"url\":\"https://dev.azure.com/iwgplc/Nox.Cli.Scripts/_settings/settings\",\"routeId\":\"ms.vss-admin-web.project-admin-hub-route\",\"routeValues\":{\"project\":\"Nox.Cli.Scripts\",\"adminPivot\":\"settings\",\"controller\":\"ContributedPage\",\"action\":\"Execute\",\"serviceHost\":\"9c853a99-f476-4792-bcc9-ec78ef3fe39f (iwgplc)\"}}}}}", DataFormat.Json);
+    //     request.AddHeader("Accept", "application/json");
+    //     var response = await client.ExecuteAsync(request);
+    //     return result;
+    // }
 }
 

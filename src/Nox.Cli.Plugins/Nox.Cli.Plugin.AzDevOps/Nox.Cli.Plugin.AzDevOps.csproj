@@ -8,12 +8,19 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.170.0" />
+      <PackageReference Include="Microsoft.VisualStudio.Services.ExtensionManagement.WebApi" Version="16.170.0" />
       <PackageReference Include="Microsoft.VisualStudio.Services.ServiceEndpoints.WebApi" Version="16.170.0" />
       <PackageReference Include="Nox.Core" Version="6.0.41" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="RestSharp">
+        <HintPath>..\..\..\..\..\..\.nuget\packages\restsharp\109.0.1\lib\net7.0\RestSharp.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>
