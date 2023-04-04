@@ -6,8 +6,8 @@ public static class FileExtensionHelper
     {
         switch (fileExtension.ToLower())
         {
-            case "zip":
-            case "tgz":
+            case ".zip":
+            case ".tgz":
                 return true;
             default:
                 return false;

@@ -138,7 +138,7 @@ public class AzDevopsDownloadRepoBranch_v1 : INoxCliAddin
         if (Directory.Exists(extractFolder)) Directory.Delete(extractFolder);
         var THRESHOLD_ENTRIES = 10000;
         var THRESHOLD_SIZE = 10 * 1024 * 1024; // 10 MB
-        double THRESHOLD_RATIO = 10;
+        double THRESHOLD_RATIO = 50;
         var totalSizeArchive = 0;
         var totalEntryArchive = 0;
 

@@ -88,7 +88,7 @@ stages:
         displayName: 'Deployment'
         pool:
           name: $(poolName)
-        environment: nox-server-test-we
+        environment: <project-dash-name>-we
         variables:
           - template: pipeline/variables/preprod-we-test.yaml
           - template: variables/APPS_EU_PLATFORM_N_WE.yml@heimdallTemplates

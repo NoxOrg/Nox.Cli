@@ -6,7 +6,7 @@ using DefinitionResourceReference = Microsoft.TeamFoundation.Build.WebApi.Defini
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzDevopsAuthorizeBuildDefinitionEndpoints_v1 : INoxCliAddin
+public class AzDevopsAuthorizeBuildDefinition_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
@@ -53,6 +53,7 @@ public class AzDevopsAuthorizeBuildDefinitionEndpoints_v1 : INoxCliAddin
         _projectId = inputs.Value<Guid>("project-id");
         _buildId = inputs.Value<int>("build-definition-id");
         _buildClient = await connection!.GetClientAsync<BuildHttpClient>();
+        
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -81,7 +82,7 @@ public class AzDevopsAuthorizeBuildDefinitionEndpoints_v1 : INoxCliAddin
                 else
                 {
                     var resources = await _buildClient.GetDefinitionResourcesAsync(_projectId.Value, _buildId.Value);
-                    var unAuths = resources.Where(r => !r.Authorized && r.Type == "endpoint").ToArray();
+                    var unAuths = resources.Where(r => !r.Authorized).ToArray();
                     if (unAuths.Any())
                     {
                         foreach (var unAuth in unAuths)
@@ -91,6 +92,10 @@ public class AzDevopsAuthorizeBuildDefinitionEndpoints_v1 : INoxCliAddin
 
                         await _buildClient.AuthorizeDefinitionResourcesAsync(unAuths, _projectId.Value, _buildId.Value);
                     }
+
+                    
+                    
+                    ctx.SetState(ActionState.Success);
                 }
             }
             catch (Exception ex)

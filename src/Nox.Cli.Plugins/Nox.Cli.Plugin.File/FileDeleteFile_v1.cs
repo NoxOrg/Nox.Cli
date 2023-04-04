@@ -48,15 +48,11 @@ public class FileDeleteFile_v1 : INoxCliAddin
             try
             {
                 var fullPath = Path.GetFullPath(_path);
-                if (!Directory.Exists(fullPath))
-                {
-                    ctx.SetErrorMessage($"Folder {fullPath} does not exist!");
-                }
-                else
+                if (Directory.Exists(fullPath))
                 {
                     System.IO.File.Delete(fullPath);
-                    ctx.SetState(ActionState.Success);
                 }
+                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {
