@@ -116,6 +116,17 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         string? formattedTaskDescription = null)
     {
         if (ctx.CurrentAction == null) return false;
+        
+        if (!ctx.CurrentAction.EvaluateIf())
+        {
+            if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
+            {
+                console.WriteLine();
+                console.MarkupLine(formattedTaskDescription);
+            }
+            console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} is false");
+            return true;
+        }
 
         var inputs = await ctx.GetInputVariables(ctx.CurrentAction);
 
@@ -130,17 +141,6 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                 console.MarkupLine($"  [bold mediumpurple3_1]{kv.Key}[/]: [indianred1]{kv.Value}[/]");
             }
             return false;
-        }
-
-        if (!ctx.CurrentAction.EvaluateIf())
-        {
-            if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
-            {
-                console.WriteLine();
-                console.MarkupLine(formattedTaskDescription);
-            }
-            console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} is false");
-            return true;
         }
 
         await ctx.CurrentAction.ActionProvider.BeginAsync(inputs);
@@ -209,7 +209,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} is false");
             return true;
         }
-        
+
         var executeResponse = await _serverIntegration.ExecuteTask(ctx.WorkflowId, ctx.CurrentAction);
         ctx.SetState(executeResponse.State);
         var outputs = executeResponse.Outputs;

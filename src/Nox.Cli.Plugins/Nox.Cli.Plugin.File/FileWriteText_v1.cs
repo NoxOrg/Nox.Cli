@@ -59,9 +59,13 @@ public class FileWriteText_v1: INoxCliAddin
             try
             {
                 var fullPath = Path.GetFullPath(_path);
+                var fileExists = System.IO.File.Exists(_path);
+                var fileCreateTime = DateTime.MinValue;
+                if (fileExists) fileCreateTime = System.IO.File.GetCreationTime(_path);
                 var directory = Path.GetDirectoryName(fullPath);
                 Directory.CreateDirectory(directory!);
                 await System.IO.File.WriteAllTextAsync(fullPath, _textToWrite);
+                if (fileExists) System.IO.File.SetCreationTime(_path, fileCreateTime);
                 ctx.SetState(ActionState.Success);    
             }
             catch (Exception ex)

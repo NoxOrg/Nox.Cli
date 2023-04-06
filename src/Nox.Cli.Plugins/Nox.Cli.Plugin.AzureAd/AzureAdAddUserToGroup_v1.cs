@@ -85,11 +85,38 @@ public class AzureAdAddUserToGroup_v1 : INoxCliAddin
         {
             try
             {
-                var request = new ReferenceCreate
+                var existingMembers = await _aadClient.Groups[_groupId].Members.GetAsync();
+                var members = new List<string>();
+                if (existingMembers!.Value!.All(em => em.Id != _userObjectId))
                 {
-                    OdataId = $"https://graph.microsoft.com/v1.0/directoryObjects/{_userObjectId}"
-                };
-                await _aadClient.Groups[_groupId].Members.Ref.PostAsync(request);
+                    members.Add($"https://graph.microsoft.com/v1.0/directoryObjects/{_userObjectId}");    
+                }
+
+                if (members.Count > 0)
+                {
+                    var request = new Group
+                    {
+                        AdditionalData = new Dictionary<string, object>
+                        {
+                            { "members@odata.bind", members }
+                        }
+                    };
+                    await _aadClient.Groups[_groupId].PatchAsync(request);    
+                }
+                
+
+                if (_isOwner == true)
+                {
+                    var existingOwners = await _aadClient.Groups[_groupId].Owners.GetAsync();
+                    if (existingOwners!.Value!.All(eo => eo.Id != _userObjectId))
+                    {
+                        var ownerRequest = new ReferenceCreate
+                        {
+                            OdataId = $"https://graph.microsoft.com/v1.0/users/{_userObjectId}"
+                        };
+                        await _aadClient.Groups[_groupId].Owners.Ref.PostAsync(ownerRequest);    
+                    }
+                }
                 
                 ctx.SetState(ActionState.Success);
             }

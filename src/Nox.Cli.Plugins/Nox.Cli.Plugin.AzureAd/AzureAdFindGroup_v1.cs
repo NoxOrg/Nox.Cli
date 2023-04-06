@@ -37,6 +37,11 @@ public class AzureAdFindGroup_v1 : INoxCliAddin
 
             Outputs =
             {
+                ["is-found"] = new NoxActionOutput
+                {
+                    Id = "is-found",
+                    Description = "Boolean indicating if the group was found or not.",
+                },
                 ["group-id"] = new NoxActionOutput
                 {
                     Id = "group-id",
@@ -70,6 +75,7 @@ public class AzureAdFindGroup_v1 : INoxCliAddin
         {
             try
             {
+                outputs["is-found"] = false;
                 var projectGroupName = _groupName.ToUpper();
 
                 var groups = await _aadClient.Groups.GetAsync((requestConfiguration) =>
@@ -80,6 +86,7 @@ public class AzureAdFindGroup_v1 : INoxCliAddin
                 
                 if (groups != null &&  groups.Value!.Count == 1)
                 {
+                    outputs["is-found"] = true;
                     outputs["group-id"] = groups.Value.First().Id!;
                 }
                 ctx.SetState(ActionState.Success);

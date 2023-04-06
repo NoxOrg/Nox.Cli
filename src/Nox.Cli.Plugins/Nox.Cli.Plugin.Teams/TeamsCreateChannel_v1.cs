@@ -1,5 +1,6 @@
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.ODataErrors;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
@@ -100,6 +101,10 @@ public class TeamsCreateChannel_v1: INoxCliAddin
                 var response = await _aadClient.Teams[_teamId].Channels.PostAsync(request);
                 if (response != null && !string.IsNullOrEmpty(response.Id)) outputs["channel-id"] = response.Id;
                 ctx.SetState(ActionState.Success);
+            }
+            catch (ODataError odataError)
+            {
+                ctx.SetErrorMessage(odataError.Error!.Message!);
             }
             catch (Exception ex)
             {

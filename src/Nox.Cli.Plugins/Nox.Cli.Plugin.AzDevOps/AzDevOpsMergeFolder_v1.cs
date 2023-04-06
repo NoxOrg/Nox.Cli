@@ -51,7 +51,15 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
                     Description = "This date time will be used to compare with files in the repo in order to determine which files are edits and which files are new additions. Typically the download-date-time output from azdevops/download-repo-branch@v1",
                     Default = DateTime.Now,
                     IsRequired = false
+                },
+                ["auto-complete"] = new NoxActionInput
+                {
+                    Id = "auto-complete",
+                    Description = "If this flag is set to true the Pull Request will be mark as completed.",
+                    Default = true,
+                    IsRequired = false
                 }
+                
             },
 
             Outputs =
@@ -69,6 +77,7 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
     private Guid? _repoId;
     private string? _branchName;
     private DateTime? _refDateTime;
+    private bool? _autoComplete;
     private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
@@ -78,6 +87,7 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
         _sourcePath = inputs.Value<string>("source-path");
         _branchName = inputs.Value<string>("branch-name");
         _refDateTime = inputs.ValueOrDefault<DateTime>("reference-date-time", this);
+        _autoComplete = inputs.ValueOrDefault<bool>("auto-complete", this);
         _gitClient = await connection!.GetClientAsync<GitHttpClient>();
     }
 
@@ -93,7 +103,8 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
             _repoId == Guid.Empty || 
             _refDateTime == null ||
             string.IsNullOrEmpty(_sourcePath) ||
-            string.IsNullOrEmpty(_branchName))
+            string.IsNullOrEmpty(_branchName) ||
+            _autoComplete == null)
         {
             ctx.SetErrorMessage("The devops merge-folder action was not initialized");
         }
@@ -105,7 +116,7 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
                 var pushId = await CreatePush(_branchName, commit);
                 var pr = await CreatePullRequest(_branchName);
                 Thread.Sleep(TimeSpan.FromSeconds(5));
-                await CompletePullRequest(pr);
+                if (_autoComplete == true) await CompletePullRequest(pr);
                 outputs["commit-id"] = pushId;
                 ctx.SetState(ActionState.Success);
             }

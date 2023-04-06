@@ -12,7 +12,7 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/delete-Project@v1",
+            Name = "azdevops/delete-project@v1",
             Author = "Jan Schutte",
             Description = "Delete an Azure Devops project",
 

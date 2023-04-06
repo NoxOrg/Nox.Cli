@@ -26,10 +26,17 @@ public class HclAddValues_v1 : INoxCliAddin
                     Default = string.Empty,
                     IsRequired = true
                 },
+                
+                ["path"] = new NoxActionInput {
+                    Id = "path",
+                    Description = "The path to the node where the values must be added.",
+                    Default = new Dictionary<string, string>(),
+                    IsRequired = true
+                },
 
                 ["values-to-add"] = new NoxActionInput {
                     Id = "values-to-add",
-                    Description = "a list containing paths with values to add to the HCL template.",
+                    Description = "a list of values to add to the HCL template.",
                     Default = new List<string>(),
                     IsRequired = true
                 },
@@ -47,11 +54,13 @@ public class HclAddValues_v1 : INoxCliAddin
     }
 
     private string? _sourceHcl;
+    private string? _path;
     private List<string>? _valuesToAdd;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _sourceHcl = inputs.Value<string>("source-hcl");
+        _path = inputs.Value<string>("path");
         _valuesToAdd = inputs.Value<List<string>>("values-to-add");
         return Task.CompletedTask;
     }
@@ -63,6 +72,7 @@ public class HclAddValues_v1 : INoxCliAddin
         ctx.SetState(ActionState.Error);
 
         if (string.IsNullOrEmpty(_sourceHcl) ||
+            string.IsNullOrEmpty(_path) ||
             _valuesToAdd == null ||
             _valuesToAdd.Count == 0)
         {
@@ -75,11 +85,9 @@ public class HclAddValues_v1 : INoxCliAddin
                 var template = HclParser.HclTemplate.Parse(_sourceHcl);
                 foreach (var item in _valuesToAdd)
                 {
-                    var itemValues = item.Split("->");
-                    if (itemValues.Length != 2) throw new NoxException("values-to-add must be structured as <PATH> seperated by -> and <VALUE> eg: <PATH>=><VALUE>");
-                    if (!HclHelpers.ValueExists(template, $"{itemValues[0]}/{itemValues[1]}"))
+                    if (!HclHelpers.ValueExists(template, $"{_path}/{item}"))
                     {
-                        HclHelpers.AddValue(template, itemValues[0], itemValues[1]);
+                        HclHelpers.AddValue(template, _path, item);
                         outputs["result-hcl"] = template.ToString();
                     }
                 }

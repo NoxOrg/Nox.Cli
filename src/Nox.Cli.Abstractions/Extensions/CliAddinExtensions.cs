@@ -40,8 +40,7 @@ public static class CliAddinExtensions
                 }
                 else if (typeof(T).IsAssignableTo(typeof(IList<string>)))
                 {
-                    var stringList = ((IList<object>)value).Select(o=>o.ToString()).ToList();
-                    result = (T)Convert.ChangeType(stringList, typeof(T));
+                    result = (T)Convert.ChangeType(value, typeof(T));
                 }
                 else if (typeof(T).IsAssignableTo(typeof(IList<object>)))
                 {

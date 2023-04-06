@@ -1,8 +1,10 @@
 using Microsoft.Graph;
+using Microsoft.Graph.Groups.Item.Team.Members;
 using Microsoft.Graph.Models;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
+using MembersRequestBuilder = Microsoft.Graph.Teams.Item.Channels.Item.Members.MembersRequestBuilder;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
@@ -87,13 +89,20 @@ public class AzureAdAddGroupToGroup_v1 : INoxCliAddin
                     ctx.SetErrorMessage("Child group does not exist in Azure AD.");
                     return outputs;
                 }
-
-                var request = new ReferenceCreate
+                
+                var members = await _aadClient.Groups[_parentGroupId].Members.GetAsync();
+                    
+                if (members!.Value!.All(m => m.Id != _childGroupId))
                 {
-                    OdataId = $"https://graph.microsoft.com/v1.0/directoryObjects/{_childGroupId}",
-                };
+                    var request = new ReferenceCreate
+                    {
+                        OdataId = $"https://graph.microsoft.com/v1.0/directoryObjects/{_childGroupId}",
+                    };
 
-                await _aadClient.Groups[_parentGroupId].Members.Ref.PostAsync(request);
+                    await _aadClient.Groups[_parentGroupId].Members.Ref.PostAsync(request);    
+                }
+                
+                
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

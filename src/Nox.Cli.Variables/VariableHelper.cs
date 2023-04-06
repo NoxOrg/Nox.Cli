@@ -36,11 +36,9 @@ public static class VariableHelper
                 {
                     return element.GetInt32();    
                 }
-
                 return element.GetDouble();
-            case JsonValueKind.Undefined:
-            case JsonValueKind.String:
             case JsonValueKind.Array:
+                return JsonConvert.DeserializeObject<List<string>>(element.ToString())!;
             default:
                 return element!.GetString()!;
         }   

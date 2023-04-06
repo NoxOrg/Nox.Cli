@@ -85,31 +85,43 @@ public class AzureAdAddUsersToGroup_v1 : INoxCliAddin
         {
             try
             {
+                var existingMembers = await _aadClient.Groups[_groupId].Members.GetAsync();
                 var objectIds = _userObjectIds.Split(',');
                 var members = new List<string>();
                 foreach (var objectId in objectIds)
                 {
-                    members.Add($"https://graph.microsoft.com/v1.0/directoryObjects/{objectId}");
+                    if (existingMembers!.Value!.All(em => em.Id != objectId))
+                    {
+                        members.Add($"https://graph.microsoft.com/v1.0/directoryObjects/{objectId}");    
+                    }
                 }
 
-                var request = new Group
+                if (members.Count > 0)
                 {
-                    AdditionalData = new Dictionary<string, object>
+                    var request = new Group
                     {
-                        { "members@odata.bind", members }
-                    }
-                };
-                await _aadClient.Groups[_groupId].PatchAsync(request);
+                        AdditionalData = new Dictionary<string, object>
+                        {
+                            { "members@odata.bind", members }
+                        }
+                    };
+                    await _aadClient.Groups[_groupId].PatchAsync(request);    
+                }
+                
 
                 if (_isOwner == true)
                 {
+                    var existingOwners = await _aadClient.Groups[_groupId].Owners.GetAsync();
                     foreach (var objectId in objectIds)
                     {
-                        var ownerRequest = new ReferenceCreate
+                        if (existingOwners!.Value!.All(eo => eo.Id != objectId))
                         {
-                            OdataId = $"https://graph.microsoft.com/v1.0/users/{objectId}"
-                        };
-                        await _aadClient.Groups[_groupId].Owners.Ref.PostAsync(ownerRequest);
+                            var ownerRequest = new ReferenceCreate
+                            {
+                                OdataId = $"https://graph.microsoft.com/v1.0/users/{objectId}"
+                            };
+                            await _aadClient.Groups[_groupId].Owners.Ref.PostAsync(ownerRequest);    
+                        }
                     }
                 }
                 

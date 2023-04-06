@@ -1,4 +1,4 @@
-module "heimdall_<microservice_name>_test_variables" {
+module "heimdall_<microservice-name>_test_variables" {
   source  = "app.terraform.io/iwgplc/tfc-variable/tfe"
   version = "1.0.0"
 
@@ -10,7 +10,7 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "Name of the environment."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_we"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_we"].id
       hcl             = null
       sensitive       = null
     }
@@ -20,7 +20,7 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "Location where resources are being deployed."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_we"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_we"].id
       hcl             = null
       sensitive       = null
     }
@@ -30,7 +30,7 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "Location prefix."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_we"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_we"].id
       hcl             = null
       sensitive       = null
     }
@@ -40,7 +40,7 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "TAG attribute."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_we"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_we"].id
       hcl             = null
       sensitive       = null
     }
@@ -50,7 +50,7 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "TAG attribute."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_we"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_we"].id
       hcl             = null
       sensitive       = null
     }
@@ -60,17 +60,17 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "TFC parent workspace name, for reading state output."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_we"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_we"].id
       hcl             = null
       sensitive       = null
     }
     we_var07 = {
       key             = "k8s_namespace"
-      value           = "<microservice_friendly_name>-test"
+      value           = "<microservice-friendly-name>-test"
       category        = "terraform"
       description     = "K8s namespace of the environment"
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_we"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_we"].id
       hcl             = null
       sensitive       = null
     },
@@ -81,7 +81,7 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "Name of the environment."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_ne"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_ne"].id
       hcl             = null
       sensitive       = null
     }
@@ -91,7 +91,7 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "Location where resources are being deployed."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_ne"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_ne"].id
       hcl             = null
       sensitive       = null
     }
@@ -101,7 +101,7 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "Location prefix."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_ne"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_ne"].id
       hcl             = null
       sensitive       = null
     }
@@ -111,7 +111,7 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "TAG attribute."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_ne"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_ne"].id
       hcl             = null
       sensitive       = null
     }
@@ -121,7 +121,7 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "TAG attribute."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_ne"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_ne"].id
       hcl             = null
       sensitive       = null
     }
@@ -131,17 +131,17 @@ module "heimdall_<microservice_name>_test_variables" {
       category        = "terraform"
       description     = "TFC parent workspace name, for reading state output."
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_ne"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_ne"].id
       hcl             = null
       sensitive       = null
     }
     ne_var07 = {
       key             = "k8s_namespace"
-      value           = "<microservice_friendly_name>-test"
+      value           = "<microservice-friendly-name>-test"
       category        = "terraform"
       description     = "K8s namespace of the environment"
       variable_set_id = null
-      workspace_id    = module.heimdall_<microservice_name>_workspaces.workspaces["<microservice_name>_test_ne"].id
+      workspace_id    = module.heimdall_<microservice-name>_workspaces.workspaces["<microservice-name>_test_ne"].id
       hcl             = null
       sensitive       = null
     }

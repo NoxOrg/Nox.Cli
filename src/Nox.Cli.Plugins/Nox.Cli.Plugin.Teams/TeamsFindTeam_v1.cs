@@ -1,6 +1,7 @@
 using Microsoft.Graph;
 using Microsoft.Graph.Connections.Item.Groups;
 using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.ODataErrors;
 using Microsoft.Graph.Sites.Item.TermStore.Groups;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
@@ -38,6 +39,11 @@ public class TeamsFindTeam_v1: INoxCliAddin
 
             Outputs =
             {
+                ["is-found"] = new NoxActionOutput
+                {
+                    Id = "is-found",
+                    Description = "Boolean indicating if the team exists or not."
+                },
                 ["team-id"] = new NoxActionOutput
                 {
                     Id = "team-id",
@@ -72,9 +78,18 @@ public class TeamsFindTeam_v1: INoxCliAddin
         {
             try
             {
+                outputs["is-found"] = false;
                 var team = await _aadClient.Teams[_teamName].GetAsync();
-                if (team != null) outputs["team-id"] = team.Id!;
+                if (team != null)
+                {
+                    outputs["is-found"] = true;
+                    outputs["team-id"] = team.Id!;
+                }
                 ctx.SetState(ActionState.Success);
+            }
+            catch (ODataError odataError)
+            {
+                ctx.SetErrorMessage(odataError.Error!.Message!);
             }
             catch (Exception ex)
             {

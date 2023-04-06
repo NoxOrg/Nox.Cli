@@ -1,5 +1,7 @@
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.ODataErrors;
+using Microsoft.Kiota.Abstractions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
@@ -69,7 +71,7 @@ public class TeamsCreateTeam_v1: INoxCliAddin
         _aadClient = inputs.Value<GraphServiceClient>("aad-client");
         _teamName = inputs.Value<string>("team-name");
         _teamDescription = inputs.Value<string>("team-description");
-        _groupId = inputs.Value<string>("group-id");
+        _groupId = inputs.Value<string>("aad-group-id");
         return Task.CompletedTask;
     }
 
@@ -90,25 +92,56 @@ public class TeamsCreateTeam_v1: INoxCliAddin
         {
             try
             {
-                var requestBody = new Team
+                var group = await _aadClient.Groups[_groupId].GetAsync();
+                if (group == null)
                 {
-                    DisplayName = _teamName,
-                    Description = _teamDescription,
-                    AdditionalData = new Dictionary<string, object>
-                    {
-                        { "template@odata.bind", "https://graph.microsoft.com/v1.0/teamsTemplates('standard')" }
-                    },
-                    Group = new Group
-                    {
-                        Id = _groupId
-                    }
-                };
-                var result = await _aadClient.Teams.PostAsync(requestBody);
-                if (result != null)
-                {
-                    outputs["team-id"] = result.Id!;    
+                    ctx.SetErrorMessage("The supplied group does not exist in AAD");
                 }
-                ctx.SetState(ActionState.Success);
+                else
+                {
+                    var members = new List<ConversationMember>();
+                    
+                    var groupOwners = await _aadClient.Groups[_groupId].Owners.GetAsync();
+                    if (groupOwners is { Value.Count: > 0 })
+                    {
+                        members.Add(new ConversationMember
+                        {
+                            Id = groupOwners.Value.First().Id,
+                            Roles = new List<string>{"owner"},
+                            OdataType = "#microsoft.graph.aadUserConversationMember",
+                            AdditionalData = new Dictionary<string, object>
+                            {
+                                { "user@odata.bind", $"https://graph.microsoft.com/v1.0/users('{groupOwners.Value.First().Id}')" }
+                            }
+                        });
+                    }
+                    
+                    
+                    var requestBody = new Team
+                    { 
+                        DisplayName = _teamName,
+                        Description = _teamDescription,
+                        AdditionalData = new Dictionary<string, object>
+                        {
+                            { "template@odata.bind", "https://graph.microsoft.com/v1.0/teamsTemplates('standard')" }
+                        },
+                        Members = members,
+                        Group = group
+                    };
+                    var result = await _aadClient.Teams.PostAsync(requestBody);
+                    if (result != null)
+                    {
+                        outputs["team-id"] = result.Id!;
+                    }
+
+                    ctx.SetState(ActionState.Success);
+                }
+                
+                
+            }
+            catch (ODataError odataError)
+            {
+                ctx.SetErrorMessage(odataError.Error!.Message!);
             }
             catch (Exception ex)
             {
