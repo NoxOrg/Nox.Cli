@@ -5,15 +5,15 @@ using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
 
-public class AzureAdFindGroup_v1 : INoxCliAddin
+public class AzureAdGetGroupMemberIds_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azuread/find-group@v1",
+            Name = "azuread/get-group-member-ids@v1",
             Author = "Jan Schutte",
-            Description = "Find an Azure Active Directory group using the group name",
+            Description = "Get the user object ids of an an Azure Active Directory group",
 
             Inputs =
             {
@@ -25,37 +25,32 @@ public class AzureAdFindGroup_v1 : INoxCliAddin
                     IsRequired = true
                 },
                 
-                ["group-name"] = new NoxActionInput
+                ["group-id"] = new NoxActionInput
                 {
-                    Id = "group-name",
-                    Description = "The name of the aad group to create",
+                    Id = "group-id",
+                    Description = "The Id of the aad group from which to get the member ids",
                     Default = string.Empty,
                     IsRequired = true
-                }
+                },
             },
 
             Outputs =
             {
-                ["is-found"] = new NoxActionOutput
+                ["member-ids"] = new NoxActionOutput
                 {
-                    Id = "is-found",
-                    Description = "Boolean indicating if the group was found or not.",
-                },
-                ["group-id"] = new NoxActionOutput
-                {
-                    Id = "group-id",
-                    Description = "The Id of the AAD group that was searched. Will return null if group is not found.",
+                    Id = "member-ids",
+                    Description = "a Delimited string containing the resolved AAD member Ids",
                 },
             }
         };
     }
 
-    private string? _groupName;
+    private string? _groupId;
     private GraphServiceClient? _aadClient;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _groupName = inputs.Value<string>("group-name");
+        _groupId = inputs.Value<string>("group-id");
         _aadClient = inputs.Value<GraphServiceClient>("aad-client");
         return Task.CompletedTask;
     }
@@ -66,29 +61,40 @@ public class AzureAdFindGroup_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_aadClient == null || string.IsNullOrEmpty(_groupName))
+        if (_aadClient == null || 
+            string.IsNullOrEmpty(_groupId))
         {
-            ctx.SetErrorMessage("The az active directory find-group action was not initialized");
+            ctx.SetErrorMessage("The az active directory get-group-member-ids action was not initialized");
         }
         else
         {
             try
             {
-                outputs["is-found"] = false;
-                var projectGroupName = _groupName.ToUpper();
-
-                var groups = await _aadClient.Groups.GetAsync((requestConfiguration) =>
+                var members = await _aadClient.Groups[_groupId].Members.GetAsync(config =>
                 {
-                    requestConfiguration.QueryParameters.Count = true;
-                    requestConfiguration.QueryParameters.Filter = $"DisplayName eq '{projectGroupName}'";
-                    requestConfiguration.QueryParameters.Select = new[] { "id" };
+                    config.QueryParameters.Count = true;
+                    config.QueryParameters.Select = new[] { "id" };
                 });
-                
-                if (groups != null &&  groups.Value!.Count == 1)
+
+                var ids = "";
+
+                if (members is { Value.Count: > 0 })
                 {
-                    outputs["is-found"] = true;
-                    outputs["group-id"] = groups.Value.First().Id!;
+                    foreach (var member in members.Value)
+                    {
+                        if (string.IsNullOrEmpty(ids))
+                        {
+                            ids = member.Id;
+                        }
+                        else
+                        {
+                            ids += "," + member.Id;
+                        }
+                    }
                 }
+
+                outputs["member-ids"] = ids;
+                
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

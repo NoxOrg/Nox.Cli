@@ -43,6 +43,13 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
                     Description = "The name of the branch to which to commit",
                     Default = "main",
                     IsRequired = true
+                },
+                ["auto-complete"] = new NoxActionInput
+                {
+                    Id = "auto-complete",
+                    Description = "If this flag is set to true the Pull Request will be mark as completed.",
+                    Default = true,
+                    IsRequired = false
                 }
             },
 
@@ -60,6 +67,7 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
     private string? _sourcePath;
     private Guid? _repoId;
     private string? _branchName;
+    private bool? _autoComplete;
     private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
@@ -68,6 +76,7 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
         _repoId = inputs.Value<Guid>("repository-id");
         _sourcePath = inputs.Value<string>("source-path");
         _gitClient = await connection!.GetClientAsync<GitHttpClient>();
+        _autoComplete = inputs.ValueOrDefault<bool>("auto-complete", this);
         _branchName = inputs.ValueOrDefault<string>("branch-name", this);
     }
 
@@ -78,7 +87,12 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_gitClient == null || _repoId == null || _repoId == Guid.Empty || string.IsNullOrEmpty(_sourcePath) || string.IsNullOrEmpty(_branchName))
+        if (_gitClient == null || 
+            _repoId == null || 
+            _repoId == Guid.Empty || 
+            string.IsNullOrEmpty(_sourcePath) || 
+            string.IsNullOrEmpty(_branchName) ||
+            _autoComplete == null)
         {
             ctx.SetErrorMessage("The devops push-folder action was not initialized");
         }

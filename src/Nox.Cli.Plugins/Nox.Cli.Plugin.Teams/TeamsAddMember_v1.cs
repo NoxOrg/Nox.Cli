@@ -15,7 +15,7 @@ public class TeamsAddMember_v1: INoxCliAddin
         {
             Name = "teams/add-member@v1",
             Author = "Jan Schutte",
-            Description = "Add AAD users to an MS Teams team, using their AAD objectId",
+            Description = "Add an AAD user to an MS Teams team, using their AAD objectId",
 
             Inputs =
             {
@@ -37,14 +37,14 @@ public class TeamsAddMember_v1: INoxCliAddin
                 ["object-id"] = new NoxActionInput
                 {
                     Id = "object-id",
-                    Description = "The AAD object id of the user to tadd to the team.",
+                    Description = "The AAD object id of the user to add to the team.",
                     Default = string.Empty,
                     IsRequired = true
                 },
                 
                 ["is-owner"] = new NoxActionInput {
                     Id = "is-owner",
-                    Description = "Indicator set if the users being added are to be owners of the team",
+                    Description = "Indicator set if the user being added is to be an owner of the team",
                     Default = false,
                     IsRequired = false
                 }

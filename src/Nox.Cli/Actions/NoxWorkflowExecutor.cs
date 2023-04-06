@@ -117,6 +117,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
     {
         if (ctx.CurrentAction == null) return false;
         
+        var inputs = await ctx.GetInputVariables(ctx.CurrentAction);
+
         if (!ctx.CurrentAction.EvaluateIf())
         {
             if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
@@ -127,9 +129,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} is false");
             return true;
         }
-
-        var inputs = await ctx.GetInputVariables(ctx.CurrentAction);
-
+        
         var unresolved = ctx.GetUnresolvedInputVariables(ctx.CurrentAction);
 
         if (unresolved.Any())
@@ -142,7 +142,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             }
             return false;
         }
-
+        
         await ctx.CurrentAction.ActionProvider.BeginAsync(inputs);
         
         var outputs = await ctx.CurrentAction.ActionProvider.ProcessAsync(ctx);

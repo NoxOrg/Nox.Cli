@@ -59,7 +59,6 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
                     Default = true,
                     IsRequired = false
                 }
-                
             },
 
             Outputs =

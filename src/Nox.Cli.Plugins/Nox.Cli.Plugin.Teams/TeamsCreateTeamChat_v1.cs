@@ -6,15 +6,15 @@ using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugin.Teams;
 
-public class TeamsFindChannel_v1: INoxCliAddin
+public class TeamsCreateTeamChat_v1: INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "teams/find-channel@v1",
+            Name = "teams/create-team-chat@v1",
             Author = "Jan Schutte",
-            Description = "Find a channel in an MS Teams, team",
+            Description = "Create a chat in an MS Teams, team",
 
             Inputs =
             {

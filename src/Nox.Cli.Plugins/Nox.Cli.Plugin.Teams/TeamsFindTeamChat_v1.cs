@@ -1,23 +1,20 @@
 using Microsoft.Graph;
-using Microsoft.Graph.Connections.Item.Groups;
-using Microsoft.Graph.Models;
 using Microsoft.Graph.Models.ODataErrors;
-using Microsoft.Graph.Sites.Item.TermStore.Groups;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugin.Teams;
 
-public class TeamsFindTeam_v1: INoxCliAddin
+public class TeamsFindTeamChat_v1: INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "teams/find-team@v1",
+            Name = "teams/find-chat@v1",
             Author = "Jan Schutte",
-            Description = "Find an MS Team using the team name",
+            Description = "Find a chat in an MS Teams, team",
 
             Inputs =
             {
@@ -29,9 +26,16 @@ public class TeamsFindTeam_v1: INoxCliAddin
                     IsRequired = true
                 },
 
-                ["team-name"] = new NoxActionInput {
-                    Id = "team-name",
-                    Description = "The name of the team to find",
+                ["team-id"] = new NoxActionInput {
+                    Id = "team-id",
+                    Description = "The Azure AD Id of the team",
+                    Default = string.Empty,
+                    IsRequired = true
+                },
+                
+                ["topic"] = new NoxActionInput {
+                    Id = "topic",
+                    Description = "The topic of the chat to find",
                     Default = string.Empty,
                     IsRequired = true
                 }
@@ -42,24 +46,26 @@ public class TeamsFindTeam_v1: INoxCliAddin
                 ["is-found"] = new NoxActionOutput
                 {
                     Id = "is-found",
-                    Description = "Boolean indicating if the team exists or not."
+                    Description = "Boolean indicating if the channel was found or not.",
                 },
-                ["team-id"] = new NoxActionOutput
+                ["chat-id"] = new NoxActionOutput
                 {
-                    Id = "team-id",
-                    Description = "The Team-id of the team."
+                    Id = "chat-id",
+                    Description = "The Id of the found chat. This will be null if the chat does not exist."
                 },
             }
         };
     }
 
     private GraphServiceClient? _aadClient;
-    private string? _teamName;
+    private string? _teamId;
+    private string? _topic;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _aadClient = inputs.Value<GraphServiceClient>("aad-client");
-        _teamName = inputs.Value<string>("team-name");
+        _teamId = inputs.Value<string>("team-id");
+        _topic = inputs.Value<string>("topic");
         return Task.CompletedTask;
     }
 
@@ -70,21 +76,24 @@ public class TeamsFindTeam_v1: INoxCliAddin
         ctx.SetState(ActionState.Error);
 
         if (_aadClient == null || 
-            string.IsNullOrEmpty(_teamName))
+            string.IsNullOrEmpty(_teamId) ||
+            string.IsNullOrEmpty(_topic))
         {
-            ctx.SetErrorMessage("The Teams find-team action was not initialized");
+            ctx.SetErrorMessage("The Teams find-chat action was not initialized");
         }
         else
         {
             try
             {
                 outputs["is-found"] = false;
-                var team = await _aadClient.Teams[_teamName].GetAsync();
-                if (team != null)
+                var chats = await _aadClient.Chats.GetAsync(config =>
                 {
-                    outputs["is-found"] = true;
-                    outputs["team-id"] = team.Id!;
-                }
+                    config.QueryParameters.Filter = $"topic eq {_topic}";
+                    config.QueryParameters.Select = new[] { "id" };
+                });
+
+                
+                
                 ctx.SetState(ActionState.Success);
             }
             catch (ODataError odataError)
