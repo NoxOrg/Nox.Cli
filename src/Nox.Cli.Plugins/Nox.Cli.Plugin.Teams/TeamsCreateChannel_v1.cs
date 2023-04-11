@@ -99,7 +99,11 @@ public class TeamsCreateChannel_v1: INoxCliAddin
                     MembershipType = ChannelMembershipType.Standard
                 };
                 var response = await _aadClient.Teams[_teamId].Channels.PostAsync(request);
-                if (response != null && !string.IsNullOrEmpty(response.Id)) outputs["channel-id"] = response.Id;
+                if (response != null && !string.IsNullOrEmpty(response.Id))
+                {
+                    outputs["channel-id"] = response.Id;
+                    
+                };
                 ctx.SetState(ActionState.Success);
             }
             catch (ODataError odataError)
