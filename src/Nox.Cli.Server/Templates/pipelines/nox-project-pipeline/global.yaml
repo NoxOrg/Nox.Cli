@@ -11,9 +11,9 @@ variables:
 
   # Docker related
   - name: buildContext
-    value: './src'
+    value: '<build-context>'
   - name: dockerfilePath
-    value: '$(Build.SourcesDirectory)/src/Dockerfile'
+    value: '$(Build.SourcesDirectory)<docker-file-path>'
 
   # Helm Chart name
   - name: helm_chart_name

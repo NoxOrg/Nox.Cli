@@ -66,9 +66,13 @@ public class FileReplaceStrings_v1 : INoxCliAddin
                 }
                 else
                 {
+                    var fileExisted = System.IO.File.Exists(_path);
+                    var fileCreateTime = DateTime.MinValue;
+                    if (fileExisted) fileCreateTime = System.IO.File.GetCreationTime(_path);
                     var source = System.IO.File.ReadAllText(fullPath);
                     var result = Replace(source, _replacements);
                     System.IO.File.WriteAllText(fullPath, result);
+                    if (fileExisted) System.IO.File.SetCreationTime(_path, fileCreateTime);
                     ctx.SetState(ActionState.Success);    
                 }
             }

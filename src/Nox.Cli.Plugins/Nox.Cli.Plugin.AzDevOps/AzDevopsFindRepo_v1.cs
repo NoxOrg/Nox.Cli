@@ -92,12 +92,12 @@ public class AzDevopsFindRepo_v1 : INoxCliAddin
                     outputs["is-found"] = true;
                     outputs["repository-id"] = repo.Id;
                 }
-                ctx.SetState(ActionState.Success);
             }
-            catch (Exception ex)
+            catch 
             {
-                ctx.SetErrorMessage(ex.Message);
+                //Ignore, gets exception when repo does not exist.
             }
+            ctx.SetState(ActionState.Success);
         }
 
         return outputs;
