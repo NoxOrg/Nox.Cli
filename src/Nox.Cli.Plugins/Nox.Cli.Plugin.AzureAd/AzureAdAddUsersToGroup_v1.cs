@@ -1,5 +1,6 @@
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.ODataErrors;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
@@ -126,6 +127,10 @@ public class AzureAdAddUsersToGroup_v1 : INoxCliAddin
                 }
                 
                 ctx.SetState(ActionState.Success);
+            }
+            catch (ODataError odataError)
+            {
+                ctx.SetErrorMessage(odataError.Error!.Message!);
             }
             catch (Exception ex)
             {

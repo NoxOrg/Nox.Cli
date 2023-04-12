@@ -1,4 +1,5 @@
 using Microsoft.Graph;
+using Microsoft.Graph.Models.ODataErrors;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
@@ -87,6 +88,10 @@ public class AzureAdGetUserObjectId_v1 : INoxCliAddin
                     ctx.SetErrorMessage($"AAD User {_username} not found.");
                 }
                 ctx.SetState(ActionState.Success);
+            }
+            catch (ODataError odataError)
+            {
+                ctx.SetErrorMessage(odataError.Error!.Message!);
             }
             catch (Exception ex)
             {

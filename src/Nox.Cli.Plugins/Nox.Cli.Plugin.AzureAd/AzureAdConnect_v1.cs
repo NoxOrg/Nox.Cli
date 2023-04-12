@@ -1,5 +1,6 @@
 using Azure.Identity;
 using Microsoft.Graph;
+using Microsoft.Graph.Models.ODataErrors;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
@@ -81,11 +82,15 @@ public class AzureAdConnect_v1 : INoxCliAddin
             outputs["aad-client"] = client;
             ctx.SetState(ActionState.Success);
         }
+        catch (ODataError odataError)
+        {
+            ctx.SetErrorMessage(odataError.Error!.Message!);
+        }
         catch (Exception ex)
         {
             ctx.SetErrorMessage(ex.Message);
         }
-
+        
         return Task.FromResult((IDictionary<string, object>)outputs);
     }
 

@@ -1,5 +1,6 @@
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.ODataErrors;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
@@ -110,6 +111,10 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
                     if (newGroupId != null) outputs["group-id"] = newGroupId;
                 }
                 ctx.SetState(ActionState.Success);
+            }
+            catch (ODataError odataError)
+            {
+                ctx.SetErrorMessage(odataError.Error!.Message!);
             }
             catch (Exception ex)
             {

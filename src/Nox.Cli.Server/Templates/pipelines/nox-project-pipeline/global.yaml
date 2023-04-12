@@ -1,9 +1,9 @@
 variables:
   # SonarCloud related
   - name: SonarcloudProjectKey
-    value: 'CHANGE_ME'
+    value: '<sonar-cloud-project-key>'
   - name: SourceFolder
-    value: 'CHANGE_ME\CHANGE_ME'
+    value: '<source-folder>'
 
   # ACR repo name | Don't rename the variable because it's linked with CD template
   - name: service_name
