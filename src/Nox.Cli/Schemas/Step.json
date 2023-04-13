@@ -13,6 +13,10 @@
             "type": "string",
             "description": "The unique identifier of the step"
         },
+        "if": {
+            "type": "string",
+            "description": "Optional if condition to evaluate whether step is executed"
+        },
         "uses": {
             "type": "string",
             "description": "The library/service used for the step"
@@ -45,6 +49,10 @@
                 { "required":
                     [ "error" ] }
                 ]
+        },
+        "continue-on-error": {
+            "type": "boolean",
+            "description": "Indicates if job continues if error occurs"
         }
     }
 }

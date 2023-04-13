@@ -15,44 +15,8 @@
             "$ref": "./schemas/Cli.json"
         },
         "jobs": {
-            "properties": {
-                "new-service": {
-                    "type": "object",
-                    "properties": {
-                        "steps": {
-                            "type": "array",
-                            "items": { "$ref": "./schemas/Step.json" }
-                        }
-                    }
-                },
-                "sync-database": {
-                    "type": "object",
-                    "properties": {
-                        "steps": {
-                            "type": "array",
-                            "items": { "$ref": "./schemas/Step.json" }
-                        }
-                    }
-                },
-                "sync-directory-service": {
-                    "type": "object",
-                    "properties": {
-                        "steps": {
-                            "type": "array",
-                            "items": { "$ref": "./schemas/Step.json" }
-                        }
-                    }
-                },
-                "sync-heimdall-helm-chart": {
-                    "type": "object",
-                    "properties": {
-                        "steps": {
-                            "type": "array",
-                            "items": { "$ref": "./schemas/Step.json" }
-                        }
-                    }
-                },
-                "sync-versionControl": {
+            "patternProperties": {
+                "^.*$": {
                     "type": "object",
                     "properties": {
                         "steps": {
@@ -61,19 +25,7 @@
                         }
                     }
                 }
-            },
-            "anyOf": [
-                { "required":
-                    [ "new-service" ] },
-                { "required":
-                    [ "sync-database" ] },
-                { "required":
-                    [ "sync-directory-service" ] },
-                { "required":
-                    [ "sync-heimdall-helm-chart" ] },                
-                { "required":
-                    [ "sync-versionControl" ] }
-            ]
+            }
         }
     }
 }

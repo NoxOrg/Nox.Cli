@@ -7,31 +7,23 @@
     "properties": {
         "branch": {
             "type": "string",
-            "description": "Command syntax",
-            "oneOf": [
-                {"const": "new", "description": "New command"},
-                {"const": "sync", "description": "Sync command"}
-            ]
+            "description": "Command syntax"
         },
         "command": {
             "type": "string",
-            "description": "Command option",
-            "oneOf": [
-                {"const": "service", "description": "New service"},
-                {"const": "azure-active-directory", "description": "Sync azure-active-directory"},
-                {"const": "database", "description": "Sync database"},
-                {"const": "helm-chart", "description": "Sync helm-chart"},
-                {"const": "version-control", "description": "Sync version-control"}
-            ]
+            "description": "Command option"
         },
         "command-alias": {
-            "type": "string"
+            "type": "string",
+            "description": "A shortened valid alias alternative to the full command option"
         },
         "description": {
-            "type": "string"
+            "type": "string",
+            "description": "A description and usage guide for the command"
         },
         "examples": {
-            "type": "array"
+            "type": "array",
+            "description": "Illustrative examples of the command usage and syntax"
         }
     }
 }
