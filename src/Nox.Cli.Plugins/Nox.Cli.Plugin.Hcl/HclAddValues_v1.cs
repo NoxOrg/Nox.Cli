@@ -88,9 +88,10 @@ public class HclAddValues_v1 : INoxCliAddin
                     if (!HclHelpers.ValueExists(template, $"{_path}/{item}"))
                     {
                         HclHelpers.AddValue(template, _path, item);
-                        outputs["result-hcl"] = template.ToString();
+                        
                     }
                 }
+                outputs["result-hcl"] = template.ToString();
 
                 ctx.SetState(ActionState.Success);
 

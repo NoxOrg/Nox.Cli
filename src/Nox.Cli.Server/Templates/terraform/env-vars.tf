@@ -137,7 +137,7 @@ module "<env-name>_variables" {
     }
     ne_var07 = {
       key             = "k8s_namespace"
-      value           = "dummy-<env-name>"
+      value           = "<k8s-namespace>"
       category        = "terraform"
       description     = "K8s namespace of the environment"
       variable_set_id = null
