@@ -1,11 +1,11 @@
 ﻿using Nox.Cli.Abstractions;
+using Nox.Core.Interfaces;
 
 namespace Nox.Cli.Commands;
 
 using Helpers;
 using Microsoft.Extensions.Configuration;
 using Nox.Cli.Configuration;
-using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 

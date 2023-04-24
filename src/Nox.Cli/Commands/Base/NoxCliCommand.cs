@@ -1,9 +1,9 @@
 ﻿using Nox.Cli.Helpers;
+using Nox.Core.Interfaces;
 
 namespace Nox.Cli.Commands;
 
 using Microsoft.Extensions.Configuration;
-using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 

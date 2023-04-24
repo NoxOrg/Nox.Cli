@@ -1,5 +1,4 @@
-﻿using Nox.Core.Interfaces.Configuration;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
@@ -7,6 +6,7 @@ using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
 using System.Diagnostics;
 using Nox.Core.Exceptions;
+using Nox.Core.Interfaces;
 
 namespace Nox.Cli.Actions;
 

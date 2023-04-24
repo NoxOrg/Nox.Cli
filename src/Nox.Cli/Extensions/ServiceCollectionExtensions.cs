@@ -1,14 +1,14 @@
 ﻿using Nox.Core.Extensions;
 using Nox.Core.Helpers;
+using Nox.Core.Interfaces;
+using Nox.Core.Models;
 
 namespace Nox.Cli;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Nox.Core.Configuration;
 using Nox.Core.Constants;
 using Nox.Core.Exceptions;
-using Nox.Core.Interfaces.Configuration;
 using System.IO;
 
 public static class ServiceCollectionExtensions

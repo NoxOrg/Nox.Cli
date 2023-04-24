@@ -12,7 +12,7 @@
 
     <ItemGroup>
       <PackageReference Include="Octopus.CoreParsers.Hcl" Version="1.1.599" />
-      <PackageReference Include="Nox.Core" Version="6.0.42" />
+      <PackageReference Include="Nox.Core" Version="6.0.45" />
     </ItemGroup>
 
     

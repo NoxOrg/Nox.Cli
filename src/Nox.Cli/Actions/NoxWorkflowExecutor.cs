@@ -3,7 +3,7 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Secrets;
 using Nox.Cli.Server.Integration;
-using Nox.Core.Interfaces.Configuration;
+using Nox.Core.Interfaces;
 using Spectre.Console;
 
 namespace Nox.Cli.Actions;

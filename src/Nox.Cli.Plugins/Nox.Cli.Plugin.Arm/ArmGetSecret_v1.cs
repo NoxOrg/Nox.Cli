@@ -5,15 +5,15 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugin.Arm;
 
-public class ArmSaveSecret_v1 : INoxCliAddin
+public class ArmGetSecret_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "arm/save-secret@v1",
+            Name = "arm/get-secret@v1",
             Author = "Jan Schutte",
-            Description = "Save a secret to an Azure key vault",
+            Description = "Get a secret from an Azure key vault",
 
             Inputs =
             {
@@ -28,27 +28,26 @@ public class ArmSaveSecret_v1 : INoxCliAddin
                     Description = "The name of the secret to save",
                     Default = string.Empty,
                     IsRequired = true
-                },
-                ["secret-value"] = new NoxActionInput {
-                    Id = "secret-value",
-                    Description = "The value of the secret to save",
-                    Default = string.Empty,
-                    IsRequired = true
                 }
+            },
+            Outputs =
+            {
+                ["secret-value"] = new NoxActionOutput {
+                    Id = "secret-value",
+                    Description = "The value of the secret in the key vault.",
+                },
             }
         };
     }
 
     private string? _kvName;
     private string? _secretName;
-    private string? _secretValue;
     private bool _isServerContext = false;
 
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _kvName = inputs.Value<string>("key-vault-name");
         _secretName = inputs.Value<string>("secret-name");
-        _secretValue = inputs.Value<string>("secret-value");
         return Task.CompletedTask;
     }
 
@@ -70,9 +69,10 @@ public class ArmSaveSecret_v1 : INoxCliAddin
         {
             try
             {
-                var secretResponse = await client.SetSecretAsync(_secretName, _secretValue);
+                var secretResponse = await client.GetSecretAsync(_secretName);
                 if (secretResponse.HasValue)
                 {
+                    outputs["secret-value"] = secretResponse.Value.Value;
                     ctx.SetState(ActionState.Success);    
                 }
                 else
