@@ -1,0 +1,60 @@
+# NOX Test Update Build General Settings
+
+name: Test Update Build General Settings
+
+cli:
+  branch: test
+  command: update-build-general-settings
+  command-alias: ubgs
+  description: Test Update Build General Settings
+  examples:
+    - ["sync update-build-general-settings", "--path <designFolder>"]
+    - ["sync ubgs", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Locate the DevOps server
+        id: locate-server
+        uses: network/ping@v1
+        with:
+          host: ${{ project.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accesable. Are you connected to the Internet?
+        run-at-server: true
+
+      - name: Connect to the DevOps server
+        id: connect-server
+        uses: azdevops/connect@v1
+        with:
+          server: ${{ project.versionControl.server }}
+          personal-access-token: ${{ server.secrets.AZURE_DEVOPS_PAT }}
+        display:
+          success: Connected to the DevOps server
+          error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
+        run-at-server: true
+
+      - name: Get the Nox project
+        id: get-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: Nox.Cli.Scripts
+        display:
+          success: Got the Nox project
+          error: There was a problem getting the Nox project (${{ steps.get-project.error-message }})
+        run-at-server: true
+
+      - name: Update General Settings
+        id: update-settings
+        uses: azdevops/update-build-general-settings@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-id: ${{ steps.get-project.outputs.project-id }}
+          enforce-job-auth-scope: false
+        display:
+          success: Updated the build settings
+          error: Unable to update the build settings (${{ steps.update-settings.error-message }})
+        run-at-server: true

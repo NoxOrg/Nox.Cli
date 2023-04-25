@@ -1,0 +1,25 @@
+# NOX Test Load Template
+
+name: Test Load Template
+
+cli:
+  branch: test
+  command: load-template
+  command-alias: ltemplate
+  description: Test Get String Capitals
+  examples:
+    - ["sync load-template", "--path <designFolder>"]
+    - ["sync ltemplate", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Load a Template
+        id: load
+        uses: core/load-template@v1
+        with:
+          path: terraform/outputs.tf
+        display:
+          success: Success
+          error: Error ${{ steps.load.error-message }}
