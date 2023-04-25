@@ -10,4 +10,10 @@
     <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Nox.Utilities">
+      <HintPath>..\..\..\..\..\.nuget\packages\nox.utilities\1.0.2\lib\net6.0\Nox.Utilities.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
