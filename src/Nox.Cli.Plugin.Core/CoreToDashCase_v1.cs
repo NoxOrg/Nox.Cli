@@ -1,9 +1,8 @@
-using System.Text;
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
-namespace Nox.Cli.Plugins.Core;
+namespace Nox.Cli.Plugin.Core;
 
 public class CoreToDashCase_v1: INoxCliAddin
 {

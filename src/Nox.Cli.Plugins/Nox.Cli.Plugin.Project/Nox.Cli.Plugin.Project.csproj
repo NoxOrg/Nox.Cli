@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Nox.Core" Version="6.0.45" />
+        <PackageReference Include="Nox.Core" Version="6.0.46" />
     </ItemGroup>
     
     <ItemGroup>

@@ -1,8 +1,7 @@
-using System.Text;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
-namespace Nox.Cli.Plugins.Core;
+namespace Nox.Cli.Plugin.Core;
 
 public class CoreGetStringCapitals_v1: INoxCliAddin
 {

@@ -1,9 +1,8 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
-namespace Nox.Cli.Plugins.Core;
+namespace Nox.Cli.Plugin.Core;
 
 public class CoreToPascalCase_v1: INoxCliAddin
 {

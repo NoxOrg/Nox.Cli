@@ -16,6 +16,7 @@ using Nox.Cli.Authentication;
 using Nox.Cli.Authentication.Azure;
 using Nox.Cli.Configuration.Validation;
 using Nox.Cli.Server.Integration;
+using Nox.Core.Helpers;
 using Nox.Utilities.Configuration;
 using Nox.Utilities.Secrets;
 
@@ -182,6 +183,7 @@ internal static class ConfiguratorExtensions
                 overriddenFiles.Add(overriddenFile.Substring(0,overriddenFile.IndexOf('.')).EscapeMarkup());
             }
 
+            yaml = YamlHelper.ResolveYamlReferences(file);
             yamlFiles[fileInfo.Name] = yaml;
         }
         if (overriddenFiles.Count > 0)
@@ -262,9 +264,12 @@ internal static class ConfiguratorExtensions
         }
 
         cache.FileInfo = onlineFiles;
-        
         cache.Save();
 
+        foreach (var entry in yamlFiles)
+        {
+            yamlFiles[entry.Key] = YamlHelper.ResolveYamlReferences(Path.Combine(workflowCachePath, entry.Key));
+        }
     }
 
     private static async Task<NoxCliCache?> GetCacheInfoFromAzureToken(string cacheFile)

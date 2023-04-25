@@ -4,15 +4,15 @@ using Nox.Core.Configuration;
 
 namespace Nox.Cli.Plugin.Project;
 
-public class ProjectGetAdminEmails_v1: INoxCliAddin
+public class ProjectGetOwnerEmails_v1: INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "project/get-admin-emails@v1",
+            Name = "project/get-owner-emails@v1",
             Author = "Jan Schutte",
-            Description = "Get a list of admin team member email addresses from the Nox Project Definition",
+            Description = "Get a list of product owner email addresses from the Nox Project Definition",
 
             Inputs =
             {
@@ -33,10 +33,10 @@ public class ProjectGetAdminEmails_v1: INoxCliAddin
 
             Outputs =
             {
-                ["team-admin-emails"] = new NoxActionOutput
+                ["owner-email"] = new NoxActionOutput
                 {
-                    Id = "team-admin-emails",
-                    Description = "The resulting concatenated string of admin team member email addresses."
+                    Id = "owner-email",
+                    Description = "The resulting concatenated string of product owner team member email addresses."
                 },
             }
         };
@@ -71,7 +71,7 @@ public class ProjectGetAdminEmails_v1: INoxCliAddin
                 var result = "";
                 foreach (var item in _members)
                 {
-                    if (!string.IsNullOrEmpty(item.Email) && item.IsAdmin)
+                    if (!string.IsNullOrEmpty(item.Email) && item.IsProductOwner)
                     {
                         if (string.IsNullOrEmpty(result))
                         {
@@ -84,7 +84,7 @@ public class ProjectGetAdminEmails_v1: INoxCliAddin
                     }
                 }
 
-                outputs["team-admin-emails"] = result!;
+                outputs["owner-emails"] = result!;
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

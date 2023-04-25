@@ -1,6 +1,6 @@
 ﻿using Nox.Cli.Abstractions;
 
-namespace Nox.Cli.Plugins.Core;
+namespace Nox.Cli.Plugin.Core;
 
 public class CoreAddVariables_v1 : INoxCliAddin
 {

@@ -39,9 +39,9 @@ public class ProjectGetTeamEmails_v1: INoxCliAddin
 
             Outputs =
             {
-                ["emails"] = new NoxActionOutput
+                ["team-emails"] = new NoxActionOutput
                 {
-                    Id = "emails",
+                    Id = "team-emails",
                     Description = "The resulting concatenated string of team member email addresses."
                 },
             }
