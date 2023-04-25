@@ -1,8 +1,7 @@
-﻿using System.Text.Json;
-using System.ComponentModel;
-using Nox.Cli.Configuration;
+﻿using System.ComponentModel;
+using System.Text.Json;
 
-namespace Nox.Cli.Services.Caching;
+namespace Nox.Cli.Abstractions.Caching;
 
 public class NoxCliCache : IChangeTracking
 {
@@ -48,17 +47,34 @@ public class NoxCliCache : IChangeTracking
         }
     }
 
-    private List<RemoteFileInfo> _fileInfo = new();
-    public List<RemoteFileInfo> FileInfo
+    private List<RemoteFileInfo> _workflowInfo = new();
+    public List<RemoteFileInfo> WorkflowInfo
     {
-        get => _fileInfo;
+        get => _workflowInfo;
         set
         {
-            var intersect = _fileInfo.Intersect(value);
+            var intersect = _workflowInfo.Intersect(value);
             var count = intersect.ToList().Count;
-            if (count != value.Count || count != _fileInfo.Count)
+            if (count != value.Count || count != _workflowInfo.Count)
             {
-                _fileInfo = value;
+                _workflowInfo = value;
+                IsChanged = true;
+            }
+        }
+    }
+
+    private List<RemoteFileInfo> _templateInfo = new();
+
+    public List<RemoteFileInfo> TemplateInfo
+    {
+        get => _templateInfo;
+        set
+        {
+            var intersect = _templateInfo.Intersect(value);
+            var count = intersect.ToList().Count;
+            if (count != value.Count || count != _templateInfo.Count)
+            {
+                _templateInfo = value;
                 IsChanged = true;
             }
         }

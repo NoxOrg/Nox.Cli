@@ -1,7 +1,0 @@
-variables:
-  namespace: <project-dash-name>-test
-
-  helm_install_name: <project-dash-name>
-
-  # HELM_CHART_VALUE_FILE: values.yaml
-  # HELM_CHART_VERSION: "0.1"

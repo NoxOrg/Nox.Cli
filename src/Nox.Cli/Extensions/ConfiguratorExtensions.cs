@@ -8,9 +8,9 @@ using System.Text.Json;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
-using Nox.Cli.Services.Caching;
 using Nox.Cli.Configuration;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Authentication;
 using Nox.Cli.Authentication.Azure;
@@ -24,7 +24,7 @@ namespace Nox.Cli;
 
 internal static class ConfiguratorExtensions
 {
-    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline, string? onlineWorkflowUrl = null)
+    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline, string onlineWorkflowUrl = "", string onlineTemplateUrl = "")
     {
         var cachePath = WellKnownPaths.CachePath;
 
@@ -39,6 +39,7 @@ internal static class ConfiguratorExtensions
         if (cache != null && isOnline)
         {
             GetOnlineWorkflowsAndManifest(yamlFiles, cache, onlineWorkflowUrl);
+            GetOnlineTemplates(cache, onlineTemplateUrl);
         }
 
         GetLocalWorkflowsAndManifest(yamlFiles);
@@ -158,7 +159,6 @@ internal static class ConfiguratorExtensions
         return cache;
     }
     
-
     private static void GetLocalWorkflowsAndManifest(Dictionary<string, string> yamlFiles, string searchPath = "")
     {
         var files = FindWorkflowsAndManifest(searchPath);
@@ -193,7 +193,7 @@ internal static class ConfiguratorExtensions
 
     }
 
-    private static void GetOnlineWorkflowsAndManifest(IDictionary<string, string> yamlFiles, NoxCliCache cache, string? onlineWorkflowUrl = null)
+    private static void GetOnlineWorkflowsAndManifest(IDictionary<string, string> yamlFiles, NoxCliCache cache, string onlineWorkflowUrl = "")
     {
         if (string.IsNullOrEmpty(onlineWorkflowUrl)) onlineWorkflowUrl = "https://noxorg.dev/workflows";
         
@@ -232,9 +232,9 @@ internal static class ConfiguratorExtensions
         {
             string? yaml = null;
 
-            if (cache.FileInfo == null
-                || !cache.FileInfo.Any(i => i.Name == file.Name)
-                || !cache.FileInfo.Any(i => i.Name == file.Name && i.ShaChecksum == file.ShaChecksum))
+            if (cache.WorkflowInfo == null
+                || !cache.WorkflowInfo.Any(i => i.Name == file.Name)
+                || !cache.WorkflowInfo.Any(i => i.Name == file.Name && i.ShaChecksum == file.ShaChecksum))
             { 
 
                 request.Resource = file.Name;
@@ -263,13 +263,86 @@ internal static class ConfiguratorExtensions
             File.Delete(Path.Combine(workflowCachePath, orphanEntry));
         }
 
-        cache.FileInfo = onlineFiles;
+        cache.WorkflowInfo = onlineFiles;
         cache.Save();
 
         foreach (var entry in yamlFiles)
         {
             yamlFiles[entry.Key] = YamlHelper.ResolveYamlReferences(Path.Combine(workflowCachePath, entry.Key));
         }
+    }
+    
+    private static void GetOnlineTemplates(NoxCliCache cache, string? onlineTemplateUrl = null)
+    {
+        if (string.IsNullOrEmpty(onlineTemplateUrl)) onlineTemplateUrl = "https://noxorg.dev/templates";
+        
+        var client = new RestClient($"{onlineTemplateUrl}/{cache.Tid}/");
+
+        var fileListRequest = new RestRequest() { Method = Method.Get };
+
+        fileListRequest.AddHeader("Accept", "application/json");
+
+        // Get list of files on server
+        var onlineFilesJson = client.Execute(fileListRequest);
+
+        if (onlineFilesJson.Content == null) return;
+
+        if (onlineFilesJson.ResponseStatus == ResponseStatus.Error)
+        {
+            throw new Exception($"GetOnlineTemplates:-> {onlineFilesJson.ErrorException?.Message}");
+        }
+        
+        var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
+        // Read and cache the entries
+
+        var templateCachePath = WellKnownPaths.TemplatesCachePath;
+
+        Directory.CreateDirectory(templateCachePath);
+
+        var existingTemplateList = TraverseDirectory(templateCachePath);
+
+        var existingCacheList = existingTemplateList.Select(f => new FileInfo(f).Name).ToHashSet();
+        
+        var fileRequest = new RestRequest() { Method = Method.Post };
+
+        fileRequest.AddHeader("Accept", "application/json");
+
+
+        foreach (var file in onlineFiles!)
+        {
+            string? fileContent = null;
+
+            if (cache.TemplateInfo == null
+                || !cache.TemplateInfo.Any(i => i.Name == file.Name)
+                || !cache.TemplateInfo.Any(i => i.Name == file.Name && i.ShaChecksum == file.ShaChecksum))
+            {
+                
+                fileRequest.AddJsonBody($"{{\"FilePath\": \"{file.Name}\"}}");
+                    
+                fileContent = client.Execute(fileRequest).Content;
+
+                if (fileContent == null) throw new Exception($"Couldn't download template {file.Name}");
+                Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(templateCachePath, file.Name))!);
+                File.WriteAllText(Path.Combine(templateCachePath, file.Name), fileContent);
+            }
+
+            if (existingCacheList.Contains(file.Name))
+            {
+                existingCacheList.Remove(file.Name);
+            }
+        }
+
+        foreach (var orphanEntry in existingCacheList)
+        {
+            File.Delete(Path.Combine(templateCachePath, orphanEntry));
+        }
+
+        cache.TemplateInfo = onlineFiles;
+        cache.Save();
     }
 
     private static async Task<NoxCliCache?> GetCacheInfoFromAzureToken(string cacheFile)
@@ -310,7 +383,7 @@ internal static class ConfiguratorExtensions
     
         return ret;
     }
-
+    
     private static string[] FindWorkflowsAndManifest(string searchPath = "")
     {
         var searchPatterns = new string[] { FileExtension.WorflowDefinition, "*.cli.nox.yaml" };
@@ -362,6 +435,22 @@ internal static class ConfiguratorExtensions
             files.AddRange( path.GetFiles(pattern, searchOption) );
         }
         return files.ToArray();
+    }
+    
+    private static List<string> TraverseDirectory(string directory)
+    {
+        var result = new List<string>();
+        foreach (var file in Directory.GetFiles(directory))
+        {
+            result.Add(file);
+        }
+
+        foreach (var subDirectory in Directory.GetDirectories(directory))
+        {
+            result.AddRange(TraverseDirectory(subDirectory));
+        }
+
+        return result;
     }
 }
 

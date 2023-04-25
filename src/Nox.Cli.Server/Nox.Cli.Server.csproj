@@ -12,7 +12,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.5" />
     <PackageReference Include="Microsoft.Identity.Web" Version="2.9.0" />
-    <PackageReference Include="Nox.Utilities" Version="1.0.1" />
+    <PackageReference Include="Nox.Utilities" Version="1.0.2" />
     <PackageReference Include="RestSharp" Version="110.2.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="7.0.6" />
@@ -54,15 +54,6 @@
     <None Update="Templates\terraform\heimdall-ms-microservice-uat-vars.tf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Templates\pipelines\nox-project-pipeline\azure-pipelines.yml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Templates\pipelines\nox-project-pipeline\global.yaml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Templates\pipelines\nox-project-pipeline\preprod-we-test.yaml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="Templates\terraform\outputs.tf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -80,8 +71,5 @@
     <Content Include="..\.dockerignore">
       <Link>.dockerignore</Link>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Helpers" />
   </ItemGroup>
 </Project>

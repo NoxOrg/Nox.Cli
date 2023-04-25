@@ -5,6 +5,7 @@ using Nox.Cli.Secrets;
 using Nox.Cli.Server.Abstractions;
 using Nox.Cli.Server.Cache;
 using Nox.Cli.Server.Extensions;
+using Nox.Cli.Server.Helpers;
 using Nox.Cli.Server.Services;
 using Nox.Utilities.Secrets;
 
@@ -13,9 +14,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration);
 builder.Services.AddWorkflowCache()
-    .AddNoxCliManifest($"{builder.Configuration["NoxManifestUrl"]}/{builder.Configuration["AzureAd:TenantId"]}")
+    .AddNoxCliManifest($"{builder.Configuration["NoxManifestUrl"]}/workflows/{builder.Configuration["AzureAd:TenantId"]}")
     .AddPersistedSecretStore()
     .AddServerSecretResolver();
+TemplateHelper.GetOnlineTemplates($"{builder.Configuration["NoxManifestUrl"]}/templates", builder.Configuration["AzureAd:TenantId"]);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

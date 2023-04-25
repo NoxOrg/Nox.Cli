@@ -65,7 +65,7 @@ app.Configure(config =>
 
     if(!isGettingVersion && !isLoggingOut)
     {
-        config.AddNoxCommands(services, isOnline, appConfig["OnlineWorkflowUrl"]);
+        config.AddNoxCommands(services, isOnline, appConfig["OnlineWorkflowUrl"]!, appConfig["OnlineTemplateUrl"]!);
     }
 
     config.AddCommand<LogoutCommand>("logout")
