@@ -1,6 +1,7 @@
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using Nox.Core.Configuration;
+using Nox.Core.Models;
 
 namespace Nox.Cli.Plugin.Project;
 
@@ -19,7 +20,7 @@ public class ProjectGetTeamUserNames_v1: INoxCliAddin
                 ["team-members"] = new NoxActionInput {
                     Id = "team-members",
                     Description = "The list of developers on the project",
-                    Default = new List<TeamMemberConfiguration>(),
+                    Default = new List<TeamMember>(),
                     IsRequired = true
                 },
                 
@@ -48,13 +49,13 @@ public class ProjectGetTeamUserNames_v1: INoxCliAddin
         };
     }
 
-    private List<TeamMemberConfiguration>? _members;
+    private List<TeamMember>? _members;
     private bool? _includeAdmin;
     private string? _delimiter;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _members = inputs.Value<List<TeamMemberConfiguration>>("team-members");
+        _members = inputs.Value<List<TeamMember>>("team-members");
         _includeAdmin = inputs.ValueOrDefault<bool>("include-admin", this);
         _delimiter = inputs.ValueOrDefault<string>("delimiter", this);
         return Task.CompletedTask;

@@ -2,7 +2,7 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "test get-capitals",
+      "commandLineArgs": "sync infrastructure --path /home/jan/Projects/IWG/Nox.Cli.Scripts/.nox/design",
       "workingDirectory": "$(ProjectDir)",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

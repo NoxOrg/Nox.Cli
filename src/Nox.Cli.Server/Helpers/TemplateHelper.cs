@@ -36,10 +36,10 @@ public static class TemplateHelper
 
         if (onlineFilesJson.ResponseStatus == ResponseStatus.Error)
         {
-            throw new Exception($"GetOnlineTemplates:-> {onlineFilesJson.ErrorException?.Message}");
+            throw new NoxCliException($"GetOnlineTemplates:-> {onlineFilesJson.ErrorException?.Message}");
         }
         
-        var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
+        var onlineFiles = JsonSerializer.Deserialize<System.Collections.Generic.List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
@@ -50,36 +50,32 @@ public static class TemplateHelper
 
         Directory.CreateDirectory(templateCachePath);
 
-        var existingTemplateList = TraverseDirectory(templateCachePath);
+        var existingCacheList = TraverseDirectory(templateCachePath).ToHashSet();
 
-        var existingCacheList = existingTemplateList.Select(f => new FileInfo(f).Name).ToHashSet();
+        ValidateTemplateCache(existingCacheList, cachePath);
         
-        var fileRequest = new RestRequest() { Method = Method.Post };
-
-        fileRequest.AddHeader("Accept", "application/json");
-
-
         foreach (var file in onlineFiles!)
         {
             string? fileContent = null;
 
             if (cache!.TemplateInfo == null
-                || !cache.TemplateInfo.Any(i => i.Name == file.Name)
-                || !cache.TemplateInfo.Any(i => i.Name == file.Name && i.ShaChecksum == file.ShaChecksum))
+                || cache.TemplateInfo.All(i => i.Name != Path.Combine(templateCachePath, file.Name)) 
+                || !cache.TemplateInfo.Any(i => i.Name == Path.Combine(templateCachePath, file.Name) && i.ShaChecksum == file.ShaChecksum))
             {
-                
+                var fileRequest = new RestRequest() { Method = Method.Post };
+                fileRequest.AddHeader("Accept", "application/json");
                 fileRequest.AddJsonBody($"{{\"FilePath\": \"{file.Name}\"}}");
                     
                 fileContent = client.Execute(fileRequest).Content;
 
-                if (fileContent == null) throw new Exception($"Couldn't download template {file.Name}");
+                if (fileContent == null) throw new NoxCliException($"Couldn't download template {file.Name}");
                 Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(templateCachePath, file.Name))!);
                 File.WriteAllText(Path.Combine(templateCachePath, file.Name), fileContent);
             }
 
-            if (existingCacheList.Contains(file.Name))
+            if (existingCacheList.Contains(Path.Combine(templateCachePath, file.Name)))
             {
-                existingCacheList.Remove(file.Name);
+                existingCacheList.Remove(Path.Combine(templateCachePath, file.Name));
             }
         }
 
@@ -130,5 +126,14 @@ public static class TemplateHelper
         }
 
         return result;
+    }
+
+    private static void ValidateTemplateCache(HashSet<string> cache, string cachePath)
+    {
+        foreach (var item in cache)
+        {
+            if (!File.Exists(Path.Combine(cachePath, item)))
+                cache.Remove(item);
+        }
     }
 }

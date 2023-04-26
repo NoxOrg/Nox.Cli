@@ -30,7 +30,7 @@ jobs:
         uses: azuread/add-user-to-group@v1
         with:
           aad-client: ${{ steps.connect.outputs.aad-client }}
-          group-id: 62fbb65a-4d98-41ae-af34-84ad250405bd
+          group-id: 589d9526-5d3b-4180-b185-d5b1ff2dc4e6
           user-object-id: 6ff73a3a-fd56-42e9-aa23-9a14d89e12ee
         display:
           success: Added user to group

@@ -1,6 +1,7 @@
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using Nox.Core.Configuration;
+using Nox.Core.Models;
 
 namespace Nox.Cli.Plugin.Project;
 
@@ -19,7 +20,7 @@ public class ProjectGetOwnerEmails_v1: INoxCliAddin
                 ["team-members"] = new NoxActionInput {
                     Id = "team-members",
                     Description = "The list of developers on the project",
-                    Default = new List<TeamMemberConfiguration>(),
+                    Default = new List<TeamMember>(),
                     IsRequired = true
                 },
                 
@@ -33,7 +34,7 @@ public class ProjectGetOwnerEmails_v1: INoxCliAddin
 
             Outputs =
             {
-                ["owner-email"] = new NoxActionOutput
+                ["owner-emails"] = new NoxActionOutput
                 {
                     Id = "owner-email",
                     Description = "The resulting concatenated string of product owner team member email addresses."
@@ -42,12 +43,12 @@ public class ProjectGetOwnerEmails_v1: INoxCliAddin
         };
     }
 
-    private List<TeamMemberConfiguration>? _members;
+    private List<TeamMember>? _members;
     private string? _delimiter;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _members = inputs.Value<List<TeamMemberConfiguration>>("team-members");
+        _members = inputs.Value<List<TeamMember>>("team-members");
         _delimiter = inputs.ValueOrDefault<string>("delimiter", this);
         return Task.CompletedTask;
     }

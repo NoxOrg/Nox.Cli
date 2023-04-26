@@ -65,7 +65,7 @@ public class CoreLoadTemplate_v1: INoxCliAddin
                 else
                 {
                     var result = await System.IO.File.ReadAllTextAsync(fullPath);
-                    outputs["result-string"] = result;
+                    outputs["result"] = result;
                     ctx.SetState(ActionState.Success);    
                 }
             }
