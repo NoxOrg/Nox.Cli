@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
-namespace Nox.Cli.Plugins.AzDevops;
+namespace Nox.Cli.Plugin.AzDevOps;
 
 public class AzDevOpsQueueBuildDefinition_v1 : INoxCliAddin
 {

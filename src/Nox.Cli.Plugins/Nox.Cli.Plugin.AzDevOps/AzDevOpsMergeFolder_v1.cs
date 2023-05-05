@@ -1,12 +1,11 @@
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
-using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Plugins.AzDevops.Helpers;
+using Nox.Cli.Plugin.AzDevOps.Helpers;
 using Nox.Core.Exceptions;
 
-namespace Nox.Cli.Plugins.AzDevops;
+namespace Nox.Cli.Plugin.AzDevOps;
 
 public class AzDevOpsMergeFolder_v1 : INoxCliAddin
 {

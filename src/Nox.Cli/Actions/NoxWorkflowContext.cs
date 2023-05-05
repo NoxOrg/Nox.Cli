@@ -112,11 +112,9 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private Dictionary<string, INoxAction> ParseSteps()
     {
         var steps = new Dictionary<string, INoxAction>(StringComparer.OrdinalIgnoreCase);
-
+        var sequence = 0;
         foreach (var (jobKey, stepConfiguration) in _workflow.Jobs)
         {
-            var sequence = 0;
-
             foreach (var step in stepConfiguration.Steps)
             {
                 if (steps.ContainsKey(step.Id))

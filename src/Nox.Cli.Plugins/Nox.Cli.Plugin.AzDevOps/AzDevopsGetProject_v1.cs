@@ -1,10 +1,9 @@
 using Microsoft.TeamFoundation.Core.WebApi;
-using Microsoft.VisualStudio.Services.ExtensionManagement.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
-namespace Nox.Cli.Plugins.AzDevops;
+namespace Nox.Cli.Plugin.AzDevOps;
 
 public class AzDevopsGetProject_v1 : INoxCliAddin
 {

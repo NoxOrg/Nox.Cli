@@ -59,8 +59,8 @@ public static class TemplateHelper
             string? fileContent = null;
 
             if (cache!.TemplateInfo == null
-                || cache.TemplateInfo.All(i => i.Name != Path.Combine(templateCachePath, file.Name)) 
-                || !cache.TemplateInfo.Any(i => i.Name == Path.Combine(templateCachePath, file.Name) && i.ShaChecksum == file.ShaChecksum))
+                || cache.TemplateInfo.All(i => i.Name != file.Name) 
+                || cache.TemplateInfo.Any(i => i.Name == file.Name && i.ShaChecksum != file.ShaChecksum))
             {
                 var fileRequest = new RestRequest() { Method = Method.Post };
                 fileRequest.AddHeader("Accept", "application/json");

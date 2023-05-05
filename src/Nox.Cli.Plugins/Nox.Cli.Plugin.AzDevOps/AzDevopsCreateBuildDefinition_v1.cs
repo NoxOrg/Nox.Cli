@@ -1,12 +1,11 @@
 using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
-using Microsoft.VisualStudio.Services.ServiceEndpoints.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using Nox.Core.Exceptions;
 
-namespace Nox.Cli.Plugins.AzDevops;
+namespace Nox.Cli.Plugin.AzDevOps;
 
 public class AzDevopsCreateBuildDefinition_v1 : INoxCliAddin
 {

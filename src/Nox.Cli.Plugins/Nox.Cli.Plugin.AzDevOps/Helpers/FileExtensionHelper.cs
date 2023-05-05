@@ -1,4 +1,4 @@
-namespace Nox.Cli.Plugins.AzDevops.Helpers;
+namespace Nox.Cli.Plugin.AzDevOps.Helpers;
 
 public static class FileExtensionHelper
 {

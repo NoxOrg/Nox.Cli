@@ -1,15 +1,10 @@
-using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.Core.WebApi;
-using Microsoft.VisualStudio.Services.ExtensionManagement.WebApi;
 using Microsoft.VisualStudio.Services.Operations;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using RestSharp;
-using RestSharp.Authenticators;
-using RestSharp.Authenticators.OAuth2;
 
-namespace Nox.Cli.Plugins.AzDevops;
+namespace Nox.Cli.Plugin.AzDevOps;
 
 public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
 {

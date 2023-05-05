@@ -12,16 +12,10 @@
       <PackageReference Include="Microsoft.VisualStudio.Services.ExtensionManagement.WebApi" Version="16.205.1" />
       <PackageReference Include="Microsoft.VisualStudio.Services.ServiceEndpoints.WebApi" Version="16.205.1" />
       <PackageReference Include="Nox.Core" Version="6.0.46" />
+      <PackageReference Include="RestSharp" Version="110.2.0" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="RestSharp">
-        <HintPath>..\..\..\..\..\..\.nuget\packages\restsharp\109.0.1\lib\net7.0\RestSharp.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
 </Project>

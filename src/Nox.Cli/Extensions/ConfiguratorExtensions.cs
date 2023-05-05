@@ -16,6 +16,7 @@ using Nox.Cli.Authentication;
 using Nox.Cli.Authentication.Azure;
 using Nox.Cli.Configuration.Validation;
 using Nox.Cli.Server.Integration;
+using Nox.Core.Exceptions;
 using Nox.Core.Helpers;
 using Nox.Utilities.Configuration;
 using Nox.Utilities.Secrets;
@@ -89,10 +90,21 @@ internal static class ConfiguratorExtensions
             services.AddSingleton<IRemoteTaskExecutorConfiguration>(manifest.RemoteTaskExecutor);
             services.AddSingleton<INoxCliServerIntegration, NoxCliServerIntegration>();
         }
+
+        var workflows = new List<WorkflowConfiguration>();
+        foreach (var yaml in yamlFiles.Where(kv => kv.Key.EndsWith(FileExtension.WorflowDefinition.TrimStart('*'))))
+        {
+            try
+            {
+                workflows.Add(deserializer.Deserialize<WorkflowConfiguration>(yaml.Value));
+            }
+            catch (Exception ex)
+            {
+                throw new NoxYamlException($"Unable to deserialize workflow {yaml.Key}. {ex.Message}");
+            }
+        }
         
-        var workflowsByBranch = yamlFiles
-            .Where(kv => kv.Key.EndsWith(FileExtension.WorflowDefinition.TrimStart('*')))
-            .Select(kv => deserializer.Deserialize<WorkflowConfiguration>(kv.Value))
+        var workflowsByBranch = workflows
             .OrderBy(w => w.Cli.Branch, StringComparer.OrdinalIgnoreCase)
             .ThenBy(w => w.Cli.Command)
             .GroupBy(w => w.Cli.Branch.ToLower());

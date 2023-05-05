@@ -2,9 +2,8 @@ using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using DefinitionResourceReference = Microsoft.TeamFoundation.Build.WebApi.DefinitionResourceReference;
 
-namespace Nox.Cli.Plugins.AzDevops;
+namespace Nox.Cli.Plugin.AzDevOps;
 
 public class AzDevopsAuthorizeBuildDefinition_v1 : INoxCliAddin
 {

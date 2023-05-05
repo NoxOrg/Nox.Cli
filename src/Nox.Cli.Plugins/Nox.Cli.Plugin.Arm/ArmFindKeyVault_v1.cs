@@ -88,12 +88,20 @@ public class ArmFindKeyVault_v1 : INoxCliAddin
                 if (resourceGroupResponse.HasValue)
                 {
                     var vaults = resourceGroupResponse.Value.GetKeyVaults();
-                    var vaultResponse = await vaults.GetAsync(_kvName);
-                    if (vaultResponse.HasValue)
+                    try
                     {
-                        outputs["is-found"] = true;
-                        outputs["key-vault"] = vaultResponse.Value;
+                        var vaultResponse = await vaults.GetAsync(_kvName);
+                        if (vaultResponse.HasValue)
+                        {
+                            outputs["is-found"] = true;
+                            outputs["key-vault"] = vaultResponse.Value;
+                        }
                     }
+                    catch
+                    {
+                        //ignore - key vault does not exist
+                    }
+
                     ctx.SetState(ActionState.Success);
                 }
                 else
