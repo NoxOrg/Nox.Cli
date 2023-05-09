@@ -146,11 +146,11 @@ internal static class ConfiguratorExtensions
 
     private static NoxCliCache? GetOrCreateCache(string cacheFile, bool isOnline)
     {
-        NoxCliCache? cache;
+        var cache = new NoxCliCache();
 
         if (File.Exists(cacheFile))
         {
-            cache = NoxCliCache.Load(cacheFile);
+            cache.Load(cacheFile);
 
             if(!isOnline)
             {

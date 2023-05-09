@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Nox.Cli.Abstractions.Caching;
 
-public class NoxCliCache : IChangeTracking
+public class NoxCliCache : INoxCliCache
 {
     private string _upn = null!;
     public string Upn
@@ -100,13 +100,11 @@ public class NoxCliCache : IChangeTracking
         }
     }
 
-    public static NoxCliCache Load(string cacheFile)
+    public void Load(string cacheFile)
     {
         var cache = JsonSerializer.Deserialize<NoxCliCache>(File.ReadAllText(cacheFile))!;
-        cache.CacheFile = cacheFile;
-        cache.IsChanged = false;
-        return cache;
+        CacheFile = cacheFile;
+        IsChanged = false;
     }
-
 }
 

@@ -22,7 +22,7 @@ public static class ManifestExtensions
         // Get list of files on server
         var onlineFilesJson = client.Execute(request);
 
-        if (onlineFilesJson.Content == null) throw new ConfigurationException("Unable to load Nox Cli Manifest!");
+        if (onlineFilesJson.Content == null) throw new ConfigurationException("Unable to load Nox Cli Manifest! Is the online scripting repository online?");
 
         if (onlineFilesJson.ResponseStatus == ResponseStatus.Error)
         {
