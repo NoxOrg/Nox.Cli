@@ -48,7 +48,7 @@ public class ElasticCreateAlert_v1: INoxCliAddin
         return Task.CompletedTask;
     }
 
-    public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
+    public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string, object>();
 
@@ -61,12 +61,8 @@ public class ElasticCreateAlert_v1: INoxCliAddin
         {
             ctx.SetErrorMessage("The elastic create-alert action was not initialized");
         }
-        
-        
 
-        
-
-        return outputs;
+        return Task.FromResult<IDictionary<string, object>>(outputs);
     }
 
     public Task EndAsync()

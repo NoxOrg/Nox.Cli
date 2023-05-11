@@ -59,11 +59,11 @@
     <ProjectReference Include="..\Nox.Cli.Caching\Nox.Cli.Caching.csproj" />
     <ProjectReference Include="..\Nox.Cli.Configuration\Nox.Cli.Configuration.csproj" />
     <ProjectReference Include="..\Nox.Cli.Helpers\Nox.Cli.Helpers.csproj" />
-    <ProjectReference Include="..\Nox.Cli.Plugin.Test\Nox.Cli.Plugin.Test.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Test\Nox.Cli.Plugin.Test.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Arm\Nox.Cli.Plugin.Arm.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.AzDevOps\Nox.Cli.Plugin.AzDevOps.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.AzureAd\Nox.Cli.Plugin.AzureAd.csproj" />
-    <ProjectReference Include="..\Nox.Cli.Plugin.Core\Nox.Cli.Plugin.Core.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Core\Nox.Cli.Plugin.Core.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.File\Nox.Cli.Plugin.File.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Hcl\Nox.Cli.Plugin.Hcl.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Network\Nox.Cli.Plugin.Network.csproj" />
