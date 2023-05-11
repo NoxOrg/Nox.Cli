@@ -15,11 +15,22 @@ jobs:
   sync-test:  
     steps:
 
-      - name: Load a Template
-        id: load
+      - name: Load a local Template
+        id: load-local
         uses: core/load-template@v1
         with:
           path: terraform/outputs.tf
         display:
           success: Success
-          error: Error ${{ steps.load.error-message }}
+          error: Error ${{ steps.load-local.error-message }}
+
+      - name: Load a remote Template
+        id: load-remote
+        uses: core/load-template@v1
+        with:
+          path: terraform/outputs.tf
+        display:
+          success: Success
+          error: Error ${{ steps.load-remote.error-message }}
+        run-at-server: true
+        

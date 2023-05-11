@@ -57,6 +57,9 @@ public class CoreLoadTemplate_v1: INoxCliAddin
         {
             try
             {
+                ctx.CacheManager!.RefreshTemplate(_path);
+                //Check if the template has a new online version
+                
                 var fullPath = Path.GetFullPath(Path.Combine(WellKnownPaths.TemplatesCachePath, _path));
                 if (!System.IO.File.Exists(fullPath))
                 {

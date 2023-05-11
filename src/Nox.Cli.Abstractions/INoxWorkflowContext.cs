@@ -1,4 +1,6 @@
-﻿namespace Nox.Cli.Abstractions
+﻿using Nox.Cli.Abstractions.Caching;
+
+namespace Nox.Cli.Abstractions
 {
     public interface INoxWorkflowContext
     {
@@ -10,5 +12,7 @@
         void AddToVariables(string key, object value);
         void SetErrorMessage(string errorMessage);
         void SetState(ActionState state);
+        
+        INoxCliCacheManager? CacheManager { get; }
     }
 }

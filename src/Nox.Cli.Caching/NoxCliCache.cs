@@ -1,12 +1,18 @@
-﻿using System.ComponentModel;
-using System.Text.Json;
+﻿using System.Text.Json;
+using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Caching;
 
-namespace Nox.Cli.Abstractions.Caching;
+namespace Nox.Cli.Caching;
 
 public class NoxCliCache : INoxCliCache
 {
-    private string _upn = null!;
-    public string Upn
+    private string _upn = string.Empty;
+
+    private string _tid = string.Empty;
+
+    private string _remoteUrl = string.Empty;
+
+    public string UserPrincipalName
     {
         get => _upn;
         set
@@ -19,8 +25,30 @@ public class NoxCliCache : INoxCliCache
         }
     }
 
-    private string _tid = null!;
-    public string Tid
+    public string RemoteUrl
+    {
+        get => _remoteUrl;
+        set
+        {
+            if (_remoteUrl != value)
+            {
+                _remoteUrl = value;
+                IsChanged = true;
+            }
+        }
+    }
+
+    public string TemplateUrl
+    {
+        get => _remoteUrl + "/templates/" + _tid;
+    }
+
+    public string WorkflowUrl
+    {
+        get => _remoteUrl + "/workflows/" + _tid;
+    }
+
+    public string TenantId
     {
         get => _tid;
         set
@@ -34,6 +62,7 @@ public class NoxCliCache : INoxCliCache
     }
 
     private DateTimeOffset _expires;
+    
     public DateTimeOffset Expires
     {
         get => _expires;
@@ -48,6 +77,12 @@ public class NoxCliCache : INoxCliCache
     }
 
     private List<RemoteFileInfo> _workflowInfo = new();
+    
+    public bool IsExpired
+    {
+        get => Expires < DateTime.Now;
+    }
+
     public List<RemoteFileInfo> WorkflowInfo
     {
         get => _workflowInfo;
@@ -80,30 +115,22 @@ public class NoxCliCache : INoxCliCache
         }
     }
 
-    public string CacheFile { get; private set; } = string.Empty;
-
     public bool IsChanged { get; private set; }
     public void AcceptChanges() => IsChanged = false;
-    public NoxCliCache() { }
 
-    public NoxCliCache(string cacheFile)
+    public NoxCliCache()
     {
-        CacheFile = cacheFile;
+        
+    }
+    
+    public NoxCliCache(string remoteUrl, string cachePath, string cacheFile)
+    {
+        _remoteUrl = remoteUrl;
+        Expires = new DateTimeOffset(DateTime.Now.AddDays(7));
     }
 
-    public void Save()
+    public void ClearChanges()
     {
-        if (IsChanged)
-        {
-            File.WriteAllText(CacheFile, JsonSerializer.Serialize(this));
-            IsChanged = false;
-        }
-    }
-
-    public void Load(string cacheFile)
-    {
-        var cache = JsonSerializer.Deserialize<NoxCliCache>(File.ReadAllText(cacheFile))!;
-        CacheFile = cacheFile;
         IsChanged = false;
     }
 }

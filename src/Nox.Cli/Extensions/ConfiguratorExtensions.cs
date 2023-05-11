@@ -1,468 +1,100 @@
 ﻿using Nox.Cli.Commands;
-using Nox.Core.Constants;
-using RestSharp;
 using Spectre.Console.Cli;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-using System.Text.Json;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using Spectre.Console;
-using Nox.Cli.Configuration;
-using Nox.Cli.Abstractions;
-using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Authentication;
 using Nox.Cli.Authentication.Azure;
+using Nox.Cli.Caching;
 using Nox.Cli.Configuration.Validation;
 using Nox.Cli.Server.Integration;
-using Nox.Core.Exceptions;
-using Nox.Core.Helpers;
-using Nox.Utilities.Configuration;
-using Nox.Utilities.Secrets;
+using Spectre.Console;
 
 namespace Nox.Cli;
 
 internal static class ConfiguratorExtensions
 {
-    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline, string onlineWorkflowUrl = "", string onlineTemplateUrl = "")
+    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline, string onlineCacheUrl = "")
     {
-        var cachePath = WellKnownPaths.CachePath;
-
-        Directory.CreateDirectory(cachePath);
-
-        var cacheFile = WellKnownPaths.CacheFile;
-        
-        var cache = GetOrCreateCache(cacheFile, isOnline);
-
-        Dictionary<string,string> yamlFiles = new(StringComparer.OrdinalIgnoreCase);
-
-        if (cache != null && isOnline)
-        {
-            GetOnlineWorkflowsAndManifest(yamlFiles, cache, onlineWorkflowUrl);
-            GetOnlineTemplates(cache, onlineTemplateUrl);
-        }
-
-        GetLocalWorkflowsAndManifest(yamlFiles);
-        
+        var cacheBuilder = new NoxCliCacheBuilder(onlineCacheUrl)
+            .WithCustomSecurity()
+            .WithBuildEventHandler((sender, args) =>
+            {
+                AnsiConsole.MarkupLine(args.SpectreMessage);
+            });
+         
 #if DEBUG
-        GetLocalWorkflowsAndManifest(yamlFiles, "../../tests/workflows");        
-#endif
-        var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(HyphenatedNamingConvention.Instance)
-            .IgnoreUnmatchedProperties()
-            .WithTypeMapping<IActionConfiguration, ActionConfiguration>()
-            .WithTypeMapping<ICliConfiguration, CliConfiguration>()
-            .WithTypeMapping<IStepConfiguration, StepConfiguration>()
-            .WithTypeMapping<ICliCommandConfiguration, CliCommandConfiguration>()
-            .WithTypeMapping<ILocalTaskExecutorConfiguration, LocalTaskExecutorConfiguration>()
-            .WithTypeMapping<ISecretsConfiguration, SecretsConfiguration>()
-            .WithTypeMapping<ISecretProviderConfiguration, SecretProviderConfiguration>()
-            .WithTypeMapping<ISecretsValidForConfiguration, SecretsValidForConfiguration>()
-            .WithTypeMapping<ICliAuthConfiguration, CliAuthConfiguration>()
-            .WithTypeMapping<IRemoteTaskExecutorConfiguration, RemoteTaskExecutorConfiguration>()
-            .Build();
+        cacheBuilder.WithLocalWorkflowPath("../../tests/workflows");        
+#endif        
         
-        var manifest = yamlFiles
-            .Where(kv => kv.Key.EndsWith(".cli.nox.yaml")) // TODO: define in nox.core constants
-            .Select(kv => deserializer.Deserialize<ManifestConfiguration>(kv.Value))
-            .FirstOrDefault();
+        var cacheManager = cacheBuilder.Build();
 
-        if (manifest?.Authentication != null)
+        services.AddNoxCliCacheManager(cacheManager);
+
+        if (cacheManager.Manifest?.Authentication != null)
         {
             var authValidator = new CliAuthValidator();
-            authValidator.ValidateAndThrow(manifest.Authentication);
+            authValidator.ValidateAndThrow(cacheManager.Manifest.Authentication);
             
-            services.AddSingleton<ICliAuthConfiguration>(manifest.Authentication);
+            services.AddSingleton<ICliAuthConfiguration>(cacheManager.Manifest.Authentication);
             services.AddNoxServerAuthentication();
             services.AddAzureAuthentication();
         }
 
-        if (manifest?.LocalTaskExecutor != null)
+        if (cacheManager.Manifest?.LocalTaskExecutor != null)
         {
-            services.AddSingleton<ILocalTaskExecutorConfiguration>(manifest!.LocalTaskExecutor);
+            services.AddSingleton<ILocalTaskExecutorConfiguration>(cacheManager.Manifest!.LocalTaskExecutor);
         }
         
-        if (manifest?.RemoteTaskExecutor != null)
+        if (cacheManager.Manifest?.RemoteTaskExecutor != null)
         {
             var rteValidator = new RemoteTaskExecutorValidator();
-            rteValidator.ValidateAndThrow(manifest.RemoteTaskExecutor);
-            services.AddSingleton<IRemoteTaskExecutorConfiguration>(manifest.RemoteTaskExecutor);
+            rteValidator.ValidateAndThrow(cacheManager.Manifest.RemoteTaskExecutor);
+            services.AddSingleton<IRemoteTaskExecutorConfiguration>(cacheManager.Manifest.RemoteTaskExecutor);
             services.AddSingleton<INoxCliServerIntegration, NoxCliServerIntegration>();
         }
 
-        var workflows = new List<WorkflowConfiguration>();
-        foreach (var yaml in yamlFiles.Where(kv => kv.Key.EndsWith(FileExtension.WorflowDefinition.TrimStart('*'))))
+        if (cacheManager.Workflows != null && cacheManager.Workflows.Any())
         {
-            try
+            var workflowsByBranch = cacheManager.Workflows!
+                .OrderBy(w => w.Cli.Branch, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(w => w.Cli.Command)
+                .GroupBy(w => w.Cli.Branch.ToLower());
+
+            var branchDescriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (cacheManager.Manifest?.CliCommands != null)
             {
-                workflows.Add(deserializer.Deserialize<WorkflowConfiguration>(yaml.Value));
+                branchDescriptions = cacheManager.Manifest.CliCommands.ToDictionary( m => m.Name, m => m.Description, StringComparer.OrdinalIgnoreCase);
             }
-            catch (Exception ex)
+
+            foreach (var branch in workflowsByBranch)
             {
-                throw new NoxYamlException($"Unable to deserialize workflow {yaml.Key}. {ex.Message}");
-            }
-        }
-        
-        var workflowsByBranch = workflows
-            .OrderBy(w => w.Cli.Branch, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(w => w.Cli.Command)
-            .GroupBy(w => w.Cli.Branch.ToLower());
-
-        var branchDescriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        if (manifest?.CliCommands != null)
-        {
-            branchDescriptions = manifest.CliCommands.ToDictionary( m => m.Name, m => m.Description, StringComparer.OrdinalIgnoreCase);
-        }
-
-        foreach (var branch in workflowsByBranch)
-        {
-            cliConfig.AddBranch(branch.Key, b =>
-            {
-                if (branchDescriptions.ContainsKey(branch.Key))
+                cliConfig.AddBranch(branch.Key, b =>
                 {
-                    b.SetDescription(branchDescriptions[branch.Key]);
-                }
-
-                foreach(var workflow in branch)
-                {
-                    var cmdConfigContinuation = b.AddCommand<DynamicCommand>(workflow.Cli.Command)
-                        .WithData(workflow)
-                        .WithAlias(workflow.Cli.CommandAlias ?? string.Empty)
-                        .WithDescription(workflow.Cli.Description ?? string.Empty);
-                        
-                    foreach (var example in workflow.Cli.Examples!)
+                    if (branchDescriptions.ContainsKey(branch.Key))
                     {
-                        cmdConfigContinuation = cmdConfigContinuation.WithExample(example.ToArray());
-                    };
-                    
-                }
+                        b.SetDescription(branchDescriptions[branch.Key]);
+                    }
 
-            });
+                    foreach(var workflow in branch)
+                    {
+                        var cmdConfigContinuation = b.AddCommand<DynamicCommand>(workflow.Cli.Command)
+                            .WithData(workflow)
+                            .WithAlias(workflow.Cli.CommandAlias ?? string.Empty)
+                            .WithDescription(workflow.Cli.Description ?? string.Empty);
+                        
+                        foreach (var example in workflow.Cli.Examples!)
+                        {
+                            cmdConfigContinuation = cmdConfigContinuation.WithExample(example.ToArray());
+                        };
+                    
+                    }
+
+                });
+            }
         }
 
         return cliConfig;
-    }
-
-    private static NoxCliCache? GetOrCreateCache(string cacheFile, bool isOnline)
-    {
-        var cache = new NoxCliCache();
-
-        if (File.Exists(cacheFile))
-        {
-            cache.Load(cacheFile);
-
-            if(!isOnline)
-            {
-                return cache;
-            }
-
-            var now = new DateTimeOffset(DateTime.UtcNow);
-
-            if (cache.Expires > now)
-            {
-                return cache;
-            }
-
-        }
-
-        cache = GetCacheInfoFromAzureToken(cacheFile).Result;      
-
-        return cache;
-    }
-    
-    private static void GetLocalWorkflowsAndManifest(Dictionary<string, string> yamlFiles, string searchPath = "")
-    {
-        var files = FindWorkflowsAndManifest(searchPath);
-
-        var overriddenFiles = new List<string>(files.Length);
-
-        foreach (var file in files)
-        {
-            var yaml = File.ReadAllText(file);
-
-            var fileInfo = new FileInfo(file);
-
-            if (yamlFiles.ContainsKey(fileInfo.Name))
-            {
-                var overriddenPath = fileInfo.DirectoryName;
-                var overriddenFile = fileInfo.Name;
-                var pathMarkup = $"[underline]{overriddenPath.EscapeMarkup()}[/]";
-                if (overriddenPath != null && !overriddenFiles.Contains(pathMarkup))
-                {
-                    overriddenFiles.Add(pathMarkup);
-                }
-                overriddenFiles.Add(overriddenFile.Substring(0,overriddenFile.IndexOf('.')).EscapeMarkup());
-            }
-
-            yaml = YamlHelper.ResolveYamlReferences(file);
-            yamlFiles[fileInfo.Name] = yaml;
-        }
-        if (overriddenFiles.Count > 0)
-        {
-            AnsiConsole.MarkupLine($"[bold yellow]Warning: Local files {string.Join(',', overriddenFiles.Skip(1).ToArray())} in local folder {overriddenFiles.First()} overrides remote workflow(s) with the same name[/]");
-        }
-
-    }
-
-    private static void GetOnlineWorkflowsAndManifest(IDictionary<string, string> yamlFiles, NoxCliCache cache, string onlineWorkflowUrl = "")
-    {
-        if (string.IsNullOrEmpty(onlineWorkflowUrl)) onlineWorkflowUrl = "https://noxorg.dev/workflows";
-        
-        var client = new RestClient($"{onlineWorkflowUrl}/{cache.Tid}/");
-
-        var request = new RestRequest() { Method = Method.Get };
-
-        request.AddHeader("Accept", "application/json");
-
-        // Get list of files on server
-        var onlineFilesJson = client.Execute(request);
-
-        if (onlineFilesJson.Content == null) return;
-
-        if (onlineFilesJson.ResponseStatus == ResponseStatus.Error)
-        {
-            throw new Exception($"GetOnlineWorkflows:-> {onlineFilesJson.ErrorException?.Message}");
-        }
-        
-        var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
-        // Read and cache the entries
-
-        var workflowCachePath = WellKnownPaths.WorkflowsCachePath;
-
-        Directory.CreateDirectory(workflowCachePath);
-
-        var existingCacheList = Directory
-            .GetFiles(workflowCachePath,FileExtension.WorflowDefinition)
-            .Select(f => (new FileInfo(f)).Name).ToHashSet();
-
-        foreach (var file in onlineFiles!)
-        {
-            string? yaml = null;
-
-            if (cache.WorkflowInfo == null
-                || !cache.WorkflowInfo.Any(i => i.Name == file.Name)
-                || !cache.WorkflowInfo.Any(i => i.Name == file.Name && i.ShaChecksum == file.ShaChecksum))
-            { 
-
-                request.Resource = file.Name;
-
-                yaml = client.Execute(request).Content;
-
-                if (yaml == null) throw new Exception($"Couldn't download workflow {file.Name}");
-
-                File.WriteAllText(Path.Combine(workflowCachePath, file.Name), yaml);
-            }
-            else
-            {
-                yaml = File.ReadAllText(Path.Combine(workflowCachePath, file.Name));
-            }
-
-            yamlFiles[file.Name] = yaml;
-
-            if (existingCacheList.Contains(file.Name))
-            {
-                existingCacheList.Remove(file.Name);
-            }
-        }
-
-        foreach (var orphanEntry in existingCacheList)
-        {
-            File.Delete(Path.Combine(workflowCachePath, orphanEntry));
-        }
-
-        cache.WorkflowInfo = onlineFiles;
-        cache.Save();
-
-        foreach (var entry in yamlFiles)
-        {
-            yamlFiles[entry.Key] = YamlHelper.ResolveYamlReferences(Path.Combine(workflowCachePath, entry.Key));
-        }
-    }
-    
-    private static void GetOnlineTemplates(NoxCliCache cache, string? onlineTemplateUrl = null)
-    {
-        if (string.IsNullOrEmpty(onlineTemplateUrl)) onlineTemplateUrl = "https://noxorg.dev/templates";
-        
-        var client = new RestClient($"{onlineTemplateUrl}/{cache.Tid}/");
-
-        var fileListRequest = new RestRequest() { Method = Method.Get };
-
-        fileListRequest.AddHeader("Accept", "application/json");
-
-        // Get list of files on server
-        var onlineFilesJson = client.Execute(fileListRequest);
-
-        if (onlineFilesJson.Content == null) return;
-
-        if (onlineFilesJson.ResponseStatus == ResponseStatus.Error)
-        {
-            throw new Exception($"GetOnlineTemplates:-> {onlineFilesJson.ErrorException?.Message}");
-        }
-        
-        var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
-        // Read and cache the entries
-
-        var templateCachePath = WellKnownPaths.TemplatesCachePath;
-
-        Directory.CreateDirectory(templateCachePath);
-
-        var existingTemplateList = TraverseDirectory(templateCachePath);
-
-        var existingCacheList = existingTemplateList.Select(f => new FileInfo(f).Name).ToHashSet();
-        
-        var fileRequest = new RestRequest() { Method = Method.Post };
-
-        fileRequest.AddHeader("Accept", "application/json");
-
-
-        foreach (var file in onlineFiles!)
-        {
-            string? fileContent = null;
-
-            if (cache.TemplateInfo == null
-                || !cache.TemplateInfo.Any(i => i.Name == file.Name)
-                || !cache.TemplateInfo.Any(i => i.Name == file.Name && i.ShaChecksum == file.ShaChecksum))
-            {
-                
-                fileRequest.AddJsonBody($"{{\"FilePath\": \"{file.Name}\"}}");
-                    
-                fileContent = client.Execute(fileRequest).Content;
-
-                if (fileContent == null) throw new Exception($"Couldn't download template {file.Name}");
-                Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(templateCachePath, file.Name))!);
-                File.WriteAllText(Path.Combine(templateCachePath, file.Name), fileContent);
-            }
-
-            if (existingCacheList.Contains(file.Name))
-            {
-                existingCacheList.Remove(file.Name);
-            }
-        }
-
-        foreach (var orphanEntry in existingCacheList)
-        {
-            File.Delete(Path.Combine(templateCachePath, orphanEntry));
-        }
-
-        cache.TemplateInfo = onlineFiles;
-        cache.Save();
-    }
-
-    private static async Task<NoxCliCache?> GetCacheInfoFromAzureToken(string cacheFile)
-    {
-        AnsiConsole.MarkupLine($"[bold mediumpurple3_1]Checking your credentials...[/]");
-
-        var auth = await AzureSecretProvider.GetCredentialFromCacheOrBrowser();
-    
-        if (auth.AuthenticationRecord == null)
-        {
-            AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} Unable to login to Azure AD. Continuing without login.");
-            return null;
-        }
-        
-        if (auth.AuthenticationRecord.Username == null)
-        {
-            AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} User principal name (UPN) not detected. Continuing without login.");
-            return null;
-        }
-    
-        if (auth.AuthenticationRecord.TenantId == null)
-        {
-            AnsiConsole.MarkupLine($"{Emoji.Known.ExclamationQuestionMark} Tenant Id (TId) not detected. Continuing without login.");
-            return null;
-        }
-    
-        var ret = new NoxCliCache(cacheFile) 
-        { 
-            Upn = auth.AuthenticationRecord.Username, 
-            Tid = auth.AuthenticationRecord.TenantId, 
-            Expires = new DateTimeOffset(DateTime.Now.AddDays(7)) 
-        };
-    
-        ret.Save();
-    
-        AnsiConsole.MarkupLine($"{Emoji.Known.GreenCircle} Logged in as {auth.AuthenticationRecord.Username} on tenant {auth.AuthenticationRecord.TenantId}");
-        AnsiConsole.WriteLine();
-    
-        return ret;
-    }
-    
-    private static string[] FindWorkflowsAndManifest(string searchPath = "")
-    {
-        var searchPatterns = new string[] { FileExtension.WorflowDefinition, "*.cli.nox.yaml" };
-
-        var path = string.IsNullOrEmpty(searchPath) 
-            ? new DirectoryInfo(Directory.GetCurrentDirectory())
-            : new DirectoryInfo(searchPath);
-
-        // current or supplied folder
-        var files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.TopDirectoryOnly);
-
-        while (!files.Any())
-        {
-            // root
-            if (path == null || path.Parent == null)
-            {
-                files = Array.Empty<FileInfo>();
-                break;
-            }
-
-            // Find special NOX folder
-            if (Directory.GetDirectories(path.FullName, @".nox").Any())
-            {
-                path = new DirectoryInfo(Path.Combine(path.FullName,".nox"));
-                files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.AllDirectories);
-                break;
-            }
-
-            // Stop in project root, after checking all sub-directories
-            if (Directory.GetDirectories(path.FullName, @".git").Any())
-            {
-                files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.AllDirectories); ;
-                break;
-            }
-
-            path = path.Parent;
-
-            files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.TopDirectoryOnly); ;
-        }
-
-        return files.Select(f => f.FullName).ToArray();
-    }
-
-    private static FileInfo[] GetFilesWithSearchPatterns(DirectoryInfo path, string[] searchPatterns, SearchOption searchOption)
-    {
-        var files = new List<FileInfo>();
-        foreach (var pattern in searchPatterns) 
-        {
-            files.AddRange( path.GetFiles(pattern, searchOption) );
-        }
-        return files.ToArray();
-    }
-    
-    private static List<string> TraverseDirectory(string directory)
-    {
-        var result = new List<string>();
-        foreach (var file in Directory.GetFiles(directory))
-        {
-            result.Add(file);
-        }
-
-        foreach (var subDirectory in Directory.GetDirectories(directory))
-        {
-            result.AddRange(TraverseDirectory(subDirectory));
-        }
-
-        return result;
     }
 }
 

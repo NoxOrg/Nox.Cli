@@ -24,8 +24,14 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Nox.Cli.Server\Nox.Cli.Server.csproj" />
-      <ProjectReference Include="..\Nox.Cli\Nox.Cli.csproj" />
+      <ProjectReference Include="..\..\src\Nox.Cli.Server\Nox.Cli.Server.csproj" />
+      <ProjectReference Include="..\..\src\Nox.Cli\Nox.Cli.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="files\NoxCliCache.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Caching;
+using Nox.Cli.Caching;
 using Nox.Cli.Server.Cache;
 using Nox.Cli.Server.Services;
 
@@ -18,9 +20,11 @@ public class WorkflowContextTests
     [Test]
     public async Task Can_Execute_a_simple_task()
     {
-        var manifest = TestHelper.GetValidManifest();
+        var cacheManager = new NoxCliCacheBuilder("")
+            .WithCacheFile("./files/NoxCliCache.json")
+            .Build();
         var workflowId = Guid.NewGuid();
-        var context = new WorkflowContext(workflowId, manifest);
+        var context = new WorkflowContext(workflowId, cacheManager);
         var action = TestHelper.GetPingAction();
         var result = await context.ExecuteTask(action);
         Assert.That(result, Is.Not.Null);
@@ -34,9 +38,11 @@ public class WorkflowContextTests
     [Test]
     public async Task Must_get_error_state_if_any_variables_are_unresolved()
     {
-        var manifest = TestHelper.GetValidManifest();
+        var cacheManager = new NoxCliCacheBuilder("")
+            .WithCacheFile("./files/NoxCliCache.json")
+            .Build();
         var workflowId = Guid.NewGuid();
-        var context = new WorkflowContext(workflowId, manifest);
+        var context = new WorkflowContext(workflowId, cacheManager);
         var action = TestHelper.GetUninitializedPingAction();
         var result = await context.ExecuteTask(action);
         Assert.That(result, Is.Not.Null);
@@ -51,9 +57,11 @@ public class WorkflowContextTests
     [Test]
     public async Task Can_execute_another_task_on_the_same_context()
     {
-        var manifest = TestHelper.GetValidManifest();
+        var cacheManager = new NoxCliCacheBuilder("")
+            .WithCacheFile("./files/NoxCliCache.json")
+            .Build();
         var workflowId = Guid.NewGuid();
-        var context = new WorkflowContext(workflowId, manifest);
+        var context = new WorkflowContext(workflowId, cacheManager);
         var action = TestHelper.GetFirstAction();
         var result = await context.ExecuteTask(action);
         Assert.That(result, Is.Not.Null);

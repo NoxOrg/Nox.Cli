@@ -56,6 +56,7 @@
     <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
     <ProjectReference Include="..\Nox.Cli.Authentication.Azure\Nox.Cli.Authentication.Azure.csproj" />
     <ProjectReference Include="..\Nox.Cli.Authentication\Nox.Cli.Authentication.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Caching\Nox.Cli.Caching.csproj" />
     <ProjectReference Include="..\Nox.Cli.Configuration\Nox.Cli.Configuration.csproj" />
     <ProjectReference Include="..\Nox.Cli.Helpers\Nox.Cli.Helpers.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugin.Test\Nox.Cli.Plugin.Test.csproj" />

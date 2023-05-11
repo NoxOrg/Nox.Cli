@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
@@ -14,14 +15,16 @@ public class WorkflowContext: INoxWorkflowContext
     private string? _errorMessage;
     private ActionState _state;
     private readonly ServerVariableProvider _varProvider;
+    private readonly INoxCliCacheManager _cachManager;
 
     private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+secret[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    public WorkflowContext(Guid workflowId, IManifestConfiguration manifest, IServerSecretResolver? serverSecretResolver = null)
+    public WorkflowContext(Guid workflowId, INoxCliCacheManager cacheManager, IServerSecretResolver? serverSecretResolver = null)
     {
         _instanceId = Guid.NewGuid();
         _workflowId = workflowId;
-        _varProvider = new ServerVariableProvider(manifest, serverSecretResolver);
+        _varProvider = new ServerVariableProvider(cacheManager.Manifest!, serverSecretResolver);
+        _cachManager = cacheManager;
     }
 
     public bool IsServer => true;
@@ -101,4 +104,7 @@ public class WorkflowContext: INoxWorkflowContext
     {
         _state = state;
     }
+
+    public INoxCliCacheManager? CacheManager { get => _cachManager; }
+
 }

@@ -16,8 +16,9 @@ public static class InternetChecker
                 return true;
             }
         }
-        catch { }
+        catch { 
+            // Ignore
+        }
         return false;
     }
-
 }

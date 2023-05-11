@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Secrets;
 using Nox.Cli.Server.Integration;
@@ -10,7 +11,7 @@ namespace Nox.Cli.Actions;
 
 public class NoxWorkflowExecutor: INoxWorkflowExecutor
 {
-    private readonly INoxCliServerIntegration _serverIntegration;
+    private readonly INoxCliServerIntegration? _serverIntegration;
     private readonly List<INoxAction> _processedActions = new();
     private readonly IAnsiConsole _console;
     private readonly IProjectConfiguration _noxConfig;
@@ -18,15 +19,17 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
     private readonly IProjectSecretResolver _projectSecretResolver;
     private readonly IOrgSecretResolver _orgSecretResolver;
     private readonly ILocalTaskExecutorConfiguration? _lteConfig;
+    private readonly INoxCliCacheManager _cacheManager;
     
     public NoxWorkflowExecutor(
-        INoxCliServerIntegration serverIntegration,
         IAnsiConsole console,
         IProjectConfiguration noxConfig,
         IConfiguration appConfig,
         IProjectSecretResolver projectSecretResolver,
         IOrgSecretResolver orgSecretResolver,
-        ILocalTaskExecutorConfiguration? lteConfig = null)
+        INoxCliCacheManager cacheManager,
+        ILocalTaskExecutorConfiguration? lteConfig = null,
+        INoxCliServerIntegration? serverIntegration = null)
     {
         _serverIntegration = serverIntegration;
         _console = console;
@@ -35,6 +38,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         _lteConfig = lteConfig;
         _projectSecretResolver = projectSecretResolver;
         _orgSecretResolver = orgSecretResolver;
+        _cacheManager = cacheManager;
     }
     
     public async Task<bool> Execute(IWorkflowConfiguration workflow)
@@ -47,7 +51,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         var ctx = _console.Status()
             .Spinner(Spinner.Known.Clock)
-            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _projectSecretResolver, _orgSecretResolver, _lteConfig));
+            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _projectSecretResolver, _orgSecretResolver, _cacheManager, _lteConfig));
 
         bool success = true;
 
@@ -192,8 +196,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         if (!await IsServerHealthy())
         {
-            ctx.SetErrorMessage(ctx.CurrentAction, "Unable to connect to Nox Cli Server");
-            console.MarkupLine($"{Emoji.Known.RedCircle} [indianred1]Unable to connect to Nox Cli Server[/]");
+            ctx.SetErrorMessage(ctx.CurrentAction, "Unable to connect to Nox Cli Server.");
+            console.MarkupLine($"{Emoji.Known.RedCircle} [indianred1]Unable to connect to Nox Cli Server, you are trying to execute an action on the Nox Cli Server, but the server endpoint is not currently available[/]");
             return false;
         }
         
@@ -210,7 +214,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             return true;
         }
 
-        var executeResponse = await _serverIntegration.ExecuteTask(ctx.WorkflowId, ctx.CurrentAction);
+        var executeResponse = await _serverIntegration!.ExecuteTask(ctx.WorkflowId, ctx.CurrentAction);
         ctx.SetState(executeResponse.State);
         var outputs = executeResponse.Outputs;
 
@@ -246,7 +250,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
     private async Task<bool> IsServerHealthy()
     {
-        var result = await _serverIntegration!.EchoHealth();
+        if (_serverIntegration == null) return false;
+        var result = await _serverIntegration.EchoHealth();
         if (result == null) return false;
         return result.Name == "Nox Cli Server";
     }

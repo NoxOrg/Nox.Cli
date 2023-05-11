@@ -5,6 +5,7 @@ using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
 using System.Diagnostics;
+using Nox.Cli.Abstractions.Caching;
 using Nox.Core.Exceptions;
 using Nox.Core.Interfaces;
 
@@ -15,6 +16,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private readonly IWorkflowConfiguration _workflow;
     private readonly IDictionary<string, INoxAction> _steps;
     private readonly ClientVariableProvider _varProvider;
+    private readonly INoxCliCacheManager _cacheManager;
 
     private int _currentActionSequence = 0;
 
@@ -31,11 +33,13 @@ public class NoxWorkflowContext : INoxWorkflowContext
         IProjectConfiguration projectConfig,
         IProjectSecretResolver projectSecretResolver,
         IOrgSecretResolver orgSecretResolver,
+        INoxCliCacheManager cacheManager,
         ILocalTaskExecutorConfiguration? lteConfig)
     {
         WorkflowId = Guid.NewGuid();
         _workflow = workflow;
         _varProvider = new ClientVariableProvider(workflow, projectSecretResolver, orgSecretResolver, projectConfig, lteConfig);
+        _cacheManager = cacheManager;
         _steps = ParseSteps();
         _currentActionSequence = 0;
         NextStep();
@@ -60,6 +64,11 @@ public class NoxWorkflowContext : INoxWorkflowContext
         {
             _currentAction.State = state;
         }
+    }
+
+    public INoxCliCacheManager? CacheManager
+    {
+        get => _cacheManager;
     }
 
     public void SetErrorMessage(string errorMessage)

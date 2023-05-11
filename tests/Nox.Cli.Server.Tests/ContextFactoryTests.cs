@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Caching.Memory;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Caching;
 using Nox.Cli.Server.Abstractions;
 using Nox.Cli.Server.Cache;
 using Nox.Cli.Server.Services;
@@ -17,8 +18,11 @@ public class ContextFactoryTests
     {
         var memCache = new MemoryCache(new MemoryCacheOptions());
         var cache = new ServerCache(memCache);
-        var manifest = TestHelper.GetValidManifest();
-        TestContextFactory = new WorkflowContextFactory(cache, manifest, null);
+        var cacheManager = new NoxCliCacheBuilder("")
+            .WithCacheFile("./files/NoxCliCache.json")
+            .Build();
+        
+        TestContextFactory = new WorkflowContextFactory(cache, cacheManager, null);
     }
     
     [Test]

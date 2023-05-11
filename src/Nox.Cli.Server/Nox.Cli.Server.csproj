@@ -19,6 +19,7 @@
     <PackageReference Include="YamlDotNet" Version="13.1.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Nox.Cli.Caching\Nox.Cli.Caching.csproj" />
     <ProjectReference Include="..\Nox.Cli.Configuration\Nox.Cli.Configuration.csproj" />
     <ProjectReference Include="..\Nox.Cli.Helpers\Nox.Cli.Helpers.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugin.Test\Nox.Cli.Plugin.Test.csproj" />
