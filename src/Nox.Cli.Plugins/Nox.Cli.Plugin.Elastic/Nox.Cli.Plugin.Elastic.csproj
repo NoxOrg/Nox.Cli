@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
+      <ProjectReference Include="..\..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
     </ItemGroup>
 
 </Project>
