@@ -17,7 +17,6 @@ internal static class ConfiguratorExtensions
     public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline, string onlineCacheUrl = "")
     {
         var cacheBuilder = new NoxCliCacheBuilder(onlineCacheUrl)
-            .WithCustomSecurity()
             .WithBuildEventHandler((sender, args) =>
             {
                 AnsiConsole.MarkupLine(args.SpectreMessage);

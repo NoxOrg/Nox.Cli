@@ -11,9 +11,9 @@ public class NoxCliCacheBuilder
         _manager = new NoxCliCacheManager(remoteUrl);
     }
 
-    public NoxCliCacheBuilder WithCustomSecurity()
+    public NoxCliCacheBuilder ForServer()
     {
-        _manager.UseCustomSecurity();
+        _manager.ForServer();
         return this;
     }
 

@@ -31,15 +31,15 @@ public class NoxCliCacheManager: INoxCliCacheManager
     private string _tenantId;
     private string _workflowUrl;
     private string _templateUrl;
-    private bool _useIntegratedSecurity = true;
+    private bool _isServer;
     private readonly string _remoteUrl;
     private List<string> _buildLog;
     private IManifestConfiguration? _manifest;
     private List<IWorkflowConfiguration>? _workflows;
 
-    internal void UseCustomSecurity()
+    internal void ForServer()
     {
-        _useIntegratedSecurity = false;
+        _isServer = true;
     }
 
     internal void UseCachePath(string cachePath)
@@ -162,20 +162,25 @@ public class NoxCliCacheManager: INoxCliCacheManager
         Dictionary<string,string> yamlFiles = new(StringComparer.OrdinalIgnoreCase);
         if (IsOnline)
         {
-            if (!_useIntegratedSecurity)
-            {
-                GetCredentialsFromAzureToken();
-            }
-            else
+            if (_isServer)
             {
                 _cache!.TenantId = _tenantId;
                 SetRemoteUrls();
             }
+            else
+            {
+                GetCredentialsFromAzureToken();
+            }
+            
             GetOnlineWorkflowsAndManifest(yamlFiles);
             GetOnlineTemplates();
+        }
+        else
+        {
+            if (_isServer) throw new NoxCliException("Unable to start Nox Cli Server, Online script cache is not available!");
         } 
         
-        GetLocalWorkflowsAndManifest(yamlFiles);
+        if (!_isServer) GetLocalWorkflowsAndManifest(yamlFiles);
         var deserializer = BuildDeserializer();
         ResolveManifest(deserializer, yamlFiles);
         ResolveWorkflows(deserializer, yamlFiles);
@@ -188,7 +193,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     {
         _cache = new NoxCliCache(_remoteUrl, _cachePath, _cacheFile);
 
-        if (!File.Exists(_cacheFile)) return;
+        if (!File.Exists(_cacheFile) || _isServer) return;
         Load();
     }
 

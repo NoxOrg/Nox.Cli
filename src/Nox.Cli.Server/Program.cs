@@ -15,6 +15,7 @@ builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration)
 
 var cacheManager = new NoxCliCacheBuilder(builder.Configuration["NoxScriptsUrl"]!)
     .WithTentantId(builder.Configuration["AzureAd:TenantId"]!)
+    .ForServer()
     .Build();
 
 builder.Services.AddWorkflowCache()
