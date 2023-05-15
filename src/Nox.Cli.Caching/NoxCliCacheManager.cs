@@ -177,7 +177,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
         }
         else
         {
-            if (_isServer) throw new NoxCliException("Unable to start Nox Cli Server, Online script cache is not available!");
+            if (_isServer) throw new NoxCliException($"Unable to start Nox Cli Server, Online script cache is not available at: {_remoteUrl}");
         } 
         
         if (!_isServer) GetLocalWorkflowsAndManifest(yamlFiles);
