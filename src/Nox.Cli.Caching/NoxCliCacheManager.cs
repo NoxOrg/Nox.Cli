@@ -165,6 +165,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
             _cache!.TenantId = _tenantId;
             SetRemoteUrls();
             GetOnlineWorkflowsAndManifest(yamlFiles);
+            
             GetOnlineTemplates();
         }
         else
@@ -177,6 +178,8 @@ public class NoxCliCacheManager: INoxCliCacheManager
                 GetLocalWorkflowsAndManifest(yamlFiles);
             }
         }
+
+        ResolveYamlReferences(yamlFiles);
         
         var deserializer = BuildDeserializer();
         ResolveManifest(deserializer, yamlFiles);
@@ -305,10 +308,6 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
             _cache!.WorkflowInfo = onlineFiles;
 
-            foreach (var entry in yamlFiles)
-            {
-                yamlFiles[entry.Key] = YamlHelper.ResolveYamlReferences(Path.Combine(_workflowCachePath, entry.Key));
-            }
         }
         catch (Exception ex)
         {
@@ -556,6 +555,14 @@ public class NoxCliCacheManager: INoxCliCacheManager
         if (string.IsNullOrEmpty(_tenantId)) throw new NoxCliException("Tenant Id has not been set!");
         _workflowUrl = $"{_remoteUrl}/workflows/{_tenantId}";
         _templateUrl = $"{_remoteUrl}/templates/{_tenantId}";
+    }
+
+    private void ResolveYamlReferences(Dictionary<string,string> yamlFiles)
+    {
+        foreach (var entry in yamlFiles)
+        {
+            yamlFiles[entry.Key] = YamlHelper.ResolveYamlReferences(Path.Combine(_workflowCachePath, entry.Key));
+        }
     }
     
 }
