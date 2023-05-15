@@ -125,7 +125,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     {
         var templateInfo = _cache!.TemplateInfo.FirstOrDefault(ti => ti.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
         if (templateInfo == null) throw new NoxCliException($"Unable to find template {name} in the template cache.");
-        if (IsOnline)
+        if (!_isServer && IsOnline)
         {
             var client = new RestClient(_templateUrl);
             var infoRequest = new RestRequest("Info") { Method = Method.Post };
@@ -160,27 +160,24 @@ public class NoxCliCacheManager: INoxCliCacheManager
         _buildLog = new List<string>();
         GetOrCreateCache();
         Dictionary<string,string> yamlFiles = new(StringComparer.OrdinalIgnoreCase);
-        if (IsOnline)
+        if (_isServer)
         {
-            if (_isServer)
-            {
-                _cache!.TenantId = _tenantId;
-                SetRemoteUrls();
-            }
-            else
-            {
-                GetCredentialsFromAzureToken();
-            }
-            
+            _cache!.TenantId = _tenantId;
+            SetRemoteUrls();
             GetOnlineWorkflowsAndManifest(yamlFiles);
             GetOnlineTemplates();
         }
         else
         {
-            if (_isServer) throw new NoxCliException($"Unable to start Nox Cli Server, Online script cache is not available at: {_remoteUrl}");
-        } 
+            GetCredentialsFromAzureToken();
+            if (IsOnline)
+            {
+                GetOnlineWorkflowsAndManifest(yamlFiles);
+                GetOnlineTemplates();
+                GetLocalWorkflowsAndManifest(yamlFiles);
+            }
+        }
         
-        if (!_isServer) GetLocalWorkflowsAndManifest(yamlFiles);
         var deserializer = BuildDeserializer();
         ResolveManifest(deserializer, yamlFiles);
         ResolveWorkflows(deserializer, yamlFiles);
@@ -240,75 +237,82 @@ public class NoxCliCacheManager: INoxCliCacheManager
     
     private void GetOnlineWorkflowsAndManifest(IDictionary<string, string> yamlFiles)
     {
-        var client = new RestClient(_workflowUrl);
-
-        var request = new RestRequest() { Method = Method.Get };
-
-        request.AddHeader("Accept", "application/json");
-
-        // Get list of files on server
-        var onlineFilesJson = client.Execute(request);
-
-        if (onlineFilesJson.Content == null) return;
-
-        if (onlineFilesJson.ResponseStatus == ResponseStatus.Error)
+        try
         {
-            throw new Exception($"GetOnlineWorkflowsAndManifest:-> {onlineFilesJson.ErrorException?.Message}");
-        }
-        
-        var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+            var client = new RestClient(_workflowUrl);
 
-        // Read and cache the entries
+            var request = new RestRequest() { Method = Method.Get };
 
-        Directory.CreateDirectory(_workflowCachePath);
+            request.AddHeader("Accept", "application/json");
 
-        var existingCacheList = Directory
-            .GetFiles(_workflowCachePath,FileExtension.WorflowDefinition)
-            .Select(f => (new FileInfo(f)).Name).ToHashSet();
+            // Get list of files on server
+            var onlineFilesJson = client.Execute(request);
 
-        foreach (var file in onlineFiles!)
-        {
-            string? yaml = null;
+            if (onlineFilesJson.Content == null) return;
 
-            if (_cache!.WorkflowInfo == null
-                || !_cache.WorkflowInfo.Any(i => i.Name == file.Name)
-                || !_cache.WorkflowInfo.Any(i => i.Name == file.Name && i.ShaChecksum == file.ShaChecksum))
-            { 
-
-                request.Resource = file.Name;
-
-                yaml = client.Execute(request).Content;
-
-                if (yaml == null) throw new NoxCliException($"Couldn't download workflow {file.Name}");
-
-                File.WriteAllText(Path.Combine(_workflowCachePath, file.Name), yaml);
-            }
-            else
+            if (onlineFilesJson.ResponseStatus == ResponseStatus.Error)
             {
-                yaml = File.ReadAllText(Path.Combine(_workflowCachePath, file.Name));
+                throw new Exception($"GetOnlineWorkflowsAndManifest:-> {onlineFilesJson.ErrorException?.Message}");
             }
 
-            yamlFiles[file.Name] = yaml;
-
-            if (existingCacheList.Contains(file.Name))
+            var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
             {
-                existingCacheList.Remove(file.Name);
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
+            // Read and cache the entries
+
+            Directory.CreateDirectory(_workflowCachePath);
+
+            var existingCacheList = Directory
+                .GetFiles(_workflowCachePath, FileExtension.WorflowDefinition)
+                .Select(f => (new FileInfo(f)).Name).ToHashSet();
+
+            foreach (var file in onlineFiles!)
+            {
+                string? yaml = null;
+
+                if (_cache!.WorkflowInfo == null
+                    || !_cache.WorkflowInfo.Any(i => i.Name == file.Name)
+                    || !_cache.WorkflowInfo.Any(i => i.Name == file.Name && i.ShaChecksum == file.ShaChecksum))
+                {
+
+                    request.Resource = file.Name;
+
+                    yaml = client.Execute(request).Content;
+
+                    if (yaml == null) throw new NoxCliException($"Couldn't download workflow {file.Name}");
+
+                    File.WriteAllText(Path.Combine(_workflowCachePath, file.Name), yaml);
+                }
+                else
+                {
+                    yaml = File.ReadAllText(Path.Combine(_workflowCachePath, file.Name));
+                }
+
+                yamlFiles[file.Name] = yaml;
+
+                if (existingCacheList.Contains(file.Name))
+                {
+                    existingCacheList.Remove(file.Name);
+                }
+            }
+
+            foreach (var orphanEntry in existingCacheList)
+            {
+                File.Delete(Path.Combine(_workflowCachePath, orphanEntry));
+            }
+
+            _cache!.WorkflowInfo = onlineFiles;
+
+            foreach (var entry in yamlFiles)
+            {
+                yamlFiles[entry.Key] = YamlHelper.ResolveYamlReferences(Path.Combine(_workflowCachePath, entry.Key));
             }
         }
-
-        foreach (var orphanEntry in existingCacheList)
+        catch (Exception ex)
         {
-            File.Delete(Path.Combine(_workflowCachePath, orphanEntry));
-        }
-
-        _cache!.WorkflowInfo = onlineFiles;
-
-        foreach (var entry in yamlFiles)
-        {
-            yamlFiles[entry.Key] = YamlHelper.ResolveYamlReferences(Path.Combine(_workflowCachePath, entry.Key));
+            throw new NoxCliException("Unable to retrieve online manifest and workflows!", ex);
         }
     }
     
@@ -443,66 +447,73 @@ public class NoxCliCacheManager: INoxCliCacheManager
     
     private void GetOnlineTemplates()
     {
-        var client = new RestClient(_templateUrl);
-
-        var fileListRequest = new RestRequest() { Method = Method.Get };
-
-        fileListRequest.AddHeader("Accept", "application/json");
-
-        // Get list of files on server
-        var onlineFilesJson = client.Execute(fileListRequest);
-
-        if (onlineFilesJson.Content == null) return;
-
-        if (onlineFilesJson.ResponseStatus == ResponseStatus.Error)
+        try
         {
-            throw new NoxCliException($"GetOnlineTemplates:-> {onlineFilesJson.ErrorException?.Message}");
-        }
-        
-        var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+            var client = new RestClient(_templateUrl);
 
-        // Read and cache the entries
+            var fileListRequest = new RestRequest() { Method = Method.Get };
 
-        Directory.CreateDirectory(_templateCachePath);
+            fileListRequest.AddHeader("Accept", "application/json");
 
-        var existingTemplateList = TraverseDirectory(_templateCachePath);
+            // Get list of files on server
+            var onlineFilesJson = client.Execute(fileListRequest);
 
-        var existingCacheList = existingTemplateList.Select(f => new FileInfo(f).Name).ToHashSet();
-        
-        var fileRequest = new RestRequest() { Method = Method.Post };
+            if (onlineFilesJson.Content == null) return;
 
-        fileRequest.AddHeader("Accept", "application/json");
-
-
-        foreach (var file in onlineFiles!)
-        {
-            if (_cache!.TemplateInfo == null
-                || !_cache.TemplateInfo.Any(i => i.Name == file.Name)
-                || !_cache.TemplateInfo.Any(i => i.Name == file.Name && i.ShaChecksum == file.ShaChecksum))
+            if (onlineFilesJson.ResponseStatus == ResponseStatus.Error)
             {
-
-                var fileContent = GetOnlineTemplate(file.Name);
-                var templateFullPath = Path.Combine(_templateCachePath, file.Name);
-                Directory.CreateDirectory(Path.GetDirectoryName(templateFullPath)!);
-                File.WriteAllText(templateFullPath, fileContent);
+                throw new NoxCliException($"GetOnlineTemplates:-> {onlineFilesJson.ErrorException?.Message}");
             }
 
-            if (existingCacheList.Contains(file.Name))
+            var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
             {
-                existingCacheList.Remove(file.Name);
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
+            // Read and cache the entries
+
+            Directory.CreateDirectory(_templateCachePath);
+
+            var existingTemplateList = TraverseDirectory(_templateCachePath);
+
+            var existingCacheList = existingTemplateList.Select(f => new FileInfo(f).Name).ToHashSet();
+
+            var fileRequest = new RestRequest() { Method = Method.Post };
+
+            fileRequest.AddHeader("Accept", "application/json");
+
+
+            foreach (var file in onlineFiles!)
+            {
+                if (_cache!.TemplateInfo == null
+                    || !_cache.TemplateInfo.Any(i => i.Name == file.Name)
+                    || !_cache.TemplateInfo.Any(i => i.Name == file.Name && i.ShaChecksum == file.ShaChecksum))
+                {
+
+                    var fileContent = GetOnlineTemplate(file.Name);
+                    var templateFullPath = Path.Combine(_templateCachePath, file.Name);
+                    Directory.CreateDirectory(Path.GetDirectoryName(templateFullPath)!);
+                    File.WriteAllText(templateFullPath, fileContent);
+                }
+
+                if (existingCacheList.Contains(file.Name))
+                {
+                    existingCacheList.Remove(file.Name);
+                }
             }
-        }
 
-        foreach (var orphanEntry in existingCacheList)
+            foreach (var orphanEntry in existingCacheList)
+            {
+                File.Delete(Path.Combine(_templateCachePath, orphanEntry));
+            }
+
+            _cache!.TemplateInfo = onlineFiles;
+            Save();
+        }
+        catch (Exception ex)
         {
-            File.Delete(Path.Combine(_templateCachePath, orphanEntry));
+            throw new NoxCliException("Unable to retrieve online templates.", ex);
         }
-
-        _cache!.TemplateInfo = onlineFiles;
-        Save();
     }
     
     private List<string> TraverseDirectory(string directory)
