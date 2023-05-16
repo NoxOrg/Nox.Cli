@@ -179,8 +179,6 @@ public class NoxCliCacheManager: INoxCliCacheManager
             }
         }
 
-        ResolveYamlReferences(yamlFiles);
-        
         var deserializer = BuildDeserializer();
         ResolveManifest(deserializer, yamlFiles);
         ResolveWorkflows(deserializer, yamlFiles);
@@ -304,6 +302,11 @@ public class NoxCliCacheManager: INoxCliCacheManager
             foreach (var orphanEntry in existingCacheList)
             {
                 File.Delete(Path.Combine(_workflowCachePath, orphanEntry));
+            }
+            
+            foreach (var entry in yamlFiles)
+            {
+                yamlFiles[entry.Key] = YamlHelper.ResolveYamlReferences(Path.Combine(_workflowCachePath, entry.Key));
             }
 
             _cache!.WorkflowInfo = onlineFiles;
@@ -555,14 +558,6 @@ public class NoxCliCacheManager: INoxCliCacheManager
         if (string.IsNullOrEmpty(_tenantId)) throw new NoxCliException("Tenant Id has not been set!");
         _workflowUrl = $"{_remoteUrl}/workflows/{_tenantId}";
         _templateUrl = $"{_remoteUrl}/templates/{_tenantId}";
-    }
-
-    private void ResolveYamlReferences(Dictionary<string,string> yamlFiles)
-    {
-        foreach (var entry in yamlFiles)
-        {
-            yamlFiles[entry.Key] = YamlHelper.ResolveYamlReferences(Path.Combine(_workflowCachePath, entry.Key));
-        }
     }
     
 }
