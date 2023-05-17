@@ -11,7 +11,7 @@ using Nox.Utilities.Secrets;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration);
+builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration, subscribeToJwtBearerMiddlewareDiagnosticsEvents: true);
 
 var cacheManager = new NoxCliCacheBuilder(builder.Configuration["NoxScriptsUrl"]!)
     .WithTentantId(builder.Configuration["AzureAd:TenantId"]!)

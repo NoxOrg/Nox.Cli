@@ -21,7 +21,7 @@ jobs:
           host: ${{ project.versionControl.server }}
         display:
           success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
-          error: The DevOps server is not accessible. Are you connected to the Internet? 
+          error: The DevOps server (${{ project.versionControl.server }}) is not accessible. Are you connected to the Internet? 
         run-at-server: true
 
       - name: Connect to the DevOps server
