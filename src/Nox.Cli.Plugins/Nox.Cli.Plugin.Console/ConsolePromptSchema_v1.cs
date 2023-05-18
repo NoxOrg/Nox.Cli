@@ -115,6 +115,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
         _defaults = inputs.Value<Dictionary<string,object>>("defaults");
 
+        //_fileOptions = inputs.Value<Dictionary<string, string>>("output-file");
         _fileOptions = inputs.Value<Dictionary<string, string>>("output-file");
 
         return Task.CompletedTask;
@@ -172,7 +173,14 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
                             var contents = _sbYaml.ToString();
 
-                            File.WriteAllText(_fileOptions["filename"],contents);
+                            var outputFilePath = _fileOptions["filename"];
+                            if (_fileOptions.TryGetValue("folder", out var folder))
+                            {
+                                outputFilePath = Path.Combine(folder, outputFilePath);
+                            }
+                            
+                            File.WriteAllText(outputFilePath,contents);
+                            outputs["file-path"] = outputFilePath;
 
                             AnsiConsole.WriteLine();
                             AnsiConsole.MarkupLine($"[bold mediumpurple3_1]Created {_fileOptions["filename"].EscapeMarkup()}[/]");

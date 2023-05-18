@@ -25,18 +25,70 @@ public static class CliAddinExtensions
             {
                 if (typeof(T).IsAssignableTo(typeof(IDictionary<string, string>)))
                 {
-                    //result = (T?)value;
-                    var newDictionary = ((IDictionary<string, string>)value).ToDictionary( 
-                        kv => kv.Key.ToString()!, kv => kv.Value.ToString(), StringComparer.OrdinalIgnoreCase
-                    );
-                    result = (T)Convert.ChangeType(newDictionary, typeof(T));
+                    if (value.GetType().IsAssignableTo(typeof(Dictionary<string, string>)) || value.GetType().IsAssignableTo(typeof(Dictionary<string, object>)))
+                    {
+                        result = (T)Convert.ChangeType((T)value, typeof(T));
+                    }
+                    if (value.GetType().IsAssignableTo(typeof(Dictionary<object, object>)))
+                    {
+                        var newDict = new Dictionary<string, string>();
+                        foreach (var item in (IDictionary<object, object>)value)
+                        {
+                            newDict.Add(item.Key.ToString()!, item.Value.ToString()!);
+                        }
+                        result = (T)Convert.ChangeType(newDict, typeof(T));
+                    }
                 }
                 else if (typeof(T).IsAssignableTo(typeof(IDictionary<string, object>)))
                 {
-                    var newDictionary = ((IDictionary<object, object>)value).ToDictionary( 
-                        kv => kv.Key.ToString()!, kv => kv.Value, StringComparer.OrdinalIgnoreCase
-                    );
-                    result = (T)Convert.ChangeType(newDictionary, typeof(T));
+                    if (value.GetType().IsAssignableTo(typeof(Dictionary<string, string>)) || value.GetType().IsAssignableTo(typeof(Dictionary<string, object>)))
+                    {
+                        result = (T)Convert.ChangeType((T)value, typeof(T));
+                        
+                    }
+                    if (value.GetType().IsAssignableTo(typeof(Dictionary<object, object>)))
+                    {
+                        var newDict = new Dictionary<string, object>();
+                        foreach (var item in (IDictionary<object, object>)value)
+                        {
+                            newDict.Add(item.Key.ToString()!, item.Value);
+                        }
+                        result = (T)Convert.ChangeType(newDict, typeof(T));
+                    }
+                }
+                else if (typeof(T).IsAssignableTo(typeof(IDictionary<string, int>)))
+                {
+                    if (value.GetType().IsAssignableTo(typeof(Dictionary<string, int>)) || value.GetType().IsAssignableTo(typeof(Dictionary<string, object>)))
+                    {
+                        result = (T)Convert.ChangeType((T)value, typeof(T));
+                        
+                    }
+                    if (value.GetType().IsAssignableTo(typeof(Dictionary<object, object>)))
+                    {
+                        var newDict = new Dictionary<string, int>();
+                        foreach (var item in (IDictionary<object, object>)value)
+                        {
+                            newDict.Add(item.Key.ToString()!, (int)item.Value);
+                        }
+                        result = (T)Convert.ChangeType(newDict, typeof(T));
+                    }
+                }
+                else if (typeof(T).IsAssignableTo(typeof(IDictionary<string, double>)))
+                {
+                    if (value.GetType().IsAssignableTo(typeof(Dictionary<string, double>)) || value.GetType().IsAssignableTo(typeof(Dictionary<string, object>)))
+                    {
+                        result = (T)Convert.ChangeType((T)value, typeof(T));
+                        
+                    }
+                    if (value.GetType().IsAssignableTo(typeof(Dictionary<object, object>)))
+                    {
+                        var newDict = new Dictionary<string, double>();
+                        foreach (var item in (IDictionary<object, object>)value)
+                        {
+                            newDict.Add(item.Key.ToString()!, (double)item.Value);
+                        }
+                        result = (T)Convert.ChangeType(newDict, typeof(T));
+                    }
                 }
                 else if (typeof(T).IsAssignableTo(typeof(IList<string>)))
                 {

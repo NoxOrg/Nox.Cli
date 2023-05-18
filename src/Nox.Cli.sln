@@ -69,6 +69,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.Elastic", "N
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.Test", "Nox.Cli.Plugins\Nox.Cli.Plugin.Test\Nox.Cli.Plugin.Test.csproj", "{6117EE16-9A61-446F-B409-484DE41FC26E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreTests", "CoreTests\CoreTests.csproj", "{4D25DF29-1045-4F6C-A5EF-C66C94A5B1E4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -195,6 +197,10 @@ Global
 		{6117EE16-9A61-446F-B409-484DE41FC26E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6117EE16-9A61-446F-B409-484DE41FC26E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6117EE16-9A61-446F-B409-484DE41FC26E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D25DF29-1045-4F6C-A5EF-C66C94A5B1E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D25DF29-1045-4F6C-A5EF-C66C94A5B1E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D25DF29-1045-4F6C-A5EF-C66C94A5B1E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D25DF29-1045-4F6C-A5EF-C66C94A5B1E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -218,5 +224,6 @@ Global
 		{A6C0569C-1BDD-4862-8425-49B848F4A17B} = {E3FA4748-9B96-42E7-BDE8-1F08AA8AD4D9}
 		{E71FC419-2898-485D-8588-8E012F064F48} = {E3FA4748-9B96-42E7-BDE8-1F08AA8AD4D9}
 		{6117EE16-9A61-446F-B409-484DE41FC26E} = {E3FA4748-9B96-42E7-BDE8-1F08AA8AD4D9}
+		{4D25DF29-1045-4F6C-A5EF-C66C94A5B1E4} = {63454657-F25B-4BAB-8868-0766A619BFE6}
 	EndGlobalSection
 EndGlobal

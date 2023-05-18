@@ -22,9 +22,9 @@ internal static class ConfiguratorExtensions
                 AnsiConsole.MarkupLine(args.SpectreMessage);
             });
          
-#if DEBUG
-        cacheBuilder.WithLocalWorkflowPath("../../tests/workflows");        
-#endif        
+// #if DEBUG
+//         cacheBuilder.WithLocalWorkflowPath("../../tests/workflows");        
+// #endif        
         
         var cacheManager = cacheBuilder.Build();
 
