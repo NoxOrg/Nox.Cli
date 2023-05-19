@@ -33,7 +33,7 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
         await base.ExecuteAsync(context, settings);
-
+        
         var workflow = (WorkflowConfiguration)context.Data!;
 
         return await _executor.Execute(workflow) ? 0 : 1;

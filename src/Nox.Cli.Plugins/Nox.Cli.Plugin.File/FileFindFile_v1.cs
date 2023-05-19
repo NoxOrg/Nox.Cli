@@ -74,16 +74,30 @@ public class FileFindFile_v1 : INoxCliAddin
                 }
                 else
                 {
-                    var fullFilename = Path.Combine(_path, _filename);
-                    if (System.IO.File.Exists(fullFilename))
+                    if (_filename.Contains('*'))
                     {
-                        outputs["is-found"] = true;
+                        var files = Directory.GetFiles(fullPath, _filename);
+                        if (files.Length == 1)
+                        {
+                            outputs["is-found"] = true;
+                        }
+                        else
+                        {
+                            outputs["is-found"] = false;
+                        }
                     }
                     else
                     {
-                        outputs["is-found"] = false;
+                        var fullFilename = Path.Combine(fullPath, _filename);
+                        if (System.IO.File.Exists(fullFilename))
+                        {
+                            outputs["is-found"] = true;
+                        }
+                        else
+                        {
+                            outputs["is-found"] = false;
+                        }    
                     }
-
                 }
                 ctx.SetState(ActionState.Success);
             }
