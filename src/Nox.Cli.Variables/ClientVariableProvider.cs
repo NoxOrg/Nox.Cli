@@ -12,7 +12,7 @@ namespace Nox.Cli.Variables;
 
 public class ClientVariableProvider: IClientVariableProvider
 {
-    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
     private readonly Dictionary<string, object?> _variables;
     private readonly IProjectSecretResolver _projectSecretResolver;
