@@ -64,7 +64,7 @@ public class CoreToDashCase_v1: INoxCliAddin
                 {
                     //If there are periods then replace them with dashes
                     var result = _source.Replace('.', '-');
-                    result = Regex.Replace(result, @"(?<!^)(?<!-)((?<=\p{Ll})\p{Lu}|\p{Lu}(?=\p{Ll}))", "-$1").ToLower();
+                    result = Regex.Replace(result, @"(?<!^)(?<!-)((?<=\p{Ll})\p{Lu}|\p{Lu}(?=\p{Ll}))", "-$1", RegexOptions.None, TimeSpan.FromSeconds(1)).ToLower();
                     outputs["result"] = result;
                 }
                 
