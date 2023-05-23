@@ -97,7 +97,6 @@ public class ServerVariableProvider: IServerVariableProvider
         //Resolve runner variables
         _variables.ResolveRunnerVariables();
         _secretResolver?.ResolveAsync(_variables, _manifest.RemoteTaskExecutor!).Wait();
-        //TODO resolve runner variables
         ResolveServerVariables();
         
     }
