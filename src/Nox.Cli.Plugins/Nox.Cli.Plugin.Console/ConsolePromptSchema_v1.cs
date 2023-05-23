@@ -1,14 +1,12 @@
-﻿
-using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Plugin.YamlMaker.JsonSchema;
-using RestSharp;
-using Spectre.Console;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
+using RestSharp;
+using Spectre.Console;
 
-namespace Nox.Cli.Plugins.Console;
+namespace Nox.Cli.Plugin.Console;
 
 public class ConsolePromptSchema_v1 : INoxCliAddin
 {
@@ -145,7 +143,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
                 if (json != null)
                 {
-                    var jsonSchema = JsonSerializer.Deserialize<JsonSchema>(json, new JsonSerializerOptions {
+                    var jsonSchema = JsonSerializer.Deserialize<JsonSchema.JsonSchema>(json, new JsonSerializerOptions {
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                     });
 
@@ -237,7 +235,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         return json;
     }
 
-    private async Task AskForProperties(JsonSchema jsonSchema, string indent = "", string fullKey = "")
+    private async Task AskForProperties(JsonSchema.JsonSchema jsonSchema, string indent = "", string fullKey = "")
     {
         if (!string.IsNullOrWhiteSpace(jsonSchema.Description))
         {
@@ -361,7 +359,8 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                                 .PromptStyle(Style.Parse("seagreen1"))
                                 .DefaultValueStyle(Style.Parse("mediumpurple3_1"));
 
-                            promptObjString.AllowEmpty = false;
+                            
+                            promptObjString.AllowEmpty = !jsonSchema.Required.Contains(key);
 
                             var defaultValueString = GetDefaultString(prop, newFullKey);
 
@@ -371,8 +370,11 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                             }
                             
                             var responseString = AnsiConsole.Prompt(promptObjString);
-                            _sbYaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {responseString}");
-                            _responses[newFullKey] = responseString;
+                            if (!string.IsNullOrEmpty(responseString))
+                            {
+                                _sbYaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {responseString}");
+                                _responses[newFullKey] = responseString;    
+                            }
                         }
                         else
                         {
@@ -400,7 +402,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         }
     }
 
-    private string GetDefaultString(JsonSchema prop, string key)
+    private string GetDefaultString(JsonSchema.JsonSchema prop, string key)
     {
         string? defaultValue = null;
         
@@ -419,7 +421,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         return defaultValue ?? string.Empty;
     }
 
-    private int GetDefaultInt(JsonSchema prop, string key)
+    private int GetDefaultInt(JsonSchema.JsonSchema prop, string key)
     {
         int? defaultValue = null;
 

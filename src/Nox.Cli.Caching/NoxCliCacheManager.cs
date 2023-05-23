@@ -1,5 +1,6 @@
 using System.Net.NetworkInformation;
 using System.Text.Json;
+using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Nox.Cli.Abstractions;
@@ -212,6 +213,8 @@ public class NoxCliCacheManager: INoxCliCacheManager
                 RaiseBuildEvent($"{Emoji.Known.ExclamationQuestionMark} Tenant Id (TId) not detected. Continuing without login.");
                 return;
             }
+
+            _cache.Username = GetUsernameFromUpn(auth.AuthenticationRecord.Username);
             _cache.UserPrincipalName = auth.AuthenticationRecord.Username;
             _tenantId = auth.AuthenticationRecord.TenantId;
             _cache.TenantId = _tenantId;
@@ -558,6 +561,18 @@ public class NoxCliCacheManager: INoxCliCacheManager
         if (string.IsNullOrEmpty(_tenantId)) throw new NoxCliException("Tenant Id has not been set!");
         _workflowUrl = $"{_remoteUrl}/workflows/{_tenantId}";
         _templateUrl = $"{_remoteUrl}/templates/{_tenantId}";
+    }
+
+    private string GetUsernameFromUpn(string upn)
+    {
+        var result = upn;
+        if (upn.Contains('@'))
+        {
+            result = upn.Substring(0, upn.IndexOf('@'));
+        }
+
+        result = result.Replace('.', ' ');
+        return result;
     }
     
 }

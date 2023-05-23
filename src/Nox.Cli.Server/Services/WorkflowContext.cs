@@ -5,6 +5,7 @@ using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
+using Nox.Core.Interfaces;
 
 namespace Nox.Cli.Server.Services;
 
@@ -106,5 +107,8 @@ public class WorkflowContext: INoxWorkflowContext
     }
 
     public INoxCliCacheManager? CacheManager { get => _cachManager; }
-
+    public void SetProjectConfiguration(IProjectConfiguration projectConfiguration)
+    {
+        throw new NotImplementedException();
+    }
 }

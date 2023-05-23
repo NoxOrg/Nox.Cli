@@ -1,4 +1,5 @@
 ﻿using Nox.Cli.Abstractions.Caching;
+using Nox.Core.Interfaces;
 
 namespace Nox.Cli.Abstractions
 {
@@ -14,5 +15,6 @@ namespace Nox.Cli.Abstractions
         void SetState(ActionState state);
         
         INoxCliCacheManager? CacheManager { get; }
+        void SetProjectConfiguration(IProjectConfiguration projectConfiguration);
     }
 }

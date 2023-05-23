@@ -4,6 +4,7 @@ namespace Nox.Cli.Abstractions.Caching;
 
 public interface INoxCliCache: IChangeTracking
 {
+    string Username { get; set; }
     string UserPrincipalName { get; set; }
     string TenantId { get; set; }
     

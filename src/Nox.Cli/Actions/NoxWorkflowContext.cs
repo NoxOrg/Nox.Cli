@@ -15,7 +15,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
 {
     private readonly IWorkflowConfiguration _workflow;
     private readonly IDictionary<string, INoxAction> _steps;
-    private readonly ClientVariableProvider _varProvider;
+    private readonly IClientVariableProvider _varProvider;
     private readonly INoxCliCacheManager _cacheManager;
 
     private int _currentActionSequence = 0;
@@ -38,7 +38,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     {
         WorkflowId = Guid.NewGuid();
         _workflow = workflow;
-        _varProvider = new ClientVariableProvider(workflow, projectSecretResolver, orgSecretResolver, projectConfig, lteConfig);
+        _varProvider = new ClientVariableProvider(workflow, projectSecretResolver, orgSecretResolver, projectConfig, lteConfig, cacheManager.Cache);
         _cacheManager = cacheManager;
         _steps = ParseSteps();
         _currentActionSequence = 0;
@@ -69,6 +69,12 @@ public class NoxWorkflowContext : INoxWorkflowContext
     public INoxCliCacheManager? CacheManager
     {
         get => _cacheManager;
+    }
+
+    public void SetProjectConfiguration(IProjectConfiguration projectConfiguration)
+    {
+        _varProvider.SetProjectConfiguration(projectConfiguration);
+        _varProvider.ResolveProjectVariables();
     }
 
     public void SetErrorMessage(string errorMessage)

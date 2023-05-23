@@ -6,11 +6,26 @@ namespace Nox.Cli.Caching;
 
 public class NoxCliCache : INoxCliCache
 {
+    private string _username = string.Empty;
+    
     private string _upn = string.Empty;
 
     private string _tid = string.Empty;
 
     private string _remoteUrl = string.Empty;
+
+    public string Username
+    {
+        get => _username;
+        set
+        {
+            if (_username != value)
+            {
+                _username = value;
+                IsChanged = true;
+            }
+        }
+    }
 
     public string UserPrincipalName
     {
