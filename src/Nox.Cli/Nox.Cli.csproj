@@ -20,7 +20,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <AssemblyVersion>1.0.16.0</AssemblyVersion>
     <FileVersion>1.0.16.0</FileVersion>
-    <PackageVersion>1.0.15</PackageVersion>
+    <PackageVersion>1.0.16</PackageVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/NoxOrg/Nox.Cli</PackageProjectUrl>
     <RepositoryUrl>https://github.com/NoxOrg/Nox.Cli.git</RepositoryUrl>
