@@ -1,0 +1,39 @@
+# NOX Test Create an MS Teams team
+name: Test Create an MS Teams team
+
+cli:
+  branch: test
+  command: create-ms-team
+  command-alias: cmst
+  description: Test Create an MS Teams team
+  examples:
+    - ["test create-ms-team", "--path <designFolder>"]
+    - ["test cmst", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Connect to Teams
+        id: connect
+        uses: teams/connect_v1
+        with:
+          tenant-id: ${{ server.secrets.AZURE_TENANT_ID }}
+          client-id: ${{ server.secrets.AZURE_CLIENT_ID }}
+          client-secret: ${{ server.secrets.AZURE_CLIENT_SECRET }}
+        display:
+          success: Connected to Teams client
+          error: Failed to connect to Teams client ${{ steps.connect.error-message }}
+        run-at-server: true
+
+      - name: Create a sample team
+        id: create-team
+        uses: teams/create-team@v1
+        with:
+          teams-client: ${{ steps.connect.outputs.teams-client }}
+          team-name: Nox.SampleCurrency Team
+          team-description: The team working on the Nox.SampleCurrency project
+        display:
+          success: Created the team
+          error: Unable to create the team ${{ steps.create-team.error-message }}
+        run-at-server: true

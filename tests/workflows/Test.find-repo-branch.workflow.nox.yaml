@@ -1,0 +1,72 @@
+# NOX Test Delete Project command
+
+name: Test Find Repo Branch
+
+cli:
+  branch: test
+  command: find-branch
+  command-alias: fb
+  description: Test Find Repo Branch
+  examples:
+    - ["sync find-branch", "--path <designFolder>"]
+    - ["sync fb", "--path <designFolder>"]
+ 
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Locate the DevOps server
+        id: locate-server
+        uses: network/ping@v1
+        with:
+          host: ${{ project.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accesable. Are you connected to the Internet?
+        run-at-server: true
+
+      - name: Connect to the DevOps server
+        id: connect-server
+        uses: azdevops/connect@v1
+        with:
+          server: ${{ project.versionControl.server }}
+          personal-access-token: ${{ server.secrets.AZURE_DEVOPS_PAT }}
+        display:
+          success: Connected to the DevOps server
+          error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
+        run-at-server: true
+
+      - name: Get the project
+        id: get-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: Nox.SampleCurrency
+        display:
+          success: Got the DevOps project
+          error: There was a problem getting the project (${{ steps.get-project.error-message }})
+        run-at-server: true
+
+      - name: Get the Repo
+        id: get-repo
+        uses: azdevops/get-repo@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-id: ${{ steps.get-project.outputs.project-id }}
+          repository-name: elastic-alert-config
+        display:
+          success: Sucessfully got the App.Helmchart repo
+          error: There was a problem getting the repo (${{ steps.get-repo.error-message }})
+        run-at-server: true
+
+      - name: Find the main branch
+        id: find-main
+        uses: azdevops/find-branch@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          repository-id: ${{ steps.get-repo.outputs.repository-id }}
+          branch-name: main
+        display:
+          success: Sucessfully got the main branch
+          error: There was a problem getting the main branch for repo
+        run-at-server: true

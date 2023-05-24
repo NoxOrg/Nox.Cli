@@ -1,4 +1,7 @@
 using System.Text.RegularExpressions;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.Azure;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Server.Abstractions;
 using Nox.Utilities.Secrets;
@@ -10,10 +13,16 @@ public class ServerSecretResolver: IServerSecretResolver
     private static readonly Regex SecretsVariableRegex = new(@"\$\{\{\s*server\.secrets\.(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
  
     private readonly IPersistedSecretStore _store;
+    private readonly string _tenantId;
+    private readonly string _clientId;
+    private readonly string _clientSecret;
 
-    public ServerSecretResolver(IPersistedSecretStore store)
+    public ServerSecretResolver(IPersistedSecretStore store, string tenantId, string clientId, string clientSecret)
     {
         _store = store;
+        _tenantId = tenantId;
+        _clientId = clientId;
+        _clientSecret = clientSecret;
     }
 
     
@@ -61,11 +70,20 @@ public class ServerSecretResolver: IServerSecretResolver
                 switch (vault.Provider.ToLower())
                 {
                     case "azure-keyvault":
-                        var azureVault = new AzureSecretProvider(vault.Url);
-                        var azureSecrets = azureVault.GetSecretsAsync(unresolvedSecrets.Select(k => k.Key).ToArray()).Result;
-                        if (azureSecrets != null)
+                        var clientCredentials = new ClientSecretCredential(_tenantId, _clientId, _clientSecret);
+                        var secretClient = new SecretClient(new Uri(vault.Url), clientCredentials);
+                        var azureSecrets = new Dictionary<string, string>();
+                        foreach (var key in unresolvedSecrets.Select(k => k.Key))
                         {
-                            if (azureSecrets.Any()) resolvedSecrets.AddRange(azureSecrets);
+                            var secret = await secretClient.GetSecretAsync(key.ToAzureSecretKey());
+                            azureSecrets.Add(key, secret.Value.Value);
+                        }
+                            
+                        //var azureVault = new AzureSecretProvider(vault.Url);
+                        //var azureSecrets = azureVault.GetSecretsAsync(unresolvedSecrets.Select(k => k.Key).ToArray()).Result;
+                        if (azureSecrets.Count > 0)
+                        {
+                            resolvedSecrets.AddRange(azureSecrets);
                             foreach (var azureSecret in azureSecrets)
                             {
                                 await _store.SaveAsync($"srv.{azureSecret.Key}", azureSecret.Value);

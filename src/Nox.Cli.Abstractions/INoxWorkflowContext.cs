@@ -1,7 +1,11 @@
-﻿namespace Nox.Cli.Abstractions
+﻿using Nox.Cli.Abstractions.Caching;
+using Nox.Core.Interfaces;
+
+namespace Nox.Cli.Abstractions
 {
     public interface INoxWorkflowContext
     {
+        bool IsServer { get; }
         Guid InstanceId { get; }
         Guid WorkflowId { get; }
         ActionState State { get; }
@@ -9,5 +13,8 @@
         void AddToVariables(string key, object value);
         void SetErrorMessage(string errorMessage);
         void SetState(ActionState state);
+        
+        INoxCliCacheManager? CacheManager { get; }
+        void SetProjectConfiguration(IProjectConfiguration projectConfiguration);
     }
 }

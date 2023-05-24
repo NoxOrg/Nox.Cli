@@ -1,14 +1,15 @@
 ﻿using Nox.Core.Extensions;
 using Nox.Core.Helpers;
+using Nox.Core.Interfaces;
+using Nox.Core.Models;
+using Spectre.Console;
 
 namespace Nox.Cli;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Nox.Core.Configuration;
 using Nox.Core.Constants;
 using Nox.Core.Exceptions;
-using Nox.Core.Interfaces.Configuration;
 using System.IO;
 
 public static class ServiceCollectionExtensions
@@ -28,9 +29,10 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(configuration);
 
-        if (Directory.GetFiles(designPath, FileExtension.ServiceDefinition, SearchOption.TopDirectoryOnly).Length > 0)
+        if (Directory.GetFiles(designPath, FileExtension.ServiceDefinition, SearchOption.AllDirectories).Length > 0)
         {
             services.AddNoxConfiguration(designPath);
+            AnsiConsole.MarkupLine($"Found solution configuration in {Path.GetFullPath(designPath)}");
         }
         else
         {

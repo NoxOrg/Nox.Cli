@@ -1,20 +1,27 @@
+using Elastic.Apm.NetCoreAll;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
+using Nox.Cli.Caching;
 using Nox.Cli.Secrets;
 using Nox.Cli.Server.Abstractions;
 using Nox.Cli.Server.Cache;
-using Nox.Cli.Server.Extensions;
 using Nox.Cli.Server.Services;
 using Nox.Utilities.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration);
+builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration, subscribeToJwtBearerMiddlewareDiagnosticsEvents: true);
+
+var cacheManager = new NoxCliCacheBuilder(builder.Configuration["NoxScriptsUrl"]!)
+    .WithTentantId(builder.Configuration["AzureAd:TenantId"]!)
+    .ForServer()
+    .Build();
+
 builder.Services.AddWorkflowCache()
-    .AddNoxCliManifest($"{builder.Configuration["NoxManifestUrl"]}/{builder.Configuration["AzureAd:TenantId"]}")
+    .AddNoxCliCacheManager(cacheManager)
     .AddPersistedSecretStore()
-    .AddServerSecretResolver();
+    .AddServerSecretResolver(builder.Configuration["ServerSecretResolver:TenantId"]!, builder.Configuration["ServerSecretResolver:ClientId"]!, builder.Configuration["ServerSecretResolver:ClientSecret"]!);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -73,14 +80,12 @@ if (app.Environment.IsDevelopment())
         });    
     }
 }
+app.UseAllElasticApm(builder.Configuration);
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
+app.MapControllers();
 
 app.Run();

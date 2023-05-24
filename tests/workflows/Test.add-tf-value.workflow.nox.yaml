@@ -1,0 +1,46 @@
+# NOX Test Add Terraform value
+
+name: Test add tf value
+
+cli:
+  branch: test
+  command: add-tf-value
+  command-alias: atfv
+  description: Test add tf value
+  examples:
+    - ["sync add-tf-value", "--path <designFolder>"]
+    - ["sync atfv", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Read HCL file
+        id: load-file
+        uses: file/read-text@v1
+        with:
+          path: /home/jan/Temp/tfe_variable_set.tf
+        display:
+          success: Loaded the file
+          error: Unable to load the file ${{ steps.load-file.error-message }}
+
+      - name: Add a value
+        id: add-value
+        uses: hcl/add-value@v1
+        with:
+          source-hcl: ${{ steps.load-file.outputs.result-string }}
+          parent-node-path: variable_set_params/azure_tenant/workspace_ids
+          value-to-add: module.heimdall_nox_sample_workspaces.workspaces["nox_sample_prod_ne"].id
+        display:
+          success: Found the node
+          error: There was a problem adding the value (${{ steps.add-value.error-message }})
+
+      - name: Save the file
+        id: save-file
+        uses: file/write-text@v1
+        with:
+          path: /home/jan/Temp/tfe_variable_set.updated.tf
+          text-to-write: ${{ steps.add-value.outputs.result-hcl }}
+        display:
+          success: Saved the file
+          error: Coult not save the file ${{ steps.save-file.error-message }}

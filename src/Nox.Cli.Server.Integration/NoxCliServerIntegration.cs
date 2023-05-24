@@ -26,6 +26,8 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
         };
     }
 
+    public string Endpoint => _remoteTaskExecutorConfiguration.Url;
+
     public async Task<EchoHealthResponse?> EchoHealth()
     {
         if (string.IsNullOrEmpty(_remoteTaskExecutorConfiguration.Url)) throw new Exception("NoxCliServerIntegration::EchoHealth -> ServerUrl not set");
@@ -44,7 +46,14 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
     public async Task<ExecuteTaskResult> ExecuteTask(Guid workflowId, INoxAction? action)
     {
         if (string.IsNullOrEmpty(_remoteTaskExecutorConfiguration.Url)) throw new Exception("NoxCliServerIntegration::ExecuteTask -> ServerUrl not set");
-        var client = new RestClient($"{_remoteTaskExecutorConfiguration.Url}/Task/v1/Execute");
+        var apiToken = await _authenticator.GetServerToken();
+        var client = new RestClient($"{_remoteTaskExecutorConfiguration.Url}/Task/v1/Execute", options =>
+        {
+            if (!string.IsNullOrEmpty(apiToken))
+            {
+                options.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(apiToken, "Bearer");    
+            }
+        });
 
         var request = new RestRequest() { Method = Method.Post };
         request.AddBody(JsonSerializer.Serialize(new ExecuteTaskRequest
@@ -64,12 +73,7 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
         }));
 
         request.AddHeader("Accept", "application/json");
-        var apiToken = await _authenticator.GetServerToken();
-        if (!string.IsNullOrEmpty(apiToken))
-        {
-            client.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(apiToken, "Bearer");
-        }
-
+        
         var result = await client.ExecuteAsync(request);
         if (result.StatusCode != HttpStatusCode.OK)
         {
@@ -82,17 +86,19 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
     public async Task<TaskStateResponse> GetTaskState(Guid taskExecutorId)
     {
         if (string.IsNullOrEmpty(_remoteTaskExecutorConfiguration.Url)) throw new Exception("NoxCliServerIntegration::GetTaskState -> ServerUrl not set");
-        var client = new RestClient($"{_remoteTaskExecutorConfiguration.Url}/Task/v1/GetState/{taskExecutorId}");
+        var apiToken = await _authenticator.GetServerToken();
+        var client = new RestClient($"{_remoteTaskExecutorConfiguration.Url}/Task/v1/GetState/{taskExecutorId}", options =>
+        {
+            if (!string.IsNullOrEmpty(apiToken))
+            {
+                options.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(apiToken, "Bearer");    
+            }
+        });
 
         var request = new RestRequest() { Method = Method.Get };
 
         request.AddHeader("Accept", "application/json");
-        var apiToken = await _authenticator.GetServerToken();
-        if (!string.IsNullOrEmpty(apiToken))
-        {
-            client.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(apiToken, "Bearer");
-        }
-        
+  
         var result = await client.ExecuteAsync(request);
         if (result.StatusCode != HttpStatusCode.OK)
         {

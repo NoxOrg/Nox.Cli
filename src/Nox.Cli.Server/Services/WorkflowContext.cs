@@ -1,9 +1,11 @@
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
+using Nox.Core.Interfaces;
 
 namespace Nox.Cli.Server.Services;
 
@@ -14,16 +16,19 @@ public class WorkflowContext: INoxWorkflowContext
     private string? _errorMessage;
     private ActionState _state;
     private readonly ServerVariableProvider _varProvider;
+    private readonly INoxCliCacheManager _cachManager;
 
     private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+secret[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    public WorkflowContext(Guid workflowId, IManifestConfiguration manifest, IServerSecretResolver? serverSecretResolver = null)
+    public WorkflowContext(Guid workflowId, INoxCliCacheManager cacheManager, IServerSecretResolver? serverSecretResolver = null)
     {
         _instanceId = Guid.NewGuid();
         _workflowId = workflowId;
-        _varProvider = new ServerVariableProvider(manifest, serverSecretResolver);
+        _varProvider = new ServerVariableProvider(cacheManager.Manifest!, serverSecretResolver);
+        _cachManager = cacheManager;
     }
 
+    public bool IsServer => true;
     public Guid InstanceId => _instanceId;
     public Guid WorkflowId => _workflowId;
     public ActionState State => _state;
@@ -70,9 +75,10 @@ public class WorkflowContext: INoxWorkflowContext
                 await addin.BeginAsync(inputVars);
                 var outputs = await addin.ProcessAsync(this);
                 _varProvider.SaveOutputs(action.Id, outputs);
-                result.Outputs = outputs;
+                result.Outputs = VariableHelper.ExtractSimpleVariables(outputs);
                 await addin.EndAsync();
-                result.SetState(ActionState.Success);
+                result.SetState(_state);
+                result.ErrorMessage = _errorMessage;
             }
             catch (Exception ex)
             {
@@ -98,5 +104,11 @@ public class WorkflowContext: INoxWorkflowContext
     public void SetState(ActionState state)
     {
         _state = state;
+    }
+
+    public INoxCliCacheManager? CacheManager { get => _cachManager; }
+    public void SetProjectConfiguration(IProjectConfiguration projectConfiguration)
+    {
+        throw new NotImplementedException();
     }
 }

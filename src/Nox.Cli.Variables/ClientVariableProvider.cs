@@ -1,8 +1,10 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Secrets;
+using Nox.Core.Interfaces;
 using Nox.Core.Interfaces.Configuration;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -11,12 +13,13 @@ namespace Nox.Cli.Variables;
 
 public class ClientVariableProvider: IClientVariableProvider
 {
-    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
     private readonly Dictionary<string, object?> _variables;
     private readonly IProjectSecretResolver _projectSecretResolver;
     private readonly IOrgSecretResolver _orgSecretResolver;
-    private readonly IProjectConfiguration? _projectConfig;
+    private IProjectConfiguration? _projectConfig;
+    private readonly INoxCliCache? _cache;
     private readonly ILocalTaskExecutorConfiguration? _lteConfig;
     
     
@@ -25,13 +28,15 @@ public class ClientVariableProvider: IClientVariableProvider
         IProjectSecretResolver projectSecretResolver,
         IOrgSecretResolver orgSecretResolver,
         IProjectConfiguration? projectConfig = null,
-        ILocalTaskExecutorConfiguration? lteConfig = null)
+        ILocalTaskExecutorConfiguration? lteConfig = null,
+        INoxCliCache? cache = null)
     {
         _variables = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         _projectSecretResolver = projectSecretResolver;
         _orgSecretResolver = orgSecretResolver;
         _projectConfig = projectConfig;
         _lteConfig = lteConfig;
+        _cache = cache;
         Initialize(workflow);
     }
 
@@ -92,6 +97,11 @@ public class ClientVariableProvider: IClientVariableProvider
         ResolveAllVariables(action);
     }
 
+    public void SetProjectConfiguration(IProjectConfiguration projectConfig)
+    {
+        _projectConfig = projectConfig;
+    }
+
     public async Task ResolveAll()
     {
         _variables.ResolveRunnerVariables();
@@ -110,13 +120,18 @@ public class ClientVariableProvider: IClientVariableProvider
             await _projectSecretResolver.Resolve(_variables, _projectConfig);
         }
 
-        if (_projectConfig != null)
-        {
-            await _variables.ResolveProjectVariables(_projectConfig);
-        }
+        await ResolveProjectVariables();
 
         await _variables.ResolveEnvironmentVariables();
+        _variables.ResolveNoxCacheVariables(_cache);
+    }
 
+    public async Task ResolveProjectVariables()
+    {
+        if (_projectConfig != null)
+        {
+            await _variables.ResolveProjectVariables(_projectConfig);    
+        }
     }
 
     private void Initialize(IWorkflowConfiguration workflow)

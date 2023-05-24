@@ -1,6 +1,8 @@
 using Azure.Identity;
 using Microsoft.Graph;
+using Microsoft.Graph.Models.ODataErrors;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -59,9 +61,9 @@ public class AzureAdConnect_v1 : INoxCliAddin
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _tenantId = (string)inputs["tenant-id"];
-        _clientId = (string)inputs["client-id"];
-        _clientSecret = (string)inputs["client-secret"];
+        _tenantId = inputs.Value<string>("tenant-id");
+        _clientId = inputs.Value<string>("client-id");
+        _clientSecret = inputs.Value<string>("client-secret");
         return Task.CompletedTask;
     }
 
@@ -75,15 +77,20 @@ public class AzureAdConnect_v1 : INoxCliAddin
         {
             var userScopes = new string[] { @"https://graph.microsoft.com/.default" };
             var credentials = new ClientSecretCredential(_tenantId, _clientId, _clientSecret);
+            //var credentials = new DefaultAzureCredential();
             var client = new GraphServiceClient(credentials, userScopes);
             outputs["aad-client"] = client;
             ctx.SetState(ActionState.Success);
+        }
+        catch (ODataError odataError)
+        {
+            ctx.SetErrorMessage(odataError.Error!.Message!);
         }
         catch (Exception ex)
         {
             ctx.SetErrorMessage(ex.Message);
         }
-
+        
         return Task.FromResult((IDictionary<string, object>)outputs);
     }
 

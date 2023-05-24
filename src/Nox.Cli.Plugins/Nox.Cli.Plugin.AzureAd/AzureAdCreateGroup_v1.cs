@@ -1,5 +1,8 @@
 using Microsoft.Graph;
+using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.ODataErrors;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
 using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Plugins.AzDevops;
@@ -51,10 +54,10 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
 
             Outputs =
             {
-                ["aad-group"] = new NoxActionOutput
+                ["group-id"] = new NoxActionOutput
                 {
-                    Id = "aadGroup",
-                    Description = "The AAD group that was created",
+                    Id = "group-id",
+                    Description = "The Id of the AAD group that was created.",
                 },
             }
         };
@@ -67,10 +70,10 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
-        _groupName = (string)inputs["group-name"];
-        _groupDescription = (string)inputs["group-description"];
-        _aadClient = (GraphServiceClient)inputs["aad-client"];
-        _projectName = inputs.ContainsKey("project-name") ? (string)inputs["project-name"] : "";
+        _groupName = inputs.Value<string>("group-name");
+        _groupDescription = inputs.Value<string>("group-description");
+        _aadClient = inputs.Value<GraphServiceClient>("aad-client");
+        _projectName = inputs.ValueOrDefault<string>("project-name", this);
         return Task.CompletedTask;
     }
 
@@ -91,20 +94,27 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
             {
                 var projectGroupName = _groupName.ToUpper();
 
-                var projectGroups = await _aadClient.Groups.Request()
-                    .Filter($"DisplayName eq '{projectGroupName}'")
-                    .Expand("Members")
-                    .GetAsync();
-
-                if (projectGroups.Count == 1)
+                var projectGroups = await _aadClient.Groups.GetAsync((requestConfiguration) =>
                 {
-                    outputs["aad-group"] = projectGroups.First();
+                    requestConfiguration.QueryParameters.Count = true;
+                    requestConfiguration.QueryParameters.Filter = $"displayName eq '{projectGroupName}'";
+                    requestConfiguration.QueryParameters.Select = new string []{ "id","displayName" };
+                });
+                
+                if (projectGroups != null && projectGroups.Value!.Count == 1)
+                {
+                    outputs["group-id"] = projectGroups.Value.First().Id!;
                 }
                 else
                 {
-                    outputs["aad-group"] = await CreateAdGroupAsync(projectGroupName);
+                    var newGroupId = await CreateAdGroupAsync(projectGroupName);
+                    if (newGroupId != null) outputs["group-id"] = newGroupId;
                 }
                 ctx.SetState(ActionState.Success);
+            }
+            catch (ODataError odataError)
+            {
+                ctx.SetErrorMessage(odataError.Error!.Message!);
             }
             catch (Exception ex)
             {
@@ -120,7 +130,7 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
         return Task.CompletedTask;
     }
 
-    private async Task<Group> CreateAdGroupAsync(string projectGroupName)
+    private async Task<string?> CreateAdGroupAsync(string projectGroupName)
     {
         var description = "Created by Nox.Cli";
         if (!string.IsNullOrEmpty(_projectName)) description += $" for service {_projectName}";
@@ -137,9 +147,8 @@ public class AzureAdCreateGroup_v1 : INoxCliAddin
             Team = { }
         };
 
-        var group = await _aadClient!.Groups.Request().AddAsync(newGroup);
-
-        return group;
+        var group = await _aadClient!.Groups.PostAsync(newGroup);
+        return group != null ? group.Id! : null;
     }
     
 }

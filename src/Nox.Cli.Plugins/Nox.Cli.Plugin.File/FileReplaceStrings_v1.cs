@@ -25,7 +25,7 @@ public class FileReplaceStrings_v1 : INoxCliAddin
                 
                 ["replacements"] = new NoxActionInput {
                     Id = "replacements",
-                    Description = "List containing a strings to replace and their replacement values.",
+                    Description = "a List containing strings to to find and their replacement values.",
                     Default = new Dictionary<string, string>(),
                     IsRequired = true
                 },
@@ -49,9 +49,11 @@ public class FileReplaceStrings_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (string.IsNullOrEmpty(_path) || _replacements == null || _replacements.Count == 0)
+        if (string.IsNullOrEmpty(_path) || 
+            _replacements == null || 
+            _replacements.Count == 0)
         {
-            ctx.SetErrorMessage("The File purge-folder action was not initialized");
+            ctx.SetErrorMessage("The File replace-strings action was not initialized");
         }
         else
         {
@@ -64,9 +66,13 @@ public class FileReplaceStrings_v1 : INoxCliAddin
                 }
                 else
                 {
+                    var fileExisted = System.IO.File.Exists(_path);
+                    var fileCreateTime = DateTime.MinValue;
+                    if (fileExisted) fileCreateTime = System.IO.File.GetCreationTime(_path);
                     var source = System.IO.File.ReadAllText(fullPath);
                     var result = Replace(source, _replacements);
                     System.IO.File.WriteAllText(fullPath, result);
+                    if (fileExisted) System.IO.File.SetCreationTime(_path, fileCreateTime);
                     ctx.SetState(ActionState.Success);    
                 }
             }

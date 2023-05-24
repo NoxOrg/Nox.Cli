@@ -1,0 +1,63 @@
+# NOX Test Send channel message
+name: Test Create an MS Teams channel
+
+cli:
+  branch: test
+  command: send-channel-message
+  command-alias: send-message
+  description: Test Create an MS Teams channel
+  examples:
+    - ["test send-channel-message", "--path <designFolder>"]
+    - ["test send-message", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Connect to AAD
+        id: connect
+        uses: azuread/connect_v1
+        with:
+          tenant-id: ${{ server.secrets.AZURE_TENANT_ID }}
+          client-id: ${{ server.secrets.AZURE_CLIENT_ID }}
+          client-secret: ${{ server.secrets.AZURE_CLIENT_SECRET }}
+        display:
+          success: Connected to Azure AD
+          error: Failed to connect to Azure AD ${{ steps.connect.error-message }}
+        run-at-server: true
+
+      - name: Find the team
+        id: find-ms-team
+        uses: azuread/find-group@v1
+        with:
+          aad-client: ${{ steps.connect.outputs.aad-client }}
+          group-name: NOX_WeatherService Team
+        display:
+          success: Searched for the NOX_WeatherService Team
+          error: Unable to search for the NOX_WeatherService Team (${{ steps.find-ms-team.error-message }})
+        run-at-server: true
+
+      - name: Find the channel
+        id: find-channel
+        uses: teams/find-channel@v1
+        with:
+          aad-client: ${{ steps.connect.outputs.aad-client }}
+          team-id: ${{ steps.find-ms-team.outputs.group-id }}
+          channel-name: General
+        display:
+          success: Searched for the channel
+          error: Unable to search for the channel ${{ steps.find-chat.error-message }}
+        run-at-server: true
+
+      - name: Send a channel message
+        id: send-message
+        uses: teams/send-channel-message@v1
+        with:
+          aad-client: ${{ steps.connect.outputs.aad-client }}
+          team-id: ${{ steps.find-ms-team.outputs.group-id }}
+          channel-id: ${{ steps.find-channel.outputs.channel-id }}
+          message-body: Hello World, from the Nox.Cli
+        display:
+          success: Sent a channel message
+          error: Unable to send a channel message (${{ steps.send-message.error-message }})
+        run-at-server: true

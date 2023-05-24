@@ -1,0 +1,85 @@
+# NOX Test Share Service Endpoint command
+
+name: Test Share Service Endpoint
+
+cli:
+  branch: test
+  command: share-service-endpoint
+  command-alias: sse
+  description: Test Share Service Endpoint
+  examples:
+    - ["sync share-service-endpoint", "--path <designFolder>"]
+    - ["sync sse", "--path <designFolder>"]
+ 
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Locate the DevOps server
+        id: locate-server
+        uses: network/ping@v1
+        with:
+          host: ${{ project.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accesable. Are you connected to the Internet?
+        run-at-server: true
+
+      - name: Connect to the DevOps server
+        id: connect-server
+        uses: azdevops/connect@v1
+        with:
+          server: ${{ project.versionControl.server }}
+          personal-access-token: ${{ server.secrets.AZURE_DEVOPS_PAT }}
+        display:
+          success: Connected to the DevOps server
+          error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
+        run-at-server: true
+
+      - name: Get the DevOps project
+        id: get-devops-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: IWG.DevOps
+        display:
+          success: Got the DevOps project
+          error: Unable to get the DevOps project (${{ steps.get-devops-project.error-message }})
+        run-at-server: true
+
+      - name: Find the service Endpoint
+        id: find-service-endpoint
+        uses: azdevops/find-service-endpoint@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-id: ${{ steps.get-devops-project.outputs.project-id }}
+          service-endpoint-name: APPS_EU_PLATFORM_N
+        display:
+          success: Sucessfully found the service endpoint
+          error: There was a problem finding the service endpoint (${{ steps.find-service-endpoint.error-message }})
+        run-at-server: true
+      
+      - name: Get the Nox.Cli project
+        id: get-nox-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: Nox.Cli
+        display:
+          success: Got the Nox project
+          error: There was a problem getting the Nox project (${{ steps.get-nox-project.error-message }})
+        run-at-server: true
+
+      - name: Share the service endpoint with Nox.Demo
+        id: share-se
+        uses: azdevops/share-service-endpoint@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          service-endpoint-id: ${{ steps.find-service-endpoint.outputs.service-endpoint-id }}
+          service-endpoint-name: APPS_EU_PLATFORM_N
+          project-id: ${{ steps.get-nox-project.outputs.project-id }}
+          project-name: Nox.Cli
+        display:
+          success: Shared the Service Endpoint
+          error: Unable to share the Service Endpoint (${{ steps.share-se.error-message }})
+        run-at-server: true

@@ -1,0 +1,25 @@
+# NOX Test Get String Capitals
+
+name: Test Get String Capitals
+
+cli:
+  branch: test
+  command: get-capitals
+  command-alias: getcaps
+  description: Test Get String Capitals
+  examples:
+    - ["sync get-capitals", "--path <designFolder>"]
+    - ["sync getcaps", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Get Capitals
+        id: get-capitals
+        uses: core/get-string-capitals@v1
+        with:
+          source-string: Nox.Cli.Scripts
+        display:
+          success: Success ${{ steps.get-capitals.outputs.result }}, lower case -> ${{ steps.get-capitals.outputs.lower-result }}
+          error: Error ${{ steps.get-capitals.error-message }}

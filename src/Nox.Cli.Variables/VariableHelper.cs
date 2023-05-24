@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace Nox.Cli.Variables;
 
@@ -26,21 +27,18 @@ public static class VariableHelper
             case JsonValueKind.False:
             case JsonValueKind.True:
                 return element.GetBoolean();
-            case JsonValueKind.Array:
-                return element.EnumerateArray();
             case JsonValueKind.Null:
                 return null!;
             case JsonValueKind.Object:
-                return element;
+                return JsonConvert.DeserializeObject<Dictionary<string, string>>(element.ToString())!;
             case JsonValueKind.Number:
                 if (element.TryGetInt32(out var intVal))
                 {
                     return element.GetInt32();    
                 }
-
                 return element.GetDouble();
-            case JsonValueKind.Undefined:
-            case JsonValueKind.String:
+            case JsonValueKind.Array:
+                return JsonConvert.DeserializeObject<List<string>>(element.ToString())!;
             default:
                 return element!.GetString()!;
         }   

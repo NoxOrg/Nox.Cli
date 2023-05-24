@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
-namespace Nox.Cli.Plugins.AzDevops;
+namespace Nox.Cli.Plugin.AzDevOps;
 
 public class AzDevopsGetProject_v1 : INoxCliAddin
 {
@@ -44,16 +44,19 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
 
     private ProjectHttpClient? _projectClient;
     private string? _projectName;
+    private bool _isServerContext = false;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
         _projectName = inputs.Value<string>("project-name");
         _projectClient = await connection!.GetClientAsync<ProjectHttpClient>();
+        
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
@@ -80,7 +83,7 @@ public class AzDevopsGetProject_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
-        _projectClient?.Dispose();
+        if (!_isServerContext && _projectClient != null) _projectClient.Dispose();
         return Task.CompletedTask;
     }
 }

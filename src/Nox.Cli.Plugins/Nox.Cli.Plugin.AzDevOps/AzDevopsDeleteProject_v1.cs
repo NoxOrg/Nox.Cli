@@ -1,9 +1,10 @@
 using Microsoft.TeamFoundation.Core.WebApi;
+using Microsoft.VisualStudio.Services.Operations;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
-namespace Nox.Cli.Plugins.AzDevops;
+namespace Nox.Cli.Plugin.AzDevOps;
 
 public class AzDevopsDeleteProject_v1 : INoxCliAddin
 {
@@ -11,7 +12,7 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/delete-Project@v1",
+            Name = "azdevops/delete-project@v1",
             Author = "Jan Schutte",
             Description = "Delete an Azure Devops project",
 
@@ -42,8 +43,10 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
     }
 
     private ProjectHttpClient? _projectClient;
+    private OperationsHttpClient? _operationsClient;
     private Guid? _projectId;
     private bool? _isHardDelete;
+    private bool _isServerContext;
 
     public async Task BeginAsync(IDictionary<string,object> inputs)
     {
@@ -51,10 +54,12 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
         _projectId = inputs.Value<Guid>("project-id");
         _isHardDelete = inputs.ValueOrDefault<bool>("hard-delete", this);
         _projectClient = await connection!.GetClientAsync<ProjectHttpClient>();
+        _operationsClient = await connection!.GetClientAsync<OperationsHttpClient>();
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
@@ -67,8 +72,35 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
         {
             try
             {
-                await _projectClient.QueueDeleteProject(_projectId.Value, _isHardDelete);
-                ctx.SetState(ActionState.Success);
+                var operation = await _projectClient.QueueDeleteProject(_projectId.Value, _isHardDelete);
+
+                // Check the operation status every 5 seconds (for up to 30 seconds)
+                var completedOperation = await WaitForLongRunningOperation(operation.Id, 5, 30);
+
+                // Check if the operation succeeded (the project was created) or failed
+                if (completedOperation.Status == Microsoft.VisualStudio.Services.Operations.OperationStatus.Succeeded)
+                {
+                    try
+                    {
+                        // Check if the project has been deleted
+                        var project = await _projectClient.GetProject(
+                            _projectId.Value.ToString(),
+                            includeCapabilities: true,
+                            includeHistory: true);
+                        ctx.SetErrorMessage("Project was not successfully deleted.");
+                    }
+                    catch
+                    {
+                        ctx.SetState(ActionState.Success);
+                    }
+                }
+                else
+                {
+                    ctx.SetErrorMessage($"Project delete operation failed: {completedOperation.ResultMessage}");
+                }
+                
+                
+                
             }
             catch (Exception ex)
             {
@@ -81,8 +113,32 @@ public class AzDevopsDeleteProject_v1 : INoxCliAddin
 
     public Task EndAsync()
     {
-        _projectClient?.Dispose();
+        if (!_isServerContext) _projectClient?.Dispose();
         return Task.CompletedTask;
+    }
+    
+    private async Task<Operation> WaitForLongRunningOperation(Guid operationId, int interavalInSec = 5, int maxTimeInSeconds = 60, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        var expiration = DateTime.Now.AddSeconds(maxTimeInSeconds);
+
+        while (true)
+        {
+            var operation = await _operationsClient!.GetOperation(operationId, cancellationToken: cancellationToken);
+
+            if (!operation.Completed)
+            {
+                await Task.Delay(interavalInSec * 1000, cancellationToken);
+
+                if (DateTime.Now > expiration)
+                {
+                    throw new Exception(String.Format("Operation did not complete in {0} seconds.", maxTimeInSeconds));
+                }
+            }
+            else
+            {
+                return operation;
+            }
+        }
     }
     
 }

@@ -20,7 +20,7 @@ jobs:
         with:
           path: /home/jan/Test/README.md
           replacements:
-            "{{Replace1}}": Jan Schutte
+            "{{Replace1}}": Jan Schutte,
             "{{Replace2}}": 51
         display:
           success: Strings Replace success

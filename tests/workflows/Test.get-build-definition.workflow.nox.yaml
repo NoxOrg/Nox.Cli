@@ -1,0 +1,60 @@
+# NOX Test CReate Project Command
+
+name: Test find build definition
+
+cli:
+  branch: test
+  command: find-build-definition
+  command-alias: fbd
+  description: Test find Build Definition
+  examples:
+    - ["sync find-build-definition", "--path <designFolder>"]
+    - ["sync fbd", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Locate the DevOps server
+        id: locate-server
+        uses: network/ping@v1
+        with:
+          host: ${{ project.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-server.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accesable. Are you connected to the Internet?
+        run-at-server: true
+
+      - name: Connect to the DevOps server
+        id: connect-server
+        uses: azdevops/connect@v1
+        with:
+          server: ${{ project.versionControl.server }}
+          personal-access-token: ${{ server.secrets.AZURE_DEVOPS_PAT }}
+        display:
+          success: Connected to the DevOps server
+          error: There was a problem connecting to the DevOps server. (${{ steps.connect-server.error-message }})
+        run-at-server: true
+
+      - name: Get the Nox.Cli project
+        id: get-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-name: Nox.Cli
+        display:
+          success: Got the DevOps project
+          error: There was a problem getting the project (${{ steps.get-project.error-message }})
+        run-at-server: true
+
+      - name: Get the pipeline
+        id: find-build-definition
+        uses: azdevops/find-build-definition@v1
+        with:
+          connection: ${{ steps.connect-server.outputs.connection }}
+          project-id: ${{ steps.get-project.outputs.project-id }}
+          build-name: Nox.Server.Helmchart
+        display:
+          success: Successfully Got the build definition
+          error: There was a problem getting the build definition
+        run-at-server: true

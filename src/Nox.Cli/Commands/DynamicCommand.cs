@@ -1,11 +1,11 @@
 ﻿using Nox.Cli.Abstractions;
+using Nox.Core.Interfaces;
 
 namespace Nox.Cli.Commands;
 
 using Helpers;
 using Microsoft.Extensions.Configuration;
 using Nox.Cli.Configuration;
-using Nox.Core.Interfaces.Configuration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -33,7 +33,7 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
         await base.ExecuteAsync(context, settings);
-
+        
         var workflow = (WorkflowConfiguration)context.Data!;
 
         return await _executor.Execute(workflow) ? 0 : 1;

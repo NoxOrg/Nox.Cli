@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Nox.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "test find-cname-record --path /home/jan/Projects/IWG/Nox.WeatherOne/.nox/design",
+      "workingDirectory": "$(ProjectDir)",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }    
+  }
+}

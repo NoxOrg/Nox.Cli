@@ -1,0 +1,116 @@
+# NOX Test Create Key Vault
+
+name: Test create key vault
+
+cli:
+  branch: test
+  command: create-key-vault
+  command-alias: ckv
+  description: Test create key vault
+  examples:
+    - ["sync create-key-vault", "--path <designFolder>"]
+    - ["sync ckv", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+
+      - name: Connect to the Arm Client
+        id: connect-arm
+        uses: arm/connect@v1
+        with:
+          subscription-id: 33f91226-e87e-4cdf-9480-7b467a1dae4e
+        display:
+          success: Connected to the Azure Subscription
+          error: There was a problem connecting to the Azure Subscription. (${{ steps.connect-arm.error-message }})
+        run-at-server: true
+
+      - name: Find the we-key-Nox-test key vault
+        id: find-kv
+        uses: arm/find-key-vault@v1
+        with:
+          subscription: ${{ steps.connect-arm.outputs.subscription }}
+          resource-group-name: RG_APPS_NOX_TEST
+          key-vault-name: we-key-nox-test
+        display:
+          success: Found the Key Vault
+          error: There was a problem finding the Key Vaule (${{ steps.find-kv.error-message }})
+        run-at-server: true
+
+      - name: Connect to AAD
+        id: connect
+        uses: azuread/connect_v1
+        with:
+          tenant-id: ${{ server.secrets.AZURE_TENANT_ID }}
+          client-id: ${{ server.secrets.AZURE_CLIENT_ID }}
+          client-secret: ${{ server.secrets.AZURE_CLIENT_SECRET }}
+        display:
+          success: Connected to Azure AD
+          error: Failed to connect to Azure AD ${{ steps.connect.error-message }}
+        run-at-server: true
+
+      - name: Get Team Members
+        id: get-team
+        uses: project/get-team-usernames@v1
+        with:
+          team-members: ${{ project.team.developers }}
+          include-admin: false
+        display:
+          success: Got the team members
+          error: Unable to get the team members ${{ steps.get-team.error-message }}
+
+      - name: Get team Object Ids
+        id: get-team-ids
+        uses: azuread/get-users-object-id-list@v1
+        with:
+          aad-client: ${{ steps.connect.outputs.aad-client }}
+          user-names: ${{ steps.get-team.outputs.team-user-names }}
+        display:
+          success: Get Object Id success
+          error: Get Object Id failed. (${{ steps.get-team-ids.error-message }})
+        run-at-server: true
+
+      - name: Add team to key vault
+        id: ensure-team-key-vault-access
+        uses: arm/ensure-key-vault-users@v1
+        with:
+          key-vault: ${{ steps.find-kv.outputs.key-vault }}
+          user-object-ids: ${{ steps.get-team-ids.outputs.object-ids }}
+          is-admin: false
+        display:
+          success: Added users to key vault
+          error: Unable to add team to key vault ${{ steps.ensure-team-key-vault-access.error-message }}
+        run-at-server: true
+
+      - name: Get Team Administrators
+        id: get-admins
+        uses: project/get-admin-usernames@v1
+        with:
+          team-members: ${{ project.team.developers }}
+        display:
+          success: Got the team Admins
+          error: Unable to get the team admins ${{ steps.get-admins.error-message }}
+
+      - name: Get Admin Object Ids
+        id: get-admin-ids
+        uses: azuread/get-users-object-id-list@v1
+        with:
+          aad-client: ${{ steps.connect.outputs.aad-client }}
+          user-names: ${{ steps.get-admins.outputs.team-admin-user-names }}
+        display:
+          success: Get Admin Object Id success
+          error: Get Admin Object Ids failed. (${{ steps.get-admin-ids.error-message }})
+        run-at-server: true
+
+      - name: Add Admins to key vault
+        id: ensure-admin-key-vault-access
+        uses: arm/ensure-key-vault-users@v1
+        with:
+          key-vault: ${{ steps.find-kv.outputs.key-vault }}
+          user-object-ids: ${{ steps.get-admin-ids.outputs.object-ids }}
+          is-admin: true
+        display:
+          success: Added admins to key vault
+          error: Unable to add admins to key vault ${{ steps.ensure-admin-key-vault-access.error-message }}
+        run-at-server: true
+

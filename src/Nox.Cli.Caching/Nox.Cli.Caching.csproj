@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
+      <ProjectReference Include="..\Nox.Cli.Configuration\Nox.Cli.Configuration.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Nox.Core" Version="6.0.48" />
+      <PackageReference Include="Nox.Utilities" Version="1.0.2" />
+      <PackageReference Include="RestSharp" Version="110.2.0" />
+      <PackageReference Include="Spectre.Console" Version="0.46.0" />
+    </ItemGroup>
+
+</Project>

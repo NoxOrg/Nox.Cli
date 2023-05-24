@@ -1,0 +1,46 @@
+#
+# Service definition
+#
+# yaml-language-server: $schema=https://raw.githubusercontent.com/NoxOrg/Nox/main/src/Nox.Core/Schemas/NoxConfiguration.json
+#
+
+#
+
+name: Nox-Cli-Scripts
+
+description: Scripts source for IWG PLC Nox Cli
+
+autoMigrations: false
+
+database:
+  name: SampleCurrencyDb
+  server: localhost
+  provider: postgres
+  options: Trusted_Connection=no;connection timeout=120;
+  user: sa  
+  password: Developer*123
+
+versionControl:
+  provider: azureDevOps
+  server: https://dev.azure.com/iwgplc
+  project: Nox.Cli.Scripts
+  repository: Nox.Cli.Scripts
+
+team:
+  developers:
+    - name: Dionisis Stoubos
+      userName: dionisis.stoubos@iwgplc.com
+      isAdmin: true
+      email: dionisis.stoubos@iwgplc.com
+    - name: Andre Sharpe
+      userName: andre.sharpe@iwgplc.com
+      mobilePhoneNumber: +41789461056
+      isAdmin: true
+    - name: Jan Schutte
+      userName: jan.schutte@iwgplc.com
+      isAdmin: false
+      email: jan.schutte@iwgplc.com
+    - name: Morne Van Zyl
+      userName: morne.vanzyl@iwgplc.com
+      isAdmin: false
+      email: morne.vanzyl@iwgplc.com

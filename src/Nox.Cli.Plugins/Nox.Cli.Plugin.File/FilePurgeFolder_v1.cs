@@ -59,7 +59,7 @@ public class FilePurgeFolder_v1 : INoxCliAddin
                 var fullPath = Path.GetFullPath(_path);
                 if (!Directory.Exists(fullPath))
                 {
-                    ctx.SetErrorMessage($"Directory {fullPath} does not exist!");
+                    ctx.SetErrorMessage($"Folder {fullPath} does not exist!");
                 }
                 else
                 {

@@ -1,11 +1,13 @@
-﻿using Nox.Core.Interfaces.Configuration;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
 using System.Diagnostics;
+using Nox.Cli.Abstractions.Caching;
+using Nox.Core.Exceptions;
+using Nox.Core.Interfaces;
 
 namespace Nox.Cli.Actions;
 
@@ -13,7 +15,8 @@ public class NoxWorkflowContext : INoxWorkflowContext
 {
     private readonly IWorkflowConfiguration _workflow;
     private readonly IDictionary<string, INoxAction> _steps;
-    private readonly ClientVariableProvider _varProvider;
+    private readonly IClientVariableProvider _varProvider;
+    private readonly INoxCliCacheManager _cacheManager;
 
     private int _currentActionSequence = 0;
 
@@ -30,13 +33,14 @@ public class NoxWorkflowContext : INoxWorkflowContext
         IProjectConfiguration projectConfig,
         IProjectSecretResolver projectSecretResolver,
         IOrgSecretResolver orgSecretResolver,
+        INoxCliCacheManager cacheManager,
         ILocalTaskExecutorConfiguration? lteConfig)
     {
         WorkflowId = Guid.NewGuid();
         _workflow = workflow;
-        _varProvider = new ClientVariableProvider(workflow, projectSecretResolver, orgSecretResolver, projectConfig, lteConfig);
+        _varProvider = new ClientVariableProvider(workflow, projectSecretResolver, orgSecretResolver, projectConfig, lteConfig, cacheManager.Cache);
+        _cacheManager = cacheManager;
         _steps = ParseSteps();
-        ValidateSteps();
         _currentActionSequence = 0;
         NextStep();
     }
@@ -49,6 +53,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _nextAction = _steps.Select(kv => kv.Value).Where(a => a.Sequence == _currentActionSequence + 1).FirstOrDefault();
     }
 
+    public bool IsServer => false;
     public Guid InstanceId { get; }
     public Guid WorkflowId { get; init; }
     public ActionState State { get; }
@@ -59,6 +64,17 @@ public class NoxWorkflowContext : INoxWorkflowContext
         {
             _currentAction.State = state;
         }
+    }
+
+    public INoxCliCacheManager? CacheManager
+    {
+        get => _cacheManager;
+    }
+
+    public void SetProjectConfiguration(IProjectConfiguration projectConfiguration)
+    {
+        _varProvider.SetProjectConfiguration(projectConfiguration);
+        _varProvider.ResolveProjectVariables();
     }
 
     public void SetErrorMessage(string errorMessage)
@@ -111,13 +127,16 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private Dictionary<string, INoxAction> ParseSteps()
     {
         var steps = new Dictionary<string, INoxAction>(StringComparer.OrdinalIgnoreCase);
-
+        var sequence = 0;
         foreach (var (jobKey, stepConfiguration) in _workflow.Jobs)
         {
-            var sequence = 0;
-
             foreach (var step in stepConfiguration.Steps)
             {
+                if (steps.ContainsKey(step.Id))
+                {
+                    throw new NoxException($"Step Id {step.Id} exists more than once in your workflow configuration. Step Ids must be unique in a workflow configuration");
+                }
+                
                 sequence++;
 
                 if (string.IsNullOrWhiteSpace(step.Uses))
@@ -177,14 +196,6 @@ public class NoxWorkflowContext : INoxWorkflowContext
         }
 
         return steps;
-    }
-
-    private void ValidateSteps()
-    {
-        // if (_steps.Any(s => s.Value.RunAtServer == true) && _serverIntegration == null || !_serverIntegration.IsConfigured)
-        // {
-        //     throw new Exception("You have set one of the steps in the workflow to run on the cli server, but the server has not been defined in the Manifest.cli.nox.yaml file.");
-        // }
     }
     
     private string MaskSecretsInDisplayText(string input)
