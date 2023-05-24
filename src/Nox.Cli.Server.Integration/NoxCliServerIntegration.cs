@@ -26,6 +26,8 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
         };
     }
 
+    public string Endpoint => _remoteTaskExecutorConfiguration.Url;
+
     public async Task<EchoHealthResponse?> EchoHealth()
     {
         if (string.IsNullOrEmpty(_remoteTaskExecutorConfiguration.Url)) throw new Exception("NoxCliServerIntegration::EchoHealth -> ServerUrl not set");

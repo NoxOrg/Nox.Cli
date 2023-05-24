@@ -58,7 +58,9 @@ public class CoreReplaceStrings_v1: INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (string.IsNullOrEmpty(_source) || _replacements == null || _replacements.Count == 0)
+        if (string.IsNullOrEmpty(_source) || 
+            _replacements == null || 
+            _replacements.Count == 0)
         {
             ctx.SetErrorMessage("The Core replace-strings action was not initialized");
         }

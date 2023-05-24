@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 using Spectre.Console;
