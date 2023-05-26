@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-Nox.Cli.Server-EDB29744-0909-49A3-8A3D-4A9E3529BF5A</UserSecretsId>
-    <AssemblyVersion>1.0.16.0</AssemblyVersion>
+    <AssemblyVersion>1.0.17.0</AssemblyVersion>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
   <ItemGroup>
