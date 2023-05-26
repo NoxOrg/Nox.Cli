@@ -57,6 +57,10 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         while (ctx.CurrentAction != null)
         {
+            if (ctx.CurrentAction.Id == "git-pull-remote")
+            {
+                Console.WriteLine();
+            }
             var taskDescription = $"Step {ctx.CurrentAction.Sequence}: {ctx.CurrentAction.Name}".EscapeMarkup();
 
             var formattedTaskDescription = $"[bold mediumpurple3_1]{taskDescription}[/]";

@@ -14,6 +14,8 @@ public interface INoxCliCacheManager
     List<IWorkflowConfiguration>? Workflows { get; }
     
     List<string> BuildLog { get; }
+    
+    IPersistedTokenCache? TokenCache { get; }
 
     event EventHandler<ICacheManagerBuildEventArgs> BuildEvent;
 

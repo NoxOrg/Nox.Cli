@@ -17,5 +17,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
+      <ProjectReference Include="..\..\Nox.Cli.PersonalAccessToken\Nox.Cli.PersonalAccessToken.csproj" />
     </ItemGroup>
 </Project>

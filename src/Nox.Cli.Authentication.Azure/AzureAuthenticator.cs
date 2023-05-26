@@ -1,23 +1,27 @@
+using System.IdentityModel.Tokens.Jwt;
 using Azure.Identity;
 using Microsoft.Identity.Client;
+using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Exceptions;
+using Nox.Cli.Caching;
 
 namespace Nox.Cli.Authentication.Azure;
 
 public class AzureAuthenticator: IAuthenticator
 {
     private IPublicClientApplication? _application;
-    private readonly PersistedServerToken _serverToken;
+    private IPersistedTokenCache _persistedToken;
     private string? _serverScope;
     private ICliAuthConfiguration? _authConfiguration;
 
     public AzureAuthenticator(
-        PersistedServerToken serverToken,
+        IPersistedTokenCache persistedToken,
         ICliAuthConfiguration? authConfiguration = null,
         IRemoteTaskExecutorConfiguration? apiConfiguration = null)
     {
-        _serverToken = serverToken;
+        _persistedToken = persistedToken;
         _authConfiguration = authConfiguration;
         if (authConfiguration != null && apiConfiguration != null)
         {
@@ -35,19 +39,20 @@ public class AzureAuthenticator: IAuthenticator
         string? result = null;
         try
         {
-            var persistedToken = await _serverToken.LoadAsync(NoxTokenType.ServerToken);
-            if (string.IsNullOrEmpty(persistedToken))
+            var token = await _persistedToken.LoadAsync("my-nox-server-token");
+
+            if (IsTokenValid(token))
+            {
+                result = token;
+            }
+            else
             {
                 var apiAuthResult = await GetApiToken();
                 if (apiAuthResult != null)
                 {
                     result = apiAuthResult.AccessToken;
-                    await _serverToken.SaveAsync(result, NoxTokenType.ServerToken);    
+                    await _persistedToken.SaveAsync("my-nox-server-token", result);
                 }
-            }
-            else
-            {
-                result = persistedToken;
             }
         }
         catch
@@ -57,7 +62,7 @@ public class AzureAuthenticator: IAuthenticator
             if (apiAuthResult != null)
             {
                 result = apiAuthResult.AccessToken;
-                await _serverToken.SaveAsync(result, NoxTokenType.ServerToken);    
+                await _persistedToken.SaveAsync("my-nox-server-token", result);
             }
             
         }
@@ -114,6 +119,17 @@ public class AzureAuthenticator: IAuthenticator
         var accounts = await _application!.GetAccountsAsync();
         var authResult = await _application.AcquireTokenSilent(new[] { _serverScope }, accounts.FirstOrDefault()).ExecuteAsync();
         return authResult;
+    }
+    
+    private bool IsTokenValid(string? token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var jwtToken = tokenHandler.ReadJwtToken(token);
+        var tokenExp = jwtToken.Claims.First(claim => claim.Type.Equals("exp")).Value;
+        var ticks = long.Parse(tokenExp);
+        var tokenExpDate = DateTimeOffset.FromUnixTimeSeconds(ticks);
+        var now = DateTime.Now.ToUniversalTime();
+        return tokenExpDate>= now;
     }
 
 }

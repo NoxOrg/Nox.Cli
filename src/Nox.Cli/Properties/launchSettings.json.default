@@ -3,7 +3,7 @@
     "Nox.Cli": {
       "commandName": "Project",
       "commandLineArgs": "init solution",
-      "workingDirectory": "/home/jan/demo/Nox.WeatherTwo",
+      "workingDirectory": "$(ProjectDir)",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

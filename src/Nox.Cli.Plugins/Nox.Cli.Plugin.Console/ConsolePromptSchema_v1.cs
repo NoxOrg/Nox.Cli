@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
 using RestSharp;
 using Spectre.Console;
@@ -78,9 +79,9 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
     private string? _schema = null!;
 
-    private string[]? _includedProperties;
+    private string[]? _includedPrompts;
 
-    private string[]? _excludedProperties;
+    private string[]? _excludedPrompts;
     
     private Dictionary<string,object>? _defaults = null;
 
@@ -107,9 +108,10 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
         _schema = inputs.Value<string>("schema");
 
-        _includedProperties = inputs.Value<string[]>("include-prompts");
+        _includedPrompts = inputs.Value<string[]>("include-prompts");
 
-        _excludedProperties = inputs.Value<string[]>("exclude-prompts");
+
+        _excludedPrompts = inputs.Value<string[]>("exclude-prompts");
 
         _defaults = inputs.Value<Dictionary<string,object>>("defaults");
 
@@ -122,6 +124,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        if (ctx.IsServer) throw new NoxCliException("This action cannot be executed on a server. remove the run-at-server attribute for this step in your Nox workflow.");
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
@@ -257,7 +260,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         {
             var newFullKey = $"{fullKey}.{key}".TrimStart('.');
 
-            if (_includedProperties != null && !_includedProperties.Any(f => newFullKey.StartsWith(f,StringComparison.OrdinalIgnoreCase)))
+            if (_includedPrompts != null && !_includedPrompts.Any(f => newFullKey.StartsWith(f,StringComparison.OrdinalIgnoreCase)))
             {
                 if (_defaults != null && _defaults.Any(d => newFullKey.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
                 {
@@ -267,7 +270,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                 continue;
             }
 
-            if (_excludedProperties != null && _excludedProperties.Any(f => newFullKey.StartsWith(f, StringComparison.OrdinalIgnoreCase)))
+            if (_excludedPrompts != null && _excludedPrompts.Any(f => newFullKey.StartsWith(f, StringComparison.OrdinalIgnoreCase)))
             {
                 if (_defaults != null && _defaults.Any(d => newFullKey.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
                 {

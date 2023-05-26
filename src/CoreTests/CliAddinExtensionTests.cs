@@ -133,6 +133,37 @@ public class CliAddinExtensionTests
         Assert.That(doubleVal, Is.TypeOf(typeof(Dictionary<string, double>)));
         Assert.That(doubleVal!, Has.Count.EqualTo(2));
     }
-    
+
+    [Test]
+    public void Should_be_able_to_parse_string_arrays()
+    {
+        var inputs = new Dictionary<string, object>();
+        var source = new List<object>
+        {
+            "Hello",
+            "World"
+        };
+        inputs.Add("stringArray", source);
+        var result = inputs.Value<string[]>("stringArray");
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result, Is.TypeOf(typeof(string[])));
+        Assert.That(result!, Has.Length.EqualTo(2));
+    }
+
+    [Test]
+    public void Should_be_able_to_parse_string_lists()
+    {
+        var inputs = new Dictionary<string, object>();
+        var source = new List<object>
+        {
+            "Hello",
+            "World"
+        };
+        inputs.Add("stringList", source);
+        var result = inputs.Value<List<string>>("stringList");
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result, Is.TypeOf(typeof(List<string>)));
+        Assert.That(result!, Has.Count.EqualTo(2));
+    }
     
 }

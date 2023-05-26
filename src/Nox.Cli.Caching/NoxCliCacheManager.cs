@@ -1,7 +1,5 @@
 using System.Net.NetworkInformation;
 using System.Text.Json;
-using MassTransit;
-using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
@@ -12,7 +10,7 @@ using Nox.Core.Constants;
 using Nox.Core.Exceptions;
 using Nox.Core.Helpers;
 using Nox.Utilities.Configuration;
-using Nox.Utilities.Secrets;
+using Nox.Utilities.Credentials;
 using RestSharp;
 using Spectre.Console;
 using YamlDotNet.Serialization;
@@ -37,6 +35,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     private List<string> _buildLog;
     private IManifestConfiguration? _manifest;
     private List<IWorkflowConfiguration>? _workflows;
+    private IPersistedTokenCache? _tokenCache;
 
     internal void ForServer()
     {
@@ -119,7 +118,9 @@ public class NoxCliCacheManager: INoxCliCacheManager
     {
         get => _buildLog;
     }
-    
+
+    public IPersistedTokenCache? TokenCache => _tokenCache;
+
     public event EventHandler<ICacheManagerBuildEventArgs>? BuildEvent;
     
     public void RefreshTemplate(string name)
@@ -141,7 +142,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
         }
     }
 
-    public NoxCliCacheManager(string remoteUrl)
+    public NoxCliCacheManager(string remoteUrl, IPersistedTokenCache? tokenCache = null)
     {
         _buildLog = new List<string>();
         _remoteUrl = remoteUrl;
@@ -154,6 +155,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
         Directory.CreateDirectory(_cachePath);
         _cacheFile = WellKnownPaths.CacheFile;
         _localWorkflowPath = ".";
+        _tokenCache = tokenCache;
     }
 
     internal INoxCliCacheManager Build()
@@ -199,7 +201,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     private void GetCredentialsFromAzureToken()
     {
         RaiseBuildEvent("[bold mediumpurple3_1]Checking your credentials...[/]");
-        var auth = AzureSecretProvider.GetCredentialFromCacheOrBrowser().Result;
+        var auth = CredentialHelper.GetCredentialFromCacheOrBrowser().Result;
         if (_cache != null)
         {
             if (auth.AuthenticationRecord.Username == null)

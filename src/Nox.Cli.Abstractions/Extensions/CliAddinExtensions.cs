@@ -90,9 +90,17 @@ public static class CliAddinExtensions
                         result = (T)Convert.ChangeType(newDict, typeof(T));
                     }
                 }
+                else if (typeof(T).IsAssignableTo(typeof(string[])))
+                {
+                    var sourceList = (List<object>)value;
+                    var stringArray = sourceList.ConvertAll(obj => obj.ToString()).ToArray();
+                    result = (T)Convert.ChangeType(stringArray, typeof(T));
+                }
                 else if (typeof(T).IsAssignableTo(typeof(IList<string>)))
                 {
-                    result = (T)Convert.ChangeType(value, typeof(T));
+                    var sourceList = (List<object>)value;
+                    var stringArray = sourceList.ConvertAll(obj => obj.ToString());
+                    result = (T)Convert.ChangeType(stringArray, typeof(T));
                 }
                 else if (typeof(T).IsAssignableTo(typeof(IList<object>)))
                 {

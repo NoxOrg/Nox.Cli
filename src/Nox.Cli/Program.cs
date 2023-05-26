@@ -9,8 +9,10 @@ using Spectre.Console.Cli;
 
 using Nox.Cli;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Actions;
+using Nox.Cli.Caching;
 using Nox.Cli.Interceptors;
 using Nox.Cli.Services;
 using Nox.Cli.Commands;
@@ -43,6 +45,7 @@ var services = new ServiceCollection();
 services.AddSingleton<IFileSystem, FileSystem>();
 services.AddSingleton<IConsoleWriter, ConsoleWriter>();
 services.AddTransient<INoxWorkflowExecutor, NoxWorkflowExecutor>();
+services.AddNoxTokenCache();
 services.AddNoxCliServices(args);
 services.AddPersistedSecretStore();
 services.AddProjectSecretResolver();

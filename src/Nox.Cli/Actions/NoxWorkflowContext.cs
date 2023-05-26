@@ -17,7 +17,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private readonly IDictionary<string, INoxAction> _steps;
     private readonly IClientVariableProvider _varProvider;
     private readonly INoxCliCacheManager _cacheManager;
-
+    
     private int _currentActionSequence = 0;
 
     private INoxAction? _previousAction;

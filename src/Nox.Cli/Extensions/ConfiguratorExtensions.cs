@@ -2,6 +2,7 @@
 using Spectre.Console.Cli;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Authentication;
 using Nox.Cli.Authentication.Azure;
@@ -16,7 +17,8 @@ internal static class ConfiguratorExtensions
 {
     public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline, string onlineCacheUrl = "")
     {
-        var cacheBuilder = new NoxCliCacheBuilder(onlineCacheUrl)
+        var persistedTokenCache = services.BuildServiceProvider().GetRequiredService<IPersistedTokenCache>();
+        var cacheBuilder = new NoxCliCacheBuilder(onlineCacheUrl, persistedTokenCache)
             .WithBuildEventHandler((sender, args) =>
             {
                 AnsiConsole.MarkupLine(args.SpectreMessage);
@@ -36,7 +38,6 @@ internal static class ConfiguratorExtensions
             authValidator.ValidateAndThrow(cacheManager.Manifest.Authentication);
             
             services.AddSingleton<ICliAuthConfiguration>(cacheManager.Manifest.Authentication);
-            services.AddNoxServerAuthentication();
             services.AddAzureAuthentication();
         }
 
