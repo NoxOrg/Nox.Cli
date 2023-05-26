@@ -7,11 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Nox.Cli.Authentication\Nox.Cli.Authentication.csproj" />
-      <ProjectReference Include="..\Nox.Cli.Caching\Nox.Cli.Caching.csproj" />
+      <PackageReference Include="Nox.Utilities" Version="1.0.3" />
+      <PackageReference Include="RestSharp" Version="110.2.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.30.1" />
+      <ProjectReference Include="..\Nox.Cli.Caching\Nox.Cli.Caching.csproj" />
     </ItemGroup>
+
 </Project>

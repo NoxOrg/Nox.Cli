@@ -10,4 +10,11 @@ public static class ServiceExtensions
         services.AddSingleton<INoxCliCacheManager>(instance);
         return services;
     }
+
+    public static IServiceCollection AddNoxTokenCache(this IServiceCollection services)
+    {
+        services.AddDataProtection();
+        services.AddSingleton<IPersistedTokenCache, PersistedTokenCache>();
+        return services;
+    }
 }

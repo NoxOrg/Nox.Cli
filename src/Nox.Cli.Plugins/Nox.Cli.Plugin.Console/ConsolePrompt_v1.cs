@@ -1,4 +1,5 @@
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
 using Spectre.Console;
 
@@ -65,6 +66,7 @@ public class ConsolePrompt_v1 : INoxCliAddin
 
     public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        if (ctx.IsServer) throw new NoxCliException("This action cannot be executed on a server. remove the run-at-server attribute for this step in your Nox workflow.");
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);

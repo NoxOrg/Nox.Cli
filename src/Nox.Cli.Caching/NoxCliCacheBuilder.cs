@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Nox.Cli.Abstractions.Caching;
 
 namespace Nox.Cli.Caching;
@@ -5,10 +6,10 @@ namespace Nox.Cli.Caching;
 public class NoxCliCacheBuilder
 {
     private readonly NoxCliCacheManager _manager;
-    
-    public NoxCliCacheBuilder(string remoteUrl)
+
+    public NoxCliCacheBuilder(string remoteUrl, IPersistedTokenCache? tokenCache = null)
     {
-        _manager = new NoxCliCacheManager(remoteUrl);
+        _manager = new NoxCliCacheManager(remoteUrl, tokenCache);
     }
 
     public NoxCliCacheBuilder ForServer()
@@ -41,7 +42,7 @@ public class NoxCliCacheBuilder
         return this;
     }
     
-    public NoxCliCacheBuilder WithTentantId(string tenantId)
+    public NoxCliCacheBuilder WithTenantId(string tenantId)
     {
         _manager.UseTenantId(tenantId);
         return this;

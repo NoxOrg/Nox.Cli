@@ -1,3 +1,5 @@
+using System.Runtime.Serialization;
+
 namespace Nox.Cli.Abstractions.Exceptions;
 
 [Serializable]

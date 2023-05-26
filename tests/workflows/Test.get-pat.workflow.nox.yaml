@@ -1,0 +1,22 @@
+# NOX Test Get Pat Command
+
+name: Test Get Pat Command
+
+cli:
+  branch: test
+  command: get-pat
+  command-alias: gp
+  description: Test Get Pat Command
+  examples:
+    - ["sync get-pat", "--path <designFolder>"]
+    - ["sync gp", "--path <designFolder>"]
+
+jobs:
+  sync-test:  
+    steps:
+      - name: Get PAT
+        id: get-pat
+        uses: azdevops/get-pat@v1
+        with:
+          organization: iwgplc
+          access-token: ${{ cache.aztoken }}

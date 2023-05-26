@@ -15,7 +15,6 @@ public class AuthenticatorTests
     public void Setup()
     {
         _services = new ServiceCollection();
-        _services.AddNoxServerAuthentication();
         _services.AddAzureAuthentication();
     }
 

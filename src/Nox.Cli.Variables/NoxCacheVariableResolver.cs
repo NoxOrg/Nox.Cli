@@ -1,4 +1,6 @@
 using Nox.Cli.Abstractions.Caching;
+using Nox.Utilities.Credentials;
+using Nox.Utilities.Secrets;
 
 namespace Nox.Cli.Variables;
 
@@ -29,8 +31,8 @@ public static class NoxCacheVariableResolver
         {
             "upn" => cache.UserPrincipalName,
             "username" => cache.Username,
+            "aztoken" => CredentialHelper.GetAzureDevOpsAccessToken().Result,
            _ => null
         };
     }
-
 }
