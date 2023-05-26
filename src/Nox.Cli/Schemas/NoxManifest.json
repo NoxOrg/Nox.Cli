@@ -1,0 +1,45 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "NOX Manifest",
+    "description": "Defines a NOX manifest",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["cli-commands"],
+    "properties": {
+        "cli-commands": {
+            "type": "array",
+            "description": "A list of cli commands",
+            "items": {"$ref": "./schemas/Command.json"  }
+        },
+        "authentication": {
+            "type": "object",
+            "$ref": "./schemas/Authentication.json"
+        },
+        "local-task-executor": {
+            "properties": {
+                "secrets": {
+                    "type": "object",
+                    "$ref": "./schemas/Secrets.json"
+                }
+            }  
+        },
+        "remote-task-executor": {
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "The URL of the remote task executor",
+                    "format": "uri"
+                },
+                "application-id": {
+                    "type": "string",
+                    "description": "The applicaton ID at the remote task executor (A UUID specified by RFC4122)",
+                    "format": "uuid"
+                },
+                "secrets": {
+                    "type": "object",
+                    "$ref": "./schemas/Secrets.json"
+                }
+            }  
+        }
+    }
+}

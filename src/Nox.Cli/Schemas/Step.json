@@ -1,0 +1,58 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "A NOX.Cli workflow step",
+    "description": "A step of a Nox.Cli workflow job",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "The name of the job step"
+        },
+        "id": {
+            "type": "string",
+            "description": "The unique identifier of the step"
+        },
+        "if": {
+            "type": "string",
+            "description": "Optional if condition to evaluate whether step is executed"
+        },
+        "uses": {
+            "type": "string",
+            "description": "The library/service used for the step"
+        },
+        "with": {
+            "type": "object",
+            "description": "Action directives for the uses property"
+        },
+        "validate": {
+            "type": "object",
+            "description": "Validation clause for the with property"
+        },
+        "display": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Action directives for the uses property",
+            "properties": {
+                "success": {
+                    "type": "string",
+                    "description": "Display message for successful outcome"
+                },
+                "error": {
+                    "type": "string",
+                    "description": "Display message for error result"
+                }
+            },
+            "anyOf": [
+                { "required":
+                    [ "success" ] },
+                { "required":
+                    [ "error" ] }
+                ]
+        },
+        "continue-on-error": {
+            "type": "boolean",
+            "description": "Indicates if job continues if error occurs"
+        }
+    }
+}

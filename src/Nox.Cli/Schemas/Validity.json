@@ -1,0 +1,35 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Validity Period",
+    "description": "Defines a period of validity in hours, minutes, seconds or milliseconds",
+    "type": "object",
+    "additionalProperties": false,
+    "oneOf": [
+        { "required":
+            [ "hours" ] },
+        { "required":
+            [ "minutes" ] },
+        { "required":
+            [ "seconds" ] },
+        { "required":
+            [ "milliseconds" ] }
+      ],
+    "properties": {
+        "hours": {
+            "type": "integer",
+            "description": "Period of validity in hours"
+        },
+        "minutes": {
+            "type": "integer",
+            "description": "Period of validity in minutes"
+        },
+        "seconds": {
+            "type": "integer",
+            "description": "Period of validity in seconds"
+        },
+        "milliseconds": {
+            "type": "integer",
+            "description": "Period of validity in milliseconds"
+        }
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "NOX.Cli Authentication",
+    "description": "Defines NOX Cli authentication",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "provider": {
+            "type": "string",
+            "description": "The authentication provider",
+            "oneOf": [
+                {
+                    "const": "azure",
+                    "description": "Use Azure authentication"
+                }
+            ]
+        },
+        "tenant-id": {
+            "type": "string",
+            "description": "The tenant ID at the authentication provider (A UUID specified by RFC4122)",
+            "format": "uuid"
+        }
+    }
+}
