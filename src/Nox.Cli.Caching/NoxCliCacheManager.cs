@@ -145,6 +145,14 @@ public class NoxCliCacheManager: INoxCliCacheManager
     public NoxCliCacheManager(string remoteUrl, IPersistedTokenCache? tokenCache = null)
     {
         _buildLog = new List<string>();
+        if (string.IsNullOrEmpty(remoteUrl))
+        {
+            _remoteUrl = remoteUrl;
+        }
+        else
+        {
+            _remoteUrl = "https://noxorg.dev";
+        }
         _remoteUrl = remoteUrl;
         _cachePath = WellKnownPaths.CachePath;
         _workflowCachePath = WellKnownPaths.WorkflowsCachePath;
