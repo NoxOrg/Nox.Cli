@@ -14,7 +14,7 @@ public class AzDevOpsPushFolder_v1 : INoxCliAddin
         {
             Name = "azdevops/commit-folder@v1",
             Author = "Jan Schutte",
-            Description = "Commit a local folder to a Azure Devops repository",
+            Description = "Commit and push a local folder to a Azure Devops repository",
 
             Inputs =
             {
