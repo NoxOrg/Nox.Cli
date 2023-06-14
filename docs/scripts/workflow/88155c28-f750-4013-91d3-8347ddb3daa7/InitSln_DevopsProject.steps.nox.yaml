@@ -1,0 +1,11 @@
+steps:
+  - name: Get the DevOps project
+    id: get-devops-project
+    uses: azdevops/get-project@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-name: IWG.DevOps
+    display:
+      success: Got the DevOps project
+      error: Unable to get the DevOps project (${{ steps.get-devops-project.error-message }})
+    run-at-server: true

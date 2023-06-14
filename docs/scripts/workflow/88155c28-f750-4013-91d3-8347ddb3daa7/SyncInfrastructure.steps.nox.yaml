@@ -1,0 +1,573 @@
+steps:
+  - name: Get the Heimdall.Microservices project
+    id: get-heimdall-project
+    uses: azdevops/get-project@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-name: Heimdall.Microservices
+    display:
+      success: Got the Heimdall.Microservices project
+      error: There was a problem getting the Heimdall.Microservices project (${{ steps.get-heimdall-project.error-message }})
+    run-at-server: true
+
+  - name: Get the Terraform project
+    id: get-terraform-project
+    uses: azdevops/get-project@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-name: Terraform
+    display:
+      success: Got the Terraform project
+      error: There was a problem getting the Terraform project (${{ steps.get-heimdall-project.error-message }})
+    run-at-server: true
+
+  - name: Ensure the Infrastructure Repository exists
+    id: ensure-infra-repo
+    uses: azdevops/ensure-repo-exists@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      repository-name: ${{ vars.project-dash-name }}-infrastructure-tf
+    display:
+      success: Ensured that the project infrastructure repository exists
+      error: There was a problem ensuring that the project infrastructure repository exists. ${{ steps.ensure-infra-repo.error-message }}
+    run-at-server: true
+
+  - name: Find the project infra main branch
+    id: find-infra-main
+    uses: azdevops/find-branch@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.ensure-infra-repo.outputs.repository-id }}
+      branch-name: main
+    display:
+      success: Successfully got the main branch for the infrastructure repo
+      error: There was a problem getting the main branch for the infrastructure repo ${{ steps.find-infra-main.error-message }}
+    run-at-server: true
+
+  - name: Get the Heimdall.Microservices Template.Terraform.Microservices repo
+    id: get-ref-infra-repo
+    uses: azdevops/get-repo@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-heimdall-project.outputs.project-id }}
+      repository-name: Template.Terraform.Microservices
+    display:
+      success: Successfully got the reference infrastructure repo
+      error: There was a problem getting the reference infrastructure repository (${{ steps.get-ref-infra-repo.error-message }})
+    run-at-server: true
+
+  - name: Download the reference infrastructure repo
+    id: download-ref-infra-repo
+    uses: azdevops/download-repo-branch@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.get-ref-infra-repo.outputs.repository-id }}
+      branch-name: main
+    display:
+      success: Successfully downloaded branch 'main' of the reference infrastructure repo to ${{ steps.download-ref-infra-repo.outputs.local-repository-path }}
+      error: There was a problem downloading the reference infrastructure repository (${{ steps.download-ref-infra-repo.error-message }})
+    run-at-server: true
+
+  - name: Push the reference infra repo to Nox project infra main branch
+    if: '"${{ steps.find-infra-main.outputs.is-found }}" == "False"'
+    id: push-infra-repo-to-main
+    uses: azdevops/push-folder@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.ensure-infra-repo.outputs.repository-id }}
+      source-path: ${{ steps.download-ref-infra-repo.outputs.local-repository-path }}
+    display:
+      success: Push the reference infrastructure repo to Nox project ${{ project.name }} success
+      error: Unable to push the reference infrastructure repo to Nox project ${{ project.name }} failed. (${{ steps.push-infra-repo-to-main.error-message }})
+    run-at-server: true
+
+  - name: Create a new Infrastructure branch
+    id: create-new-infra-branch
+    uses: azdevops/create-branch@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.ensure-infra-repo.outputs.repository-id }}
+    display:
+      success: Successfully created new Infrastructure branch -> ${{ steps.create-new-infra-branch.outputs.branch-name }}
+      error: Failed to create new Infrastructure branch -> ${{ steps.create-new-infra-branch.outputs.branch-name }}
+    run-at-server: true
+
+  - name: Download the new Infrastructure branch
+    id: download-infra-branch
+    uses: azdevops/download-repo-branch@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.ensure-infra-repo.outputs.repository-id }}
+      branch-name: ${{ steps.create-new-infra-branch.outputs.branch-name }}
+    display:
+      success: Successfully downloaded branch '${{ steps.create-new-infra-branch.outputs.branch-name }}' of the repo to ${{ steps.download-infra-branch.outputs.local-repository-path }}
+      error: There was a problem downloading the project helm-chart branch (${{ steps.download-infra-branch.error-message }})
+    run-at-server: true
+  
+  # Copy the reference repo branch over the project infra branch
+  - name: Copy reference repo to project repo
+    id: copy-infra-to-project
+    uses: file/copy-folder@v1
+    with:
+      source-path: ${{ steps.download-ref-infra-repo.outputs.local-repository-path }}
+      target-path: ${{ steps.download-infra-branch.outputs.local-repository-path }}
+    display:
+      success: Copied reference repo to project repo
+      error: Unable to copy reference repo to project repo (${{ steps.copy-infra-to-project.error-message }})
+    run-at-server: true
+
+  - name: Get the project product owner email addresses
+    id: get-product-owners
+    uses: project/get-owner-emails@v1
+    with:
+      team-members: ${{ project.team.developers }}
+    display:
+      success: Got the project product owner email addresses
+      error: Unable to the project product owner email addresses (${{ steps.get-product-owners.outputs.error-message }})
+  
+  # Replace variables.tf
+  - name: variables.tf Replace
+    id: replace-variables-tf
+    uses: file/replace-strings@v1
+    with:
+      path: ${{ steps.download-infra-branch.outputs.local-repository-path }}/variables.tf
+      replacements:
+        "<project-owner-email>": ${{ steps.get-product-owners.outputs.owner-emails }}
+        "<project-short-name>": ${{ vars.project-short-name }}
+        "<project-dash-name>": ${{ vars.project-dash-name }}
+        "<project-description>": ${{ project.description }}
+        "<project-aad-group-name>": NOX_PROJECT_${{ project.name }}
+    display:
+      success: Strings Replace in values.yaml success
+      error: Strings Replace in values.yaml failed. (${{ steps.replace-values-yaml.error-message }})
+    run-at-server: true
+
+  - name: Push updated infra branch to project repo
+    id: merge-infra-branch
+    uses: azdevops/merge-folder@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.ensure-infra-repo.outputs.repository-id }}
+      branch-name: ${{ steps.create-new-infra-branch.outputs.branch-name }}
+      source-path: ${{ steps.download-infra-branch.outputs.local-repository-path }}
+      reference-date-time: ${{ steps.download-infra-branch.outputs.download-date-time }}
+    display:
+      success: Push updated infrastructure branch to terraform success
+      error: Push updated infrastructure branch to terraform failed. (${{ steps.merge-infra-branch.error-message }})
+    run-at-server: true
+  
+  # tfe section
+  - name: Get the Terraform tfe-manage-workspaces repo
+    id: get-terraform-tfe-manage-workspaces-repo
+    uses: azdevops/get-repo@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-terraform-project.outputs.project-id }}
+      repository-name: tfe-manage-workspaces
+    display:
+      success: Successfully got the Terraform tfe-manage-workspaces repo
+      error: There was a problem getting the Terraform tfe-manage-workspacesrepository (${{ steps.get-terraform-tfe-manage-workspaces-repo.error-message }})
+    run-at-server: true
+
+  - name: Create a new tfe-manage-workspaces branch
+    id: create-new-tfe-manage-workspaces-branch
+    uses: azdevops/create-branch@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.get-terraform-tfe-manage-workspaces-repo.outputs.repository-id }}
+    display:
+      success: Successfully created new tfe-manage-workspaces branch -> ${{ steps.create-new-tfe-manage-workspaces-branch.outputs.branch-name }}
+      error: Failed to create new tfe-manage-workspaces branch -> ${{ steps.create-new-tfe-manage-workspaces-branch.outputs.branch-name }}
+    run-at-server: true
+
+  - name: Download the new tfe-manage-workspaces branch
+    id: download-tfe-manage-workspaces-branch
+    uses: azdevops/download-repo-branch@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.get-terraform-tfe-manage-workspaces-repo.outputs.repository-id }}
+      branch-name: ${{ steps.create-new-tfe-manage-workspaces-branch.outputs.branch-name }}
+    display:
+      success: Successfully downloaded branch '${{ steps.create-new-tfe-manage-workspaces-branch.outputs.branch-name }}' of the repo to ${{ steps.download-tfe-manage-workspaces-branch.outputs.local-repository-path }}
+      error: There was a problem downloading the tfe-manage-workspaces branch (${{ steps.download-tfe-manage-workspaces-branch.error-message }})
+    run-at-server: true
+
+  - name: Store tfe variables
+    id: add-tfe-vars
+    uses: core/add-variables@v1
+    with:
+      branch-folder: ${{ steps.download-tfe-manage-workspaces-branch.outputs.local-repository-path }}
+    display:
+      success: Save the tfe Variables
+      error: Unable to store tfe variables (${{ steps.add-tfe-vars.error-message }})
+
+  - name: Ensure microservice sub folder exists
+    id: ensure-tf-sub-folder
+    uses: file/ensure-folder@v1
+    with:
+      path: ${{ vars.branch-folder }}
+      folder-name: ${{ vars.tf-folder }}
+    display:
+      success: Ensured that microservice sub folder exists
+      error: Unable to ensure that the microservice sub folder exists ${{ steps.ensure-tf-sub-folder.error-message }}
+    run-at-server: true
+  
+  #outputs.tf
+  - name: Delete outputs.tf terraform file if it exists
+    id: delete-outputs-tf-file
+    uses: file/delete-file@v1
+    with:
+      path: ${{ vars.branch-folder }}/${{ vars.tf-folder }}/outputs.tf
+    display:
+      success: Ensured that outputs.tf terraform file does not exist
+      error: unable to delete outputs.tf terraform file (${{ steps.delete-outputs-tf-file.error-message }})
+    run-at-server: true
+
+  - name: Load outputs.tf terraform file template
+    id: load-outputs-tf-template
+    uses: core/load-template@v1
+    with:
+      path: terraform/outputs.tf
+    display:
+      success: Loaded outputs.tf terraform template
+      error: Unable to load outputs.tf template (${{ steps.load-outputs-tf-template.error-message }})
+    run-at-server: true
+
+  - name: Interpolate outputs.tf template variables
+    id: interpolate-outputs-tf-file-template
+    uses: core/replace-strings@v1
+    with:
+      source-string: ${{ steps.load-outputs-tf-template.outputs.result }}
+      replacements:
+        "<test-we>": output "test_we" { value = module.test_we.workspaces["${local.app_name}_test_we"].id }
+        "<test-ne>": output "test_ne" { value = module.test_ne.workspaces["${local.app_name}_test_ne"].id }
+        "<uat-we>": ""
+        "<uat-ne>": ""
+        "<prod-we>": ""
+        "<prod-ne>": ""
+    display:
+      success: Interpolated outputs.tf template variables
+      error: Unable to interpolated outputs.tf template variables ${{ steps.interpolate-outputs-tf-file-template.error-message }}
+    run-at-server: true
+
+  - name: Save outputs.tf terraform file
+    id: save-outputs-tf-file
+    uses: file/write-text@v1
+    with:
+      path: ${{ vars.branch-folder }}/${{ vars.tf-folder }}/outputs.tf
+      text-to-write: ${{ steps.interpolate-outputs-tf-file-template.outputs.result }}
+    display:
+      success: Saved outputs.tf
+      error: Unable to save outputs.tf ${{ steps.save-outputs-tf-file.error-message }}
+    run-at-server: true
+  
+  #Add test-vars.tf
+  - name: Delete test-vars.tf terraform file if it exists
+    id: delete-test-tf-file
+    uses: file/delete-file@v1
+    with:
+      path: ${{ vars.branch-folder }}/${{ vars.tf-folder }}/test-vars.tf
+    display:
+      success: Ensured that test-vars.tf terraform file does not exist
+      error: Unable to delete test-vars.tf terraform file (${{ steps.delete-test-tf-file.error-message }})
+    run-at-server: true
+
+  - name: Load test-vars.tf terraform file template
+    id: load-vars-tf-template
+    uses: core/load-template@v1
+    with:
+      path: terraform/env-vars.tf
+    display:
+      success: Loaded env-vars.tf terraform template
+      error: Unable to load env-vars.tf terraform template (${{ steps.load-vars-tf-template.error-message }})
+    run-at-server: true
+
+  - name: replace env-vars.tf template variables
+    id: interpolate-test-tf-file-template
+    uses: core/replace-strings@v1
+    with:
+      source-string: ${{ steps.load-vars-tf-template.outputs.result }}
+      replacements:
+        "<env-name>": test
+        "<k8s-namespace>": ${{ vars.project-dash-name }}-test
+    display:
+      success: Interpolated test-vars.tf template variables
+      error: Unable to interpolated test-vars.tf template variables ${{ steps.interpolate-test-tf-file-template.error-message }}
+    run-at-server: true
+
+  - name: Save test-vars.tf terraform file
+    id: save-test-tf-file
+    uses: file/write-text@v1
+    with:
+      path: ${{ vars.branch-folder }}/${{ vars.tf-folder }}/test-vars.tf
+      text-to-write: ${{ steps.interpolate-test-tf-file-template.outputs.result }}
+    display:
+      success: Saved test-vars.tf terraform file
+      error: Unable to save test-vars.tf (${{ steps.save-test-tf-file.error-message }})
+    run-at-server: true
+  
+  #Add tfc-workspace.tf
+  - name: Delete tfc-workspace.tf terraform file if it exists
+    id: delete-tfc-workspace-tf-file
+    uses: file/delete-file@v1
+    with:
+      path: ${{ vars.branch-folder }}/${{ vars.tf-folder }}/tfc-workspace.tf
+    display:
+      success: Ensured that tfc-workspace.tf terraform file does not exist
+      error: Unable to delete tfc-workspace.tf terraform file (${{ steps.delete-tfc-workspace-tf-file.error-message }})
+    run-at-server: true
+
+  - name: Load tfc-workspace.tf terraform file template
+    id: load-tfc-workspace-template
+    uses: core/load-template@v1
+    with:
+      path: terraform/tfc-workspace.tf
+    display:
+      success: Loaded tfc-workspace.tf terraform template
+      error: Unable to load tfc-workspace.tf terraform template (${{ steps.load-tfc-workspace-template.error-message }})
+    run-at-server: true
+
+  - name: replace tfc-workspace.tf template variables
+    id: interpolate-tfc-workspace-template
+    uses: core/replace-strings@v1
+    with:
+      source-string: ${{ steps.load-tfc-workspace-template.outputs.result }}
+      replacements:
+        "<project-name>": ${{ vars.project-name }}
+        "<project-snake-name>": ${{ vars.project-snake-name }}
+        "<project-dash-name>": ${{ vars.project-dash-name }}
+    display:
+      success: Interpolated tfc-workspace.tf template variables
+      error: Unable to interpolated tfc-workspace.tf template variables ${{ steps.interpolate-tfc-workspace-template.error-message }}
+    run-at-server: true
+
+  - name: Save tfc-workspace.tf terraform file
+    id: save-tfc-workspace-file
+    uses: file/write-text@v1
+    with:
+      path: ${{ vars.branch-folder }}/${{ vars.tf-folder }}/tfc-workspace.tf
+      text-to-write: ${{ steps.interpolate-tfc-workspace-template.outputs.result }}
+    display:
+      success: Saved tfc-workspace.tf terraform file
+      error: Unable to save tfc-workspace.tf (${{ steps.save-tfc-workspace-file.error-message }})
+    run-at-server: true
+  
+  #Add variables.tf
+  - name: Delete variables.tf terraform file if it exists
+    id: delete-infra-variables-tf-file
+    uses: file/delete-file@v1
+    with:
+      path: ${{ vars.branch-folder }}/${{ vars.tf-folder }}/variables.tf
+    display:
+      success: Ensured that variables.tf terraform file does not exist
+      error: Unable to delete variables.tf terraform file (${{ steps.delete-infra-variables-tf-file.error-message }})
+    run-at-server: true
+
+  - name: Load variables.tf terraform file template
+    id: load-variables-template
+    uses: core/load-template@v1
+    with:
+      path: terraform/variables.tf
+    display:
+      success: Loaded variables.tf terraform template
+      error: Unable to load variables.tf terraform template (${{ steps.load-variables-template.error-message }})
+    run-at-server: true
+
+  - name: Save variables.tf terraform file
+    id: save-variables-file
+    uses: file/write-text@v1
+    with:
+      path: ${{ vars.branch-folder }}/${{ vars.tf-folder }}/variables.tf
+      text-to-write: ${{ steps.load-variables-template.outputs.result }}
+    display:
+      success: Saved variables.tf terraform file
+      error: Unable to save variables.tf (${{ steps.save-variables-file.error-message }})
+    run-at-server: true
+  
+  #Add heimdall-ms-microservice.tf
+  - name: Delete heimdall-ms-<microservice>.tf terraform file if it exists
+    id: delete-microservice-tf-file
+    uses: file/delete-file@v1
+    with:
+      path: ${{ vars.branch-folder }}/heimdall-ms-${{ vars.project-dash-name }}.tf
+    display:
+      success: Ensured that heimdall-ms-<microservice>.tf terraform file does not exist
+      error: Unable to delete heimdall-ms-<microservice>.tf terraform file (${{ steps.delete-microservice-tf-file.error-message }})
+    run-at-server: true
+
+  - name: Load heimdall-ms-microservice.tf terraform file template
+    id: load-microservice-template
+    uses: core/load-template@v1
+    with:
+      path: terraform/heimdall-ms-microservice.tf
+    display:
+      success: Loaded heimdall-ms-microservice.tf terraform template
+      error: Unable to load heimdall-ms-microservice.tf terraform template (${{ steps.load-microservice-template.error-message }})
+    run-at-server: true
+
+  - name: replace heimdall-ms-microservice.tf template variables
+    id: interpolate-microservice-template
+    uses: core/replace-strings@v1
+    with:
+      source-string: ${{ steps.load-microservice-template.outputs.result }}
+      replacements:
+        "<app-dash-name>": ${{ vars.project-dash-name }}
+        "<app-snake-name>": ${{ vars.project-snake-name }}
+    display:
+      success: Interpolated heimdall-ms-microservice.tf template variables
+      error: Unable to interpolated heimdall-ms-microservice.tf template variables ${{ steps.interpolate-microservice-template.error-message }}
+    run-at-server: true
+
+  - name: Save microservice-template terraform file
+    id: save-microservice-file
+    uses: file/write-text@v1
+    with:
+      path: ${{ vars.branch-folder }}/heimdall-ms-${{ vars.project-dash-name }}.tf
+      text-to-write: ${{ steps.interpolate-microservice-template.outputs.result }}
+    display:
+      success: Saved variables.tf terraform file
+      error: Unable to save variables.tf (${{ steps.save-microservice-file.error-message }})
+    run-at-server: true
+  
+  #Add workspaces ids to tfe_variable_set.tf
+  - name: Read the tfe_variable_set.tf file
+    id: load-tfe-variable-set-file
+    uses: file/read-text@v1
+    with:
+      path: ${{ vars.branch-folder }}/tfe_variable_set.tf
+    display:
+      success: Loaded the tfe_variable_set.tf file
+      error: Unable to load the tfe_variable_set.tf file ${{ steps.load-tfe-variable-set-file.error-message }}
+    run-at-server: true
+  
+  #tenant workspace ids
+  - name: Add the tenant workspace ids if they do not exist
+    id: add-workspace-ids
+    uses: hcl/add-values@v1
+    with:
+      source-hcl: ${{ steps.load-tfe-variable-set-file.outputs.result-string }}
+      path: variable_set_params/azure_tenant/workspace_ids
+      values-to-add:
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_we
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_ne
+    display:
+      success: Added the workspace ids
+      error: Unable to add the workspace ids (${{ steps.add-workspace-ids.error-message }})
+    run-at-server: true
+  
+  #platform-n workspace ids
+  - name: Add the platform-n workspace ids if they do not exist
+    id: add-platform-n-workspace-ids
+    uses: hcl/add-values@v1
+    with:
+      source-hcl: ${{ steps.add-workspace-ids.outputs.result-hcl }}
+      path: variable_set_params/azure_sub_platform_n/workspace_ids
+      values-to-add:
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_we
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_ne
+    display:
+      success: Added the platform-n workspace ids
+      error: Unable to add the platform-n workspace ids (${{ steps.add-platform-n-workspace-ids.error-message }})
+    run-at-server: true
+  
+  #devops_sp workspace ids
+  - name: Add the devops_sp workspace ids if they do not exist
+    id: add-devops-sp-workspace-ids
+    uses: hcl/add-values@v1
+    with:
+      source-hcl: ${{ steps.add-platform-n-workspace-ids.outputs.result-hcl }}
+      path: variable_set_params/devops_sp/workspace_ids
+      values-to-add:
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_we
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_ne
+    display:
+      success: Added the devops_sp workspace ids
+      error: Unable to add the devops_sp workspace ids (${{ steps.add-devops-sp-workspace-ids.error-message }})
+    run-at-server: true
+  
+  #devops_nonprod workspace ids
+  - name: Add the devops_nonprod workspace ids if they do not exist
+    id: add-devops-nonprod-workspace-ids
+    uses: hcl/add-values@v1
+    with:
+      source-hcl: ${{ steps.add-devops-sp-workspace-ids.outputs.result-hcl }}
+      path: variable_set_params/devops_nonprod/workspace_ids
+      values-to-add:
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_we
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_ne
+    display:
+      success: Added the devops_nonprod workspace ids
+      error: Unable to add the devops_nonprod workspace ids (${{ steps.add-devops-nonprod-workspace-ids.error-message }})
+    run-at-server: true
+  
+  #dev_team workspace ids
+  - name: Add the dev_team workspace ids if they do not exist
+    id: add-dev-team-workspace-ids
+    uses: hcl/add-values@v1
+    with:
+      source-hcl: ${{ steps.add-devops-nonprod-workspace-ids.outputs.result-hcl }}
+      path: variable_set_params/dev_team/workspace_ids
+      values-to-add:
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_we
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_ne
+    display:
+      success: Added the dev_team workspace ids
+      error: Unable to add the dev_team workspace ids (${{ steps.add-add-dev-team-workspace-ids-workspace-ids.error-message }})
+    run-at-server: true
+  
+  #azure_creds workspace ids
+  - name: Add the azure_creds workspace ids if they do not exist
+    id: add-azure-creds-workspace-ids
+    uses: hcl/add-values@v1
+    with:
+      source-hcl: ${{ steps.add-dev-team-workspace-ids.outputs.result-hcl }}
+      path: variable_set_params/azure_creds/workspace_ids
+      values-to-add:
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_we
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_ne
+    display:
+      success: Added the azure_creds workspace ids
+      error: Unable to add the azure_creds workspace ids (${{ steps.add-azure-creds-workspace-ids-workspace-ids.error-message }})
+    run-at-server: true
+  
+  #devops_nonprod_creds workspace ids
+  - name: Add the devops_nonprod_creds workspace ids if they do not exist
+    id: add-devops-nonprod-creds-workspace-ids
+    uses: hcl/add-values@v1
+    with:
+      source-hcl: ${{ steps.add-azure-creds-workspace-ids.outputs.result-hcl }}
+      path: variable_set_params/devops_nonprod_creds/workspace_ids
+      values-to-add:
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_we
+        - module.heimdall_${{ vars.project-snake-name }}_workspaces.test_ne
+    display:
+      success: Added the devops_nonprod_creds workspace ids
+      error: Unable to add the devops_nonprod_creds workspace ids (${{ steps.add-devops-nonprod-creds-workspace-ids.error-message }})
+    run-at-server: true
+
+  - name: Save the tfe_variable_set.tf file
+    id: save-tfe-variable-set-file
+    uses: file/write-text@v1
+    with:
+      path: ${{ vars.branch-folder }}/tfe_variable_set.tf
+      text-to-write: ${{ steps.add-devops-nonprod-creds-workspace-ids.outputs.result-hcl }}
+    display:
+      success: Saved the tfe_variable_set.tf file
+      error: unable to save the tfe_variable_set.tf file ${{ steps.save-tfe-variable-set-file.error-message }}
+    run-at-server: true
+
+  - name: Push updated branch to tfe-manage-workspaces-repo
+    id: merge-tfe-repo
+    uses: azdevops/merge-folder@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.get-terraform-tfe-manage-workspaces-repo.outputs.repository-id }}
+      branch-name: ${{ steps.create-new-tfe-manage-workspaces-branch.outputs.branch-name }}
+      source-path: ${{ steps.download-tfe-manage-workspaces-branch.outputs.local-repository-path }}
+      reference-date-time: ${{ steps.download-tfe-manage-workspaces-branch.outputs.download-date-time }}
+      auto-complete: false
+    display:
+      success: Pushed updated tfe config to Terraform Project.
+      error: Unable to push updated tfe branch to Terraform project. (${{ steps.merge-tfe-repo.error-message }})
+    run-at-server: true

@@ -1,0 +1,92 @@
+# NOX Version Control Sync Command
+
+name: Synchronise NOX project definition with Terraform Infrastructure
+
+cli:
+  branch: sync
+  command: infrastructure
+  command-alias: iac
+  description: "|iac - Sets up or synchronizes the infrastructure repos on Azure Devops for your NOX project."
+  examples:
+    - ["sync infrastructure", "--path <designFolder>"]
+    - ["sync iac", "--path <designFolder>"]
+
+jobs:
+  main-setup:
+    steps:
+      - name: Get Project dash case name
+        id: get-project-dash-case-name
+        uses: core/to-dash-case@v1
+        with:
+          source-string: ${{ project.versionControl.project }}
+        display:
+          success: Got the Project dash case name
+          error: Unable to get the Project dash case name (${{ steps.get-project-dash-case-name.error-message }})
+
+      - name: Get the project snake case name
+        id: get-project-snake-case-name
+        uses: core/to-snake-case@v1
+        with:
+          source-string: ${{ project.versionControl.project }}
+        display:
+          success: Got the Project snake case name
+          error: Unable to get the Project snake case name (${{ steps.get-project-snake-case-name.error-message }})
+
+      - name: Get Project Short Name
+        id: get-project-short-name
+        uses: core/get-string-capitals@v1
+        with:
+          source-string: ${{ project.versionControl.project }}
+        display:
+          success: Got the project short name.
+          error: Unable to get the project short name (${{ steps.get-project-short-name.error-message }})
+
+      - name: Store setup variables
+        id: add-setup-vars
+        uses: core/add-variables@v1
+        with:
+          project-name: ${{ project.versionControl.project }}
+          project-dash-name: ${{ steps.get-project-dash-case-name.outputs.result }}
+          project-snake-name: ${{ steps.get-project-snake-case-name.outputs.result }}
+          project-short-name: ${{ steps.get-project-short-name.outputs.lower-result }}
+          tf-folder: heimdall-ms-${{ steps.get-project-dash-case-name.outputs.result }}
+        display:
+          success: Variables stored
+          error: Unable to store project variables ${{ steps.add-setup-vars.error-message }}
+      
+  connect:
+    steps:
+      - name: Locate the DevOps server
+        id: locate-devops
+        uses: network/ping@v1
+        with:
+          host: ${{ project.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-devops.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accessible. Are you connected to the Internet?
+        run-at-server: true
+
+      - name: Connect to the DevOps server
+        id: connect-devops
+        uses: azdevops/connect@v1
+        with:
+          server: ${{ project.versionControl.server }}
+          personal-access-token: ${{ server.secrets.AZURE_DEVOPS_PAT }}
+        display:
+          success: Connected to the DevOps server
+          error: There was a problem connecting to the DevOps server. (${{ steps.connect-devops.error-message }})
+        run-at-server: true
+        
+      - name: Get the Nox project
+        id: get-nox-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-devops.outputs.connection }}
+          project-name: ${{ project.versionControl.project }}
+        display:
+          success: Got the ${{ project.versionControl.project }} DevOps project
+          error: There was a problem getting the ${{ project.versionControl.project }} project. (${{ steps.get-nox-project.error-message }})
+        run-at-server: true
+  
+  sync-infrastructure:  
+    $ref: SyncInfrastructure.steps.nox.yaml

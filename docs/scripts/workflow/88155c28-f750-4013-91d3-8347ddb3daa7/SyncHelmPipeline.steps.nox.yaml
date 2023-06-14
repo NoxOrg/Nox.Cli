@@ -1,0 +1,236 @@
+steps:
+  - name: Get the Project helm-chart Repository
+    id: get-helm-repo
+    uses: azdevops/get-repo@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      repository-name: ${{ project.versionControl.project }}.Helmchart
+    display:
+      success: Got the project helm-chart repository
+      error: Unable to get the project helm-chart repository. ${{ steps.ensure-nox-helm-repo.error-message }}
+    run-at-server: true
+  
+  #Service Endpoints     
+  #APPS_EU_PLATFORM_N service endpoint
+  - name: Check if the APPS_EU_PLATFORM_N service endpoint exists
+    id: verify-platform-n-se-helm
+    uses: azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_N
+    display:
+      success: Checked if APPS_EU_PLATFORM_N service endpoint exists
+      error: Unable to check if APPS_EU_PLATFORM_N service endpoint exists (${{ steps.verify-platform-n-se-helm.error-message }})
+    run-at-server: true
+  
+  - name: Find the APPS_EU_PLATFORM_N service endpoint
+    if: '"${{ steps.verify-platform-n-se-helm.outputs.is-found }}" == "False"'
+    id: find-platform-n-se-helm
+    uses:
+      azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-devops-project.outputs.project-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_N
+    display:
+      success: Searched for APPS_EU_PLATFORM_N service endpoint in Nox.Cli
+      error: Unable to search for APPS_EU_PLATFORM_N service endpoint in Nox.Cli (${{ steps.find-platform-n-se-helm.error-message }})
+    run-at-server: true
+  
+  - name: Share the APPS_EU_PLATFORM_N service endpoint
+    if: '"${{ steps.verify-platform-n-se-helm.outputs.is-found }}" == "False"'
+    id: share-platform-n-se-helm
+    uses: azdevops/share-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      service-endpoint-id: ${{ steps.find-platform-n-se-helm.outputs.service-endpoint-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_N
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      project-name: ${{ project.versionControl.project }}
+    display:
+      success: Shared the APPS_EU_PLATFORM_N service connection with ${{ project.name }}
+      error: Unable to share the APPS_EU_PLATFORM_N service connection with ${{ project.name }} (${{ steps.share-platform-n-se-helm.error-message }})
+    run-at-server: true
+  
+  #APPS_EU_PLATFORM_P service endpoint
+  - name: Check if the APPS_EU_PLATFORM_P service endpoint exists
+    id: verify-platform-p-se-helm
+    uses: azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_P
+    display:
+      success: Checked if APPS_EU_PLATFORM_P service endpoint exists
+      error: Unable to check if APPS_EU_PLATFORM_P service endpoint exists (${{ steps.verify-platform-p-se-helm.error-message }})
+    run-at-server: true
+  
+  - name: Find the APPS_EU_PLATFORM_P service endpoint
+    if: '"${{ steps.verify-platform-p-se-helm.outputs.is-found }}" == "False"'
+    id: find-platform-p-se-helm
+    uses:
+      azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-devops-project.outputs.project-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_P
+    display:
+      success: Searched for APPS_EU_PLATFORM_P service endpoint in Nox.Cli
+      error: Unable to search for APPS_EU_PLATFORM_P service endpoint in Nox.Cli (${{ steps.find-platform-p-se-helm.error-message }})
+    run-at-server: true
+  
+  - name: Share the APPS_EU_PLATFORM_P service endpoint
+    if: '"${{ steps.verify-platform-p-se-helm.outputs.is-found }}" == "False"'
+    id: share-platform-p-se-helm-helm
+    uses: azdevops/share-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      service-endpoint-id: ${{ steps.find-platform-p-se-helm.outputs.service-endpoint-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_P
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      project-name: ${{ project.versionControl.project }}
+    display:
+      success: Shared the APPS_EU_PLATFORM_P service connection with ${{ project.name }}
+      error: Unable to share the APPS_EU_PLATFORM_P service connection with ${{ project.name }} (${{ steps.share-platform-p-se-helm-helm.error-message }})
+    run-at-server: true
+  
+  #SonarCloud service endpoint
+  - name: Check if the SonarCloud service endpoint exists
+    id: verify-sonarcloud-se-helm
+    uses: azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      service-endpoint-name: SonarCloud
+    display:
+      success: Checked if SonarCloud service endpoint exists
+      error: Unable to check if SonarCloud service endpoint exists (${{ steps.verify-sonarcloud-se-helm.error-message }})
+    run-at-server: true
+  
+  - name: Find the SonarCloud service endpoint
+    if: '"${{ steps.verify-sonarcloud-se-helm.outputs.is-found }}" == "False"'
+    id: find-sonarcloud-se-helm
+    uses:
+      azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-devops-project.outputs.project-id }}
+      service-endpoint-name: SonarCloud
+    display:
+      success: Searched for SonarCloud service endpoint in Nox.Cli
+      error: Unable to search for SonarCloud service endpoint in Nox.Cli (${{ steps.find-sonarcloud-se-helm.error-message }})
+    run-at-server: true
+  
+  - name: Share the SonarCloud service endpoint
+    if: '"${{ steps.verify-sonarcloud-se-helm.outputs.is-found }}" == "False"'
+    id: share-sonarcloud-se-helm
+    uses: azdevops/share-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      service-endpoint-id: ${{ steps.find-sonarcloud-se-helm.outputs.service-endpoint-id }}
+      service-endpoint-name: SonarCloud
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      project-name: ${{ project.versionControl.project }}
+    display:
+      success: Shared the SonarCloud service connection with ${{ project.name }}
+      error: Unable to share the SonarCloud service connection with ${{ project.name }} (${{ steps.share-sonarcloud-se-helm.error-message }})
+    run-at-server: true
+  
+  #weacrheimdallpreprod service endpoint
+  - name: Check if the weacrheimdallpreprod service endpoint exists
+    id: verify-weacrheimdallpreprod-se-helm
+    uses: azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      service-endpoint-name: weacrheimdallpreprod
+    display:
+      success: Checked if weacrheimdallpreprod service endpoint exists
+      error: Unable to check if weacrheimdallpreprod service endpoint exists (${{ steps.verify-weacrheimdallpreprod-se-helm.error-message }})
+    run-at-server: true
+  
+  - name: Find the weacrheimdallpreprod service endpoint
+    if: '"${{ steps.verify-weacrheimdallpreprod-se-helm.outputs.is-found }}" == "False"'
+    id: find-weacrheimdallpreprod-se-helm
+    uses:
+      azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-devops-project.outputs.project-id }}
+      service-endpoint-name: weacrheimdallpreprod
+    display:
+      success: Searched for weacrheimdallpreprod service endpoint in Nox.Cli
+      error: Unable to search for weacrheimdallpreprod service endpoint in Nox.Cli (${{ steps.find-weacrheimdallpreprod-se-helm.error-message }})
+    run-at-server: true
+  
+  - name: Share the weacrheimdallpreprod service endpoint
+    if: '"${{ steps.verify-weacrheimdallpreprod-se-helm.outputs.is-found }}" == "False"'
+    id: share-weacrheimdallpreprod-se-helm
+    uses: azdevops/share-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      service-endpoint-id: ${{ steps.find-weacrheimdallpreprod-se-helm.outputs.service-endpoint-id }}
+      service-endpoint-name: weacrheimdallpreprod
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      project-name: ${{ project.versionControl.project }}
+    display:
+      success: Shared the weacrheimdallpreprod service connection with ${{ project.name }}
+      error: Unable to share the weacrheimdallpreprod service connection with ${{ project.name }} (${{ steps.share-weacrheimdallpreprod-se-helm.error-message }})
+    run-at-server: true
+  
+  #Helm-chart pipeline                  
+  - name: Find Helm Chart pipeline
+    id: find-helm-pipeline
+    uses: azdevops/find-build-definition@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      build-name: ${{ project.versionControl.project }}.HelmChart
+    display:
+      success: Searched for the helm chart pipeline
+      error: Unable to search for the helm chart pipeline (${{ steps.find-helm-pipeline.error-message }})
+    run-at-server: true
+  
+  - name: Authorize the Helm Chart pipeline
+    id: auth-helm-pipeline-update
+    if: '"${{ steps.find-helm-pipeline.outputs.is-found }}" == "True"'
+    uses: azdevops/authorize-build-definition@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      build-definition-id: ${{ steps.find-helm-pipeline.outputs.build-definition-id }}
+    display:
+      success: Authorized the Helm Chart build definition endpoints
+      error: Unable to authorize the Helm Chart build definition endpoints (${{ steps.auth-helm-pipeline-update.error-message }})
+    run-at-server: true
+  
+  - name: Create the Helm Chart pipeline if it does not exist
+    id: create-helm-pipeline
+    if: '"${{ steps.find-helm-pipeline.outputs.is-found }}" == "False"'
+    uses: azdevops/create-build-definition@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      repository-id: ${{ steps.get-helm-repo.outputs.repository-id }}
+      yaml-file-path: azure-pipelines.yml
+      build-name: ${{ project.versionControl.project }}.HelmChart
+      agent-pool: Azure Pipelines
+    display:
+      success: Created the Helm Chart build pipeline
+      error: Unable to create the Helm Chart build pipeline (${{ steps.create-helm-pipeline.error-message }})
+    run-at-server: true
+  
+  - name: Authorize the Helm Chart pipeline
+    id: auth-helm-pipeline-new
+    if: '"${{ steps.find-helm-pipeline.outputs.is-found }}" == "False"'
+    uses: azdevops/authorize-build-definition@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      build-definition-id: ${{ steps.create-helm-pipeline.outputs.build-definition-id }}
+    display:
+      success: Authorized the Helm Chart build definition endpoints
+      error: Unable to authorize the Helm Chart build definition endpoints (${{ steps.auth-helm-pipeline-new.error-message }})
+    run-at-server: true

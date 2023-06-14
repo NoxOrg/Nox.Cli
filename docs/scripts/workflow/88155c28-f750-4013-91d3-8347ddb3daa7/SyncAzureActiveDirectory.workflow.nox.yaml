@@ -1,0 +1,335 @@
+# NOX Azure Active Directory Sync Command
+
+name: Synchronise NOX definition with Azure Active Directory
+
+cli:
+  branch: sync
+  command: azure-active-directory
+  command-alias: ad
+  description: "|ad - Synchronises NOX team definition with your Azure Active Directory (AAD)."
+  examples:
+    - ["sync azure-active-directory", "--path <designFolder>"]
+    - ["sync azad", "--path <designFolder>"]
+    
+jobs:
+  main-setup:
+    steps:
+      - name: Get the Team Member user name list
+        id: get-team-uname-list
+        uses: project/get-team-user-names@v1
+        with:
+          team-members: ${{ project.team.developers }}
+        display:
+          success: Got the team user name list
+          error: Unable to get the team user name list (${{ steps.get-team-uname-list.error-message }})
+          
+      - name: Get the Team Admins user name list
+        id: get-project-admin-uname-list
+        uses: project/get-admin-user-names@v1
+        with:
+          team-members: ${{ project.team.developers }}
+        display:
+          success: Got the project admins user name list
+          error: Unable to get the project admins user name list (${{ steps.get-project-admin-list.error-message }})
+          
+      - name: Store setup variables
+        id: add-setup-vars
+        uses: core/add-variables@v1
+        with:
+          project-name: ${{ project.versionControl.project }}
+          team-user-names: ${{ steps.get-team-uname-list.outputs.user-names }}
+          admin-user-names: ${{ steps.get-project-admin-uname-list.outputs.user-names }}
+        display:
+          success: Setup variables stored
+          error: Unable to store setup variables (${{ steps.add-setup-vars.error-message }})
+          
+  connect:
+    steps:
+      - name: Connect to Azure Active Directory
+        id: connect-aad
+        uses: azuread/connect@v1
+        with:
+          tenant-id: ${{ server.secrets.AZURE_TENANT_ID }}
+          client-id: ${{ server.secrets.AZURE_CLIENT_ID }}
+          client-secret: ${{ server.secrets.AZURE_CLIENT_SECRET }}
+        display:
+          success: Successfully connected to Azure Active Directory
+          error: Unable to connect to Azure Active Directory
+        run-at-server: true
+
+  sync-active-directory:
+    $ref: SyncAzureActiveDirectory.steps.nox.yaml
+
+#MS Teams  
+#      - name: Find the Project MS Teams, team
+#        id: find-ms-team
+#        uses: azuread/find-group@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          group-name: NOX_${{ project.name }} Team
+#        display:
+#          success: Searched for the NOX_${{ project.name }} Team
+#          error: Unable to search for the NOX_${{ project.name }} Team (${{ steps.find-ms-team.error-message }})
+#        run-at-server: true
+#        
+#      - name: Save the MS Teams, Team Id
+#        if: '"${{ steps.find-ms-team.outputs.is-found }}" == "True"'
+#        id: save-team-id
+#        uses: core/add-variables@v1
+#        with:
+#          team-id: ${{ steps.find-ms-team.outputs.group-id }}
+#        display:
+#          success: Saved the Team Id
+#          error: Unable to save the Team Id (${{ steps.save-team-id.error-message }})
+#      
+#      - name: Create an MS teams, team for the project if it does not exist
+#        if: '"${{ steps.find-ms-team.outputs.is-found }}" == "False"'
+#        id: create-ms-team
+#        uses: teams/create-team@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          aad-group-id: ${{ vars.project-group-id }}
+#          team-name: NOX_${{ project.name }} Team
+#          team-description: Team for members of the Nox ${{ project.name }} project
+#        display:
+#          success: Created an MS Teams, team for the project
+#          error: Unable to create an MS Teams, team for the project ($${{ steps.create-ms-team.error-message }})
+#        run-at-server: true
+#        
+#      - name: Update the MS Teams, Team Id
+#        if: '"${{ steps.find-ms-team.outputs.is-found }}" == "False"'
+#        id: update-team-id
+#        uses: core/add-variables@v1
+#        with:
+#          team-id: ${{ steps.create-ms-team.outputs.team-id }}
+#        display:
+#          success: Updated the Team Id
+#          error: Unable to update the Team Id (${{ steps.update-team-id.error-message }})
+#
+#      - name: Add Project team members to MS Team
+#        id: add-members-to-ms-team
+#        uses: teams/add-members@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          user-object-ids: ${{ steps.get-team-obj-id-list.outputs.object-ids }}
+#        display:
+#          success: Added team members to MS Teams, team
+#          error: Unable to add team members to MS Teams, team (${{ steps.add-members-to-ms-team.error-message }})
+#        run-at-server: true
+#
+#      - name: Add Project Admins to MS Team
+#        id: add-admins-to-ms-team
+#        uses: teams/add-members@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          user-object-ids: ${{ steps.get-team-admin-obj-id-list.outputs.object-ids }}
+#          is-owner: true
+#        display:
+#          success: Added team admins to MS Teams, team
+#          error: Unable to add team admins to MS Teams, team (${{ steps.add-admins-to-ms-team.error-message }})
+#        run-at-server: true
+#
+#      - name: Add Nox.Cli to MS Team
+#        id: add-cli-to-ms-team
+#        uses: teams/add-member@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          object-id: 081ed5f0-1bdf-406a-a2c5-b4f7341bf3ee
+#          is-owner: true
+#        display:
+#          success: Added Nox.Cli to MS Teams, team
+#          error: Unable to add Nox.Cli to MS Teams, team (${{ steps.add-cli-to-ms-team.error-message }})
+#        run-at-server: true
+#
+#      - name: Find the DevOps Team
+#        id: find-devops-team
+#        uses: azuread/find-group@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          group-name: IWG DevOps Team
+#        display:
+#          success: Searched for the IWG DevOps Team
+#          error: Unable to search for the IWG DevOps Team (${{ steps.find-devops-team.error-message }})
+#        run-at-server: true
+#          
+#      - name: Get the DevOps team members
+#        if: '"${{ steps.find-devops-team.outputs.is-found }}" == "True"'
+#        id: get-devops-members
+#        uses: azuread/get-group-member-ids@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          group-id: ${{ steps.find-devops-team.outputs.group-id }}
+#        display:
+#          success: Got the DevOps team members
+#          error: Unable to get the DevOps team members (${{ steps.get-devops-members.error-message }})
+#        run-at-server: true
+#
+#      - name: Add DevOps group to MS Team
+#        if: '"${{ steps.find-devops-team.outputs.is-found }}" == "True"'
+#        id: add-devops-to-ms-team
+#        uses: teams/add-members@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          user-object-ids: ${{ steps.get-devops-members.outputs.member-ids }}
+#        display:
+#          success: Added DevOps to MS Teams, team
+#          error: Unable to add DevOps to MS Teams, team (${{ steps.add-devops-to-ms-team.error-message }})
+#        run-at-server: true
+#        
+#      - name: Find the Cli channel on the MS Teams team
+#        id: find-cli-channel
+#        uses: teams/find-channel@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          channel-name: Nox Cli message channel
+#        display:
+#          success: Searched for the Cli channel on the MS Teams team (${{ steps.find-cli-channel.outputs.is-found }})
+#          error: Unable to search for the Cli channel on the MS Teams team (${{ steps.find-cli-channel.error-message }})
+#        run-at-server: true
+#        
+#      - name: Save the Channel Id
+#        if: '"${{ steps.find-cli-channel.outputs.is-found }}" == "True"'
+#        id: save-channel-id
+#        uses: core/add-variables@v1
+#        with:
+#          channel-id: ${{ steps.find-cli-channel.outputs.channel-id }}
+#        display:
+#          success: Saved the Channel Id in a variable
+#          error: Unable to save the Channel Id in a variable (${{ steps.save-channel-id.error-message }})
+#
+#      - name: Create a channel on the MS Team
+#        if: '"${{ steps.find-cli-channel.outputs.is-found }}" == "False"'
+#        id: create-cli-channel
+#        uses: teams/create-channel@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          channel-name: Nox Cli message channel
+#          channel-description: Channel used by Nox.Cli to message members of the project team
+#        display:
+#          success: Created the Cli channel on the MS Teams team
+#          error: Unable to create the Cli channel on the MS Teams team (${{ steps.create-cli-channel.error-message }})
+#        run-at-server: true
+#        
+#      - name: Update the Channel Id
+#        if: '"${{ steps.find-cli-channel.outputs.is-found }}" == "False"'
+#        id: update-channel-id
+#        uses: core/add-variables@v1
+#        with:
+#          channel-id: steps.create-cli-channel.outputs.channel-id
+#        display:
+#          success: Updated Channel Id
+#          error: Unable to update Channel Id (${{ steps.update-channel-id.error-message }})
+
+#      - name: Add Nox.Cli to channel
+#        id: add-cli-to-channel
+#        uses: teams/add-channel-member@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          channel-id: ${{ steps.create-cli-channel.outputs.channel-id }}
+#          object-id: 081ed5f0-1bdf-406a-a2c5-b4f7341bf3ee
+#          is-owner: true
+#        display:
+#          success: Added Nox.Cli to the project team channel
+#          error: Unable to add Nox.Cli to the project team channel (${{ steps.add-cli-to-channel.error-message }})
+#        run-at-server: true
+
+#      - name: Add team members to channel
+#        id: add-team-to-channel
+#        uses: teams/add-channel-members@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          channel-id: ${{ steps.create-cli-channel.outputs.channel-id }}
+#          object-ids: ${{ steps.get-team-obj-id-list.outputs.object-ids }}
+#        display:
+#          success: Added project members to the project team channel
+#          error: Unable to add project members to the project team channel (${{ steps.add-team-to-channel.error-message }})
+#        run-at-server: true
+#
+#      - name: Add admins to channel
+#        id: add-admins-to-channel
+#        uses: teams/add-channel-members@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          channel-id: ${{ steps.create-cli-channel.outputs.channel-id }}
+#          object-ids: ${{ steps.get-admin-obj-id-list.outputs.object-ids }}
+#          is-owner: true
+#        display:
+#          success: Added project admins to the project team channel
+#          error: Unable to add project admins to the project team channel (${{ steps.add-admins-to-channel.error-message }})
+#        run-at-server: true
+
+#      - name: Send Test message on project channel
+#        id: send-project-test-message
+#        uses: teams/send-channel-message@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          channel-id: ${{ vars.channel-id }}
+#          message-body: Welcome to the ${{ project.name }} project team!
+#        display:
+#          success: Sent a test message to the project team channel
+#          error: Unable to send a test message to the project team channel (${{ steps.send-project-test-message.error-message }})
+#        run-at-server: true
+#
+#      - name: Create a DevOps channel on the MS Team
+#        id: create-devops-channel
+#        uses: teams/create-channel@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          channel-name: ${{ project.name }} - DevOps channel
+#          channel-description: Channel used by Nox.Cli to message DevOps members.
+#        display:
+#          success: Created the DevOps channel on the MS Teams team
+#          error: Unable to create the DevOps channel on the MS Teams team (${{ steps.create-devops-channel.error-message }})
+#        run-at-server: true
+#
+#      - name: Add Nox.Cli toDevOps channel
+#        id: add-cli-to-devops-channel
+#        uses: teams/add-channel-member@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          channel-id: ${{ steps.create-devops-channel.outputs.channel-id }}
+#          object-id: 081ed5f0-1bdf-406a-a2c5-b4f7341bf3ee
+#          is-owner: true
+#        display:
+#          success: Added Nox.Cli to the devops channel
+#          error: Unable to add Nox.Cli to the devops channel (${{ steps.add-cli-to-devops-channel.error-message }})
+#        run-at-server: true
+#
+#      - name: Add DevOps group to devops channel
+#        id: add-devops-to-devops-channel
+#        uses: teams/add-channel-member@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          channel-id: ${{ steps.create-devops-channel.outputs.channel-id }}
+#          object-id: e00e4ac2-4318-472b-8c78-8cd8c3a54685
+#        display:
+#          success: Added DevOps to DevOps channel
+#          error: Unable to add DevOps to DevOps channel (${{ steps.add-devops-to-devops-channel.error-message }})
+#        run-at-server: true
+#
+#      - name: Send Test message on DevOps channel
+#        id: send-devops-test-message
+#        uses: teams/send-channel-message@v1
+#        with:
+#          aad-client: ${{ steps.connect.outputs.aad-client }}
+#          team-id: ${{ vars.team-id }}
+#          channel-id: ${{ steps.create-devops-channel.outputs.channel-id }}
+#          message-body: Welcome to the ${{ project.name }} DevOps team!
+#        display:
+#          success: Sent a test message to the devops team channel
+#          error: Unable to send a test message to the devops team channel (${{ steps.send-devops-test-message.error-message }})
+#        run-at-server: true
+

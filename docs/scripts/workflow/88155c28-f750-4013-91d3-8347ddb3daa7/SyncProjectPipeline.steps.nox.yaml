@@ -1,0 +1,249 @@
+steps:
+  - name: Get the current Nox project repository
+    id: get-nox-repo
+    uses: azdevops/get-repo@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      repository-name: ${{ project.versionControl.repository }}
+    display:
+      success: Got the current Nox project repository
+      error: Unable to get the current Nox project repository (${{ steps.get-nox-repo.error-message }})
+    run-at-server: true
+  
+  #Service Endpoints     
+  #APPS_EU_PLATFORM_N service endpoint
+  - name: Check if the APPS_EU_PLATFORM_N service endpoint exists
+    id: verify-platform-n-se-proj
+    uses: azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_N
+    display:
+      success: Checked if APPS_EU_PLATFORM_N service endpoint exists
+      error: Unable to check if APPS_EU_PLATFORM_N service endpoint exists (${{ steps.verify-platform-n-se-proj.error-message }})
+    run-at-server: true
+  
+  - name: Find the APPS_EU_PLATFORM_N service endpoint
+    if: '"${{ steps.verify-platform-n-se-proj.outputs.is-found }}" == "False"'
+    id: find-platform-n-se-proj
+    uses:
+      azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-devops-project.outputs.project-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_N
+    display:
+      success: Searched for APPS_EU_PLATFORM_N service endpoint in Nox.Cli
+      error: Unable to search for APPS_EU_PLATFORM_N service endpoint in Nox.Cli (${{ steps.find-platform-n-se-proj.error-message }})
+    run-at-server: true
+  
+  - name: Share the APPS_EU_PLATFORM_N service endpoint
+    if: '"${{ steps.verify-platform-n-se-proj.outputs.is-found }}" == "False"'
+    id: share-platform-n-se-proj-proj
+    uses: azdevops/share-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      service-endpoint-id: ${{ steps.find-platform-n-se-proj.outputs.service-endpoint-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_N
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      project-name: ${{ project.versionControl.project }}
+    display:
+      success: Shared the APPS_EU_PLATFORM_N service connection with ${{ project.name }}
+      error: Unable to share the APPS_EU_PLATFORM_N service connection with ${{ project.name }} (${{ steps.share-platform-n-se-proj-proj.error-message }})
+    run-at-server: true
+  
+  #APPS_EU_PLATFORM_P service endpoint
+  - name: Check if the APPS_EU_PLATFORM_P service endpoint exists
+    id: verify-platform-p-se-proj
+    uses: azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_P
+    display:
+      success: Checked if APPS_EU_PLATFORM_P service endpoint exists
+      error: Unable to check if APPS_EU_PLATFORM_P service endpoint exists (${{ steps.verify-platform-p-se-proj.error-message }})
+    run-at-server: true
+  
+  - name: Find the APPS_EU_PLATFORM_P service endpoint
+    if: '"${{ steps.verify-platform-p-se-proj.outputs.is-found }}" == "False"'
+    id: find-platform-p-se-proj
+    uses:
+      azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-devops-project.outputs.project-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_P
+    display:
+      success: Searched for APPS_EU_PLATFORM_P service endpoint in Nox.Cli
+      error: Unable to search for APPS_EU_PLATFORM_P service endpoint in Nox.Cli (${{ steps.find-platform-p-se-proj.error-message }})
+    run-at-server: true
+  
+  - name: Share the APPS_EU_PLATFORM_P service endpoint
+    if: '"${{ steps.verify-platform-p-se-proj.outputs.is-found }}" == "False"'
+    id: share-platform-p-se-proj-proj
+    uses: azdevops/share-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      service-endpoint-id: ${{ steps.find-platform-p-se-proj.outputs.service-endpoint-id }}
+      service-endpoint-name: APPS_EU_PLATFORM_P
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      project-name: ${{ project.versionControl.project }}
+    display:
+      success: Shared the APPS_EU_PLATFORM_P service connection with ${{ project.name }}
+      error: Unable to share the APPS_EU_PLATFORM_P service connection with ${{ project.name }} (${{ steps.share-platform-p-se-proj-proj.error-message }})
+    run-at-server: true
+  
+  #SonarCloud service endpoint
+  - name: Check if the SonarCloud service endpoint exists
+    id: verify-sonarcloud-se-proj
+    uses: azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      service-endpoint-name: SonarCloud
+    display:
+      success: Checked if SonarCloud service endpoint exists
+      error: Unable to check if SonarCloud service endpoint exists (${{ steps.verify-sonarcloud-se-proj.error-message }})
+    run-at-server: true
+  
+  - name: Find the SonarCloud service endpoint
+    if: '"${{ steps.verify-sonarcloud-se-proj.outputs.is-found }}" == "False"'
+    id: find-sonarcloud-se-proj
+    uses:
+      azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-devops-project.outputs.project-id }}
+      service-endpoint-name: SonarCloud
+    display:
+      success: Searched for SonarCloud service endpoint in Nox.Cli
+      error: Unable to search for SonarCloud service endpoint in Nox.Cli (${{ steps.find-sonarcloud-se-proj.error-message }})
+    run-at-server: true
+  
+  - name: Share the SonarCloud service endpoint
+    if: '"${{ steps.verify-sonarcloud-se-proj.outputs.is-found }}" == "False"'
+    id: share-sonarcloud-se-proj
+    uses: azdevops/share-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      service-endpoint-id: ${{ steps.find-sonarcloud-se-proj.outputs.service-endpoint-id }}
+      service-endpoint-name: SonarCloud
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      project-name: ${{ project.versionControl.project }}
+    display:
+      success: Shared the SonarCloud service connection with ${{ project.name }}
+      error: Unable to share the SonarCloud service connection with ${{ project.name }} (${{ steps.share-sonarcloud-se-proj.error-message }})
+    run-at-server: true
+  
+  #weacrheimdallpreprod service endpoint
+  - name: Check if the weacrheimdallpreprod service endpoint exists
+    id: verify-weacrheimdallpreprod-se-proj
+    uses: azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      service-endpoint-name: weacrheimdallpreprod
+    display:
+      success: Checked if weacrheimdallpreprod service endpoint exists
+      error: Unable to check if weacrheimdallpreprod service endpoint exists (${{ steps.verify-weacrheimdallpreprod-se-proj.error-message }})
+    run-at-server: true
+  
+  - name: Find the weacrheimdallpreprod service endpoint
+    if: '"${{ steps.verify-weacrheimdallpreprod-se-proj.outputs.is-found }}" == "False"'
+    id: find-weacrheimdallpreprod-se-proj
+    uses:
+      azdevops/find-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-devops-project.outputs.project-id }}
+      service-endpoint-name: weacrheimdallpreprod
+    display:
+      success: Searched for weacrheimdallpreprod service endpoint in Nox.Cli
+      error: Unable to search for weacrheimdallpreprod service endpoint in Nox.Cli (${{ steps.find-weacrheimdallpreprod-se-proj.error-message }})
+    run-at-server: true
+  
+  - name: Share the weacrheimdallpreprod service endpoint
+    if: '"${{ steps.verify-weacrheimdallpreprod-se-proj.outputs.is-found }}" == "False"'
+    id: share-weacrheimdallpreprod-se-proj
+    uses: azdevops/share-service-endpoint@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      service-endpoint-id: ${{ steps.find-weacrheimdallpreprod-se-proj.outputs.service-endpoint-id }}
+      service-endpoint-name: weacrheimdallpreprod
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      project-name: ${{ project.versionControl.project }}
+    display:
+      success: Shared the weacrheimdallpreprod service connection with ${{ project.name }}
+      error: Unable to share the weacrheimdallpreprod service connection with ${{ project.name }} (${{ steps.share-weacrheimdallpreprod-se-proj.error-message }})
+    run-at-server: true
+  
+  #Agent pools
+  - name: Add we-aks-agent-pool
+    id: add-aks-agent-pool
+    uses: azdevops/add-project-agent-pool@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      agent-pool-name: we-aks-preprod-agent
+    display:
+      success: Successfully added the we-aks-preprod-agent pool
+      error: Unable to add the we-aks-preprod-agent pool ${{ steps.add-agent-pool.error-message }}
+    run-at-server: true
+  
+  #Project Pipeline        
+  - name: Find Project pipeline
+    id: find-project-pipeline
+    uses: azdevops/find-build-definition@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      build-name: ${{ project.versionControl.project }}
+    display:
+      success: Searched for the Project pipeline
+      error: Unable to search for the Project pipeline (${{ steps.find-project-pipeline.error-message }})
+    run-at-server: true
+  
+  - name: Authorize the project pipeline endpoints
+    id: auth-project-pipeline-update
+    if: '"${{ steps.find-project-pipeline.outputs.is-found }}" == "True"'
+    uses: azdevops/authorize-build-definition@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      build-definition-id: ${{ steps.find-project-pipeline.outputs.build-definition-id }}
+    display:
+      success: Authorized the project pipeline endpoints
+      error: Unable to authorize the project pipeline endpoints (${{ steps.auth-project-pipeline-update.error-message }})
+    run-at-server: true
+  
+  - name: Create the Project pipeline if it does not exist
+    id: create-project-pipeline
+    if: '"${{ steps.find-project-pipeline.outputs.is-found }}" == "False"'
+    uses: azdevops/create-build-definition@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      repository-id: ${{ steps.get-nox-repo.outputs.repository-id }}
+      yaml-file-path: azure-pipelines.yml
+      build-name: ${{ project.versionControl.project }}
+      agent-pool: Azure Pipelines
+    display:
+      success: Created the Project build pipeline
+      error: Unable to create the Project build pipeline (${{ steps.create-project-pipeline.error-message }})
+    run-at-server: true
+  
+  - name: Authorize the project pipeline endpoints
+    id: auth-project-pipeline-new
+    if: '"${{ steps.find-project-pipeline.outputs.is-found }}" == "False"'
+    uses: azdevops/authorize-build-definition@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.get-nox-project.outputs.project-id }}
+      build-definition-id: ${{ steps.create-project-pipeline.outputs.build-definition-id }}
+    display:
+      success: Authorized the project pipeline endpoints
+      error: Unable to authorize the project pipeline endpoints (${{ steps.auth-project-pipeline-new.error-message }})
+    run-at-server: true

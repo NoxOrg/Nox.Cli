@@ -1,0 +1,161 @@
+steps:
+  - name: Find the project AAD group
+    id: find-project-group
+    uses: azuread/find-group@v1
+    with:
+      aad-client: ${{ steps.connect-aad.outputs.aad-client }}
+      group-name: NOX_PROJECT_${{ project.name }}
+    display:
+      success: Searched for the NOX_PROJECT_${{ project.name }} AAD Group
+      error: Unable to search for the NOX_PROJECT_${{ project.name }} AAD Group (${{ steps.find-project-group.error-message }})
+    run-at-server: true
+  
+  - name: Store project group id variable
+    if: '"${{ steps.find-project-group.outputs.is-found }}" == "True"'
+    id: store-project-group-id
+    uses: core/add-variables@v1
+    with:
+      project-group-id: ${{ steps.find-project-group.outputs.group-id }}
+    display:
+      success: Project group id stored
+      error: Unable to store project group id ${{ steps.store-project-group-id.error-message }}
+  
+  - name: Create the project AAD group if it does not exist
+    if: '"${{ steps.find-project-group.outputs.is-found }}" == "False"'
+    id: create-project-group
+    uses: azuread/create-group@v1
+    with:
+      aad-client: ${{ steps.connect-aad.outputs.aad-client }}
+      group-name: NOX_PROJECT_${{ project.name }}
+      group-description: ${{ project.description }}
+    display:
+      success: Created the NOX_PROJECT_${{ project.name }} AAD group
+      error: Unable to create the NOX_PROJECT_${{ project.name }} AAD group (${{ steps.create-project-group.error-message }})
+    run-at-server: true
+  
+  - name: Update project group id variable
+    if: '"${{ steps.find-project-group.outputs.is-found }}" == "False"'
+    id: update-project-group-id
+    uses: core/add-variables@v1
+    with:
+      project-group-id: ${{ steps.create-project-group.outputs.group-id }}
+    display:
+      success: Project group id updated
+      error: Unable to update the project group id ${{ steps.update-project-group-id.error-message }}
+  
+  - name: Find the NOX_PROJECTS_ALL AAD group
+    id: find-nox_projects_all-group
+    uses: azuread/find-group@v1
+    with:
+      aad-client: ${{ steps.connect-aad.outputs.aad-client }}
+      group-name: NOX_PROJECTS_ALL
+    display:
+      success: Searched for the NOX_PROJECTS_ALL AAD Group
+      error: Unable to search for the NOX_PROJECTS_ALL AAD Group (${{ steps.find-nox_projects_all-group.error-message }})
+    run-at-server: true
+  
+  - name: Store NOX_PROJECTS_ALL group id variable
+    id: store-all-group-id
+    uses: core/add-variables@v1
+    with:
+      all-group-id: ${{ steps.find-nox_projects_all-group.outputs.group-id }}
+    display:
+      success: NOX_PROJECTS_ALL group id stored
+      error: Unable to store NOX_PROJECTS_ALL group id ${{ steps.store-all-group-id.error-message }}
+  
+  - name: Create the NOX_PROJECTS_ALL AAD security group
+    if: '"${{ steps.find-nox_projects_all-group.outputs.is-found }}" == "False"'
+    id: create-nox-projects-all-group
+    uses: azuread/create-group@v1
+    with:
+      aad-client: ${{ steps.connect-aad.outputs.aad-client }}
+      group-name: NOX_PROJECTS_ALL
+      group-description: Nox Projects - Security Group
+    display:
+      success: Created the AAD security group
+      error: Unable to create the AAD security group (${{ steps.create-security-group.error-message }})
+    run-at-server: true
+  
+  - name: Update NOX_PROJECTS_ALL group id variable
+    if: '"${{ steps.find-nox_projects_all-group.outputs.is-found }}" == "False"'
+    id: update-all-group-id
+    uses: core/add-variables@v1
+    with:
+      all-group-id: ${{ steps.create-nox-projects-all-group.outputs.group-id }}
+    display:
+      success: NOX_PROJECTS_ALL group id updated
+      error: Unable to update NOX_PROJECTS_ALL group id ${{ steps.update-all-group-id.error-message }}
+  
+  - name: Add the project group as a member of NOX_PROJECTS_ALL
+    id: add-project-group-to-all-group
+    uses: azuread/add-group-to-group@v1
+    with:
+      aad-client: ${{ steps.connect-aad.outputs.aad-client }}
+      child-group-id: ${{ vars.project-group-id }}
+      parent-group-id: ${{ vars.all-group-id }}
+    display:
+      success: Added NOX_PROJECT_${{ project.name }} to NOX_PROJECTS_ALL
+      error: Unable to add NOX_PROJECT_${{ project.name }} to NOX_PROJECTS_ALL (${{ steps.add-project-group-to-all-group.error-message }})
+    run-at-server: true
+  
+  - name: Get Team member user object Id list
+    if: '"${{ steps.get-team-uname-list.outputs.user-names }}" != ""'
+    id: get-team-obj-id-list
+    uses: azuread/get-users-object-id-list@v1
+    with:
+      aad-client: ${{ steps.connect-aad.outputs.aad-client }}
+      user-names: ${{ vars.team-user-names }}
+    display:
+      success: Got the Team members object ids
+      error: Unable to get the team members object ids (${{ steps.get-team-obj-id-list.error-message }})
+    run-at-server: true
+  
+  - name: Get the team admins user object Id list
+    id: get-team-admin-obj-id-list
+    uses: azuread/get-users-object-id-list@v1
+    with:
+      aad-client: ${{ steps.connect-aad.outputs.aad-client }}
+      user-names: ${{ vars.admin-user-names }}
+    display:
+      success: Got the Team admins object ids
+      error: Unable to get the team admins object ids (${{ steps.get-team-admin-obj-id-list.error-message }})
+    run-at-server: true
+  
+  - name: Add project team members to project group
+    if: '"${{ steps.get-team-uname-list.outputs.user-names }}" != ""'
+    id: add-members-to-aad-group
+    uses: azuread/add-users-to-group@v1
+    with:
+      aad-client: ${{ steps.connect-aad.outputs.aad-client }}
+      group-id: ${{ vars.project-group-id }}
+      user-object-ids: ${{ steps.get-team-obj-id-list.outputs.object-ids }}
+    display:
+      success: Added project team members to project group
+      error: Unable to add project team members to project group (${{ steps.add-members-to-aad-group.error-message }})
+    run-at-server: true
+  
+  - name: Add project admins to project group
+    id: add-admins-to-aad-group
+    uses: azuread/add-users-to-group@v1
+    with:
+      aad-client: ${{ steps.connect-aad.outputs.aad-client }}
+      group-id: ${{ vars.project-group-id }}
+      user-object-ids: ${{ steps.get-team-admin-obj-id-list.outputs.object-ids }}
+      is-owner: true
+    display:
+      success: Added project team admins to project AAD group
+      error: Unable to add project admins to project AAD group (${{ steps.add-admins-to-aad-group.error-message }})
+    run-at-server: true
+  
+  - name: Add Nox.Cli to project group
+    id: add-cli-to-project-group
+    uses: azuread/add-user-to-group@v1
+    with:
+      aad-client: ${{ steps.connect-aad.outputs.aad-client }}
+      group-id: ${{ vars.project-group-id }}
+      user-object-id: 081ed5f0-1bdf-406a-a2c5-b4f7341bf3ee
+      is-owner: true
+    display:
+      success: Added Nox.Cli to project AAD group
+      error: Unable to add Nox.Cli to project AAD group (${{ steps.add-cli-to-project-group.error-message }})
+    run-at-server: true

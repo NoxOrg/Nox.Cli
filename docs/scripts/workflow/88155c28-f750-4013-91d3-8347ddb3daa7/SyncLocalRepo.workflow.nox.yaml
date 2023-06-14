@@ -1,0 +1,18 @@
+# NOX Init Solution Command
+
+name: Sync local project repository with remote Azure DevOps
+description: This workflow will sync your local git repository with the project's remote Azure DevOps repository
+
+cli:
+  branch: sync
+  command: local-repo
+  command-alias: repo
+  description: "|np - Sync local repository with remote."
+  examples:
+    - ["sync local-repo", "--path <designFolder>"]
+    - ["sync repo", "--path <designFolder>"]
+
+jobs:
+  sync-repos:
+    $ref: InitSln_SyncRepos.steps.nox.yaml
+

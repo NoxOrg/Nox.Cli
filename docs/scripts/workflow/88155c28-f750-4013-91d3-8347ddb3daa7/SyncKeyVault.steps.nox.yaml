@@ -1,0 +1,48 @@
+- name: Connect to the Arm Client
+  id: connect-arm
+  uses: arm/connect@v1
+  with:
+    subscription-id: 03d6460a-7ea8-4d54-a64a-69db6e5823d8
+  display:
+    success: Connected to the Azure Subscription
+    error: There was a problem connecting to the Azure Subscription. (${{ steps.connect-arm.error-message }})
+  run-at-server: true
+  
+- name: Find the Helm Chart key vault
+  id: find-hc-kv
+  uses: arm/find-key-vault@v1
+  with:
+    subscription: ${{ steps.connect-arm.outputs.subscription }}
+    resource-group-name: RG_WE_APPS_HEIMDALL_PREPROD
+    key-vault-name: we-test-mp-kv-${{ steps.get-project-short-name.outputs.lower-result }}
+  display:
+    success: Found the Helm Chart Key Vault
+    error: There was a problem finding the Helm Chart Key Vault (${{ steps.find-hc-kv.error-message }})
+  run-at-server: true
+  
+- name: Create the Helm Chart key vault
+  id: create-hc-kv
+  if: '"${{ steps.find-hc-kv.outputs.is-found }}" == "False"'
+  uses: arm/create-key-vault@v1
+  with:
+    subscription: ${{ steps.connect-arm.outputs.subscription }}
+    resource-group-name: RG_WE_APPS_HEIMDALL_PREPROD
+    key-vault-name: we-test-mp-kv-${{ steps.get-project-short-name.outputs.lower-result }}
+  display:
+    success: Created the Helm Chart key vault
+    error: Unable to create the Helm Chart key vault (${{ steps.create-hc-kv.error-message }})
+  run-at-server: true
+
+- name: Save the db-connection-string secret
+  id: save-db-connection-string
+  uses: arm/save-secret@v1
+  with:
+    key-vault-name: we-test-mp-kv-${{ steps.get-project-short-name.outputs.lower-result }}
+    secret-name: db-connection-string
+    secret-value: not-set
+  display:
+    success: Saved the Db connection string secret
+    error: Unable to save the Db connection string secret (${{ steps.save-db-connection-string.error-message }})
+    
+    
+  

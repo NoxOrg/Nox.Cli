@@ -1,0 +1,280 @@
+steps:
+  #Current Project
+  - name: Ensure your Nox project exists
+    id: ensure-project-exists
+    uses: azdevops/ensure-project-exists@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-name: ${{ project.versionControl.project }}
+      project-description: ${{ project.description }}
+    display:
+      success: ${{ steps.ensure-project-exists.outputs.success-message }}
+      error: Unable to ensure the Nox project exists (${{ steps.ensure-project-exists.error-message }})
+    run-at-server: true
+  
+  - name: Update Nox Project Settings
+    id: update-project-settings
+    uses: azdevops/update-build-general-settings@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.ensure-project-exists.outputs.project-id }}
+      enforce-job-auth-scope: false
+      enforce-referenced-repo-scoped-token: false
+    display:
+      success: Updated the Nox project build settings
+      error: Unable to update the Nox project build settings (${{ steps.update-project-settings.error-message }})
+    run-at-server: true
+  
+  - name: Add the admins to the project
+    id: add-admins
+    if: '"${{ vars.admin-user-names }}" != ""'
+    uses: azdevops/add-project-admins@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.ensure-project-exists.outputs.project-id }}
+      admins: ${{ vars.admin-user-names }}
+    display:
+      success: Added administrators to the project
+      error: Unable to add administrators to the project (${{ steps.add-admins.error-message }})
+    run-at-server: true
+  
+  - name: Add the team to the project
+    id: add-developers
+    if: '"${{ vars.team-user-names }}"!= ""'
+    uses: azdevops/add-team-members@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.ensure-project-exists.outputs.project-id }}
+      team-members: ${{ vars.team-user-names }}
+    display:
+      success: Added team members to the project
+      error: Unable to add team members to the project (${{ steps.add-developers.error-message }})
+    run-at-server: true
+  
+  - name: Ensure the Project Repository exists
+    id: ensure-repo-exists
+    uses: azdevops/ensure-repo-exists@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.ensure-project-exists.outputs.project-id }}
+      repository-name: ${{ project.versionControl.repository }}
+      do-initialize: true
+    display:
+      success: ${{ steps.ensure-repo-exists.outputs.success-message }}
+      error: There was a problem ensuring that the repository exists. (${{ steps.ensure-repo-exists.error-message }})
+    run-at-server: true
+  
+  - name: Find the Default Project Repository
+    if: '"${{ project.versionControl.repository }}" != "${{ project.versionControl.project }}"'
+    id: find-default-repo
+    uses: azdevops/find-repo@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.ensure-project-exists.outputs.project-id }}
+      repository-name: ${{ project.versionControl.project }}
+    display:
+      success: Searched for the default project repository
+      error: Unable to search for the default project repository ${{ steps.find-default-repo.error-message }}
+    run-at-server: true
+  
+  - name: Delete the Default Repository if it exists
+    if: '"${{ project.versionControl.repository }}" != "${{ project.versionControl.project }}" && "${{ steps.find-default-repo.outputs.is-found }}" == "True"'
+    id: delete-default-repo
+    uses: azdevops/delete-repo@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      project-id: ${{ steps.ensure-project-exists.outputs.project-id }}
+      repository-name: ${{ project.versionControl.project }}
+    display:
+      success: Deleted the default repository
+      error: Unable to delete the default repository ${{ steps.delete-default-repo.error-message }}
+    run-at-server: true
+  
+  - name: Find the project main branch
+    id: find-main
+    uses: azdevops/find-branch@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.ensure-repo-exists.outputs.repository-id }}
+      branch-name: main
+    display:
+      success: Successfully searched for the main branch
+      error: There was a problem finding the main branch for repo (${{ steps.find-main.error-message }})
+    run-at-server: true
+  
+  - name: Create new branch
+    id: create-branch
+    uses: azdevops/create-branch@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.ensure-repo-exists.outputs.repository-id }}
+    display:
+      success: Successfully created new branch -> ${{ steps.create-branch.outputs.branch-name }}
+      error: Unable to create new branch -> ${{ steps.create-branch.error-message }}
+    run-at-server: true
+  
+  - name: Download the new branch
+    id: download-branch
+    uses: azdevops/download-repo-branch@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.ensure-repo-exists.outputs.repository-id }}
+      branch-name: ${{ steps.create-branch.outputs.branch-name }}
+    display:
+      success: Successfully downloaded branch '${{ steps.create-branch.outputs.branch-name }}' of the Project Repo
+      error: There was a problem downloading the repository (${{ steps.download-branch.error-message }})
+    run-at-server: true
+  
+  # global.yaml        
+  - name: Check if global.yaml exists
+    id: find-global-yaml
+    uses: file/find-file@v1
+    with:
+      path: ${{ steps.download-branch.outputs.local-repository-path }}/pipeline/variables
+      file-name: global.yaml
+    display:
+      success: Searched for global.yaml
+      error: Unable to search for global.yaml (${{ steps.find-global-yaml.error-message }})
+    run-at-server: true
+  
+  - name: Load global.yaml template
+    id: load-global-yaml
+    uses: core/load-template@v1
+    with:
+      path: pipeline/nox-project/global.yaml
+    display:
+      success: Loaded global.yaml
+      error: Unable to load global.yaml (${{ steps.load-global-yaml.error-message }})
+    run-at-server: true
+  
+  - name: Save global.yaml to local repo
+    id: save-global-yaml
+    uses: file/write-text@v1
+    with:
+      path: ${{ steps.download-branch.outputs.local-repository-path }}/pipeline/variables/global.yaml
+      text-to-write: ${{ steps.load-global-yaml.outputs.result }}
+    display:
+      success: Saved global.yaml
+      error: unable to save global.yaml (${{ steps.save-global-yaml.error-message }})
+    run-at-server: true
+  
+  - name: Replace global.yaml template
+    id: replace-global-yaml
+    uses: file/replace-strings@v1
+    with:
+      path: ${{ steps.download-branch.outputs.local-repository-path }}/pipeline/variables/global.yaml
+      replacements:
+        "<sonar-cloud-project-key>": ${{ vars.project-dash-name }}
+        "<source-folder>": ""
+        "<project-dash-name>": ${{ vars.project-dash-name }}
+        "<build-context>": ${{ project.versionControl.relativeProjectSourceFolder }}
+        "<docker-file-path>": ${{ project.versionControl.relativeDockerFilePath }}
+    display:
+      success: Strings Replace global.yaml success
+      error: Strings Replace global.yaml failed. (${{ steps.replace-global-yaml.error-message }})
+    run-at-server: true
+  
+  # preprod-we-test.yaml        
+  - name: Check if preprod-we-test.yaml exists
+    id: find-preprod-we-test-yaml
+    uses: file/find-file@v1
+    with:
+      path: ${{ steps.download-branch.outputs.local-repository-path }}/pipeline/variables
+      file-name: preprod-we-test.yaml
+    display:
+      success: Searched for preprod-we-test.yaml
+      error: Unable to search for preprod-we-test.yaml (${{ steps.find-preprod-we-test-yaml.error-message }})
+    run-at-server: true
+  
+  - name: Load preprod-we-test.yaml template
+    id: load-preprod-we-test-yaml
+    uses: core/load-template@v1
+    with:
+      path: pipeline/nox-project/preprod-we-test.yaml
+    display:
+      success: Loaded preprod-we-test.yaml
+      error: Unable to load preprod-we-test.yaml (${{ steps.load-preprod-we-test-yaml.error-message }})
+    run-at-server: true
+  
+  - name: Save preprod-we-test.yaml to local repo
+    id: save-preprod-we-test-yaml
+    uses: file/write-text@v1
+    with:
+      path: ${{ steps.download-branch.outputs.local-repository-path }}/pipeline/variables/preprod-we-test.yaml
+      text-to-write: ${{ steps.load-preprod-we-test-yaml.outputs.result }}
+    display:
+      success: Saved preprod-we-test.yaml
+      error: unable to save preprod-we-test.yaml (${{ steps.save-preprod-we-test.error-message }})
+    run-at-server: true
+  
+  - name: Replace preprod-we-test.yaml template
+    id: replace-preprod-we-test-yaml
+    uses: file/replace-strings@v1
+    with:
+      path: ${{ steps.download-branch.outputs.local-repository-path }}/pipeline/variables/preprod-we-test.yaml
+      replacements:
+        "<project-dash-name>": ${{ vars.project-dash-name }}
+    display:
+      success: Strings Replace preprod-we-test.yaml success
+      error: Strings Replace preprod-we-test.yaml failed. (${{ steps.replace-preprod-we-test-yaml.error-message }})
+    run-at-server: true
+  
+  # azure-pipelines.yml
+  - name: Check if azure-pipelines.yml exists
+    id: find-azure-pipelines-yml
+    uses: file/find-file@v1
+    with:
+      path: ${{ steps.download-branch.outputs.local-repository-path }}
+      file-name: azure-pipelines.yml
+    display:
+      success: Searched for azure-pipelines.yml
+      error: Unable to search for azure-pipelines.yml (${{ steps.find-azure-pipelines-yml.error-message }})
+    run-at-server: true
+  
+  - name: Load azure-pipelines.yml template
+    id: load-azure-pipelines-yml
+    uses: core/load-template@v1
+    with:
+      path: pipeline/nox-project/azure-pipelines.yml
+    display:
+      success: Loaded azure-pipelines.yml
+      error: Unable to load azure-pipelines.yml (${{ steps.load-azure-pipelines-yml.error-message }})
+    run-at-server: true
+  
+  - name: Save azure-pipelines.yml to local repo
+    id: save-azure-pipelines
+    uses: file/write-text@v1
+    with:
+      path: ${{ steps.download-branch.outputs.local-repository-path }}/azure-pipelines.yml
+      text-to-write: ${{ steps.load-azure-pipelines-yml.outputs.result }}
+    display:
+      success: Saved azure-pipelines.yml
+      error: unable to save azure-pipelines.yml (${{ steps.save-azure-pipelines.error-message }})
+    run-at-server: true
+  
+  - name: Replace azure-pipelines.yml template
+    id: replace-azure-pipelines-yml
+    uses: file/replace-strings@v1
+    with:
+      path: ${{ steps.download-branch.outputs.local-repository-path }}/azure-pipelines.yml
+      replacements:
+        "<project-name>": ${{ vars.project-name }}
+        "<project-dash-name>": ${{ vars.project-dash-name }}
+    display:
+      success: Strings Replace azure-pipelines.yml success
+      error: Strings Replace azure-pipelines.yml failed. (${{ steps.replace-azure-pipelines-yml.error-message }})
+    run-at-server: true
+  
+  - name: Push updated branch
+    id: merge-repo
+    uses: azdevops/merge-folder@v1
+    with:
+      connection: ${{ steps.connect-devops.outputs.connection }}
+      repository-id: ${{ steps.ensure-repo-exists.outputs.repository-id }}
+      branch-name: ${{ steps.create-branch.outputs.branch-name }}
+      source-path: ${{ steps.download-branch.outputs.local-repository-path }}
+      reference-date-time: ${{ steps.download-branch.outputs.download-date-time }}
+    display:
+      success: Pushed updated branch to project repo
+      error: Unable to push updated branch to project repo. (${{ steps.merge-repo.error-message }})
+    run-at-server: true

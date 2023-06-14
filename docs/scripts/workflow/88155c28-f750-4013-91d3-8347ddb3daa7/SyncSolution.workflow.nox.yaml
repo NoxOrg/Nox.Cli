@@ -1,0 +1,156 @@
+# NOX Sync Solution Command
+
+name: Initialize a Nox project
+description: This workflow will sync your Nox solution with Azure AD, Terraform and DevOps
+
+cli:
+  branch: sync
+  command: solution
+  command-alias: sln
+  description: "|np - Synchronizes a Nox solution."
+  examples:
+    - ["sync solution", "--path <designFolder>"]
+    - ["sync sln", "--path <designFolder>"]
+      
+jobs:
+  main-setup:
+    steps:
+      - name: Get Project dash case name
+        id: get-project-dash-name
+        uses: core/to-dash-case@v1
+        with:
+          source-string: ${{ project.versionControl.project }}
+        display:
+          success: Got the Project dash case name
+          error: Unable to get the Project dash case name (${{ steps.get-project-dash-name.error-message }})
+
+      - name: Get the project snake case name
+        id: get-project-snake-name
+        uses: core/to-snake-case@v1
+        with:
+          source-string: ${{ project.versionControl.project }}
+        display:
+          success: Got the Project snake case name
+          error: Unable to get the Project snake case name (${{ steps.get-project-snake-name.error-message }})
+          
+      - name: Get Project Short Name
+        id: get-project-short-name
+        uses: core/get-string-capitals@v1
+        with:
+          source-string: ${{ project.versionControl.project }}
+        display:
+          success: Got the project short name.
+          error: Unable to get the project short name (${{ steps.get-project-short-name.error-message }})
+
+      - name: Get the Team Member user name list
+        id: get-team-uname-list
+        uses: project/get-team-user-names@v1
+        with:
+          team-members: ${{ project.team.developers }}
+        display:
+          success: Got the team user name list
+          error: Unable to get the team user name list (${{ steps.get-team-uname-list.error-message }})
+
+      - name: Get the Team Admins user name list
+        id: get-project-admin-uname-list
+        uses: project/get-admin-user-names@v1
+        with:
+          team-members: ${{ project.team.developers }}
+        display:
+          success: Got the project admins user name list
+          error: Unable to get the project admins user name list (${{ steps.get-project-admin-list.error-message }})
+
+      - name: Store setup variables
+        id: add-setup-vars
+        uses: core/add-variables@v1
+        with:
+          project-name: ${{ project.versionControl.project }}
+          project-dash-name: ${{ steps.get-project-dash-name.outputs.result }}
+          project-snake-name: ${{ steps.get-project-snake-name.outputs.result }}
+          project-short-name: ${{ steps.get-project-short-name.outputs.lower-result }}
+          team-user-names: ${{ steps.get-team-uname-list.outputs.user-names }}
+          admin-user-names: ${{ steps.get-project-admin-uname-list.outputs.user-names }}
+          tf-folder: heimdall-ms-${{ steps.get-project-dash-name.outputs.result }}
+        display:
+          success: Variables stored
+          error: Unable to store project variables ${{ steps.add-setup-vars.error-message }}  
+      
+  connect:
+    steps:
+      - name: Connect to Azure Active Directory
+        id: connect-aad
+        uses: azuread/connect@v1
+        with:
+          tenant-id: ${{ server.secrets.AZURE_TENANT_ID }}
+          client-id: ${{ server.secrets.AZURE_CLIENT_ID }}
+          client-secret: ${{ server.secrets.AZURE_CLIENT_SECRET }}
+        display:
+          success: Successfully connected to Azure Active Directory
+          error: Unable to connect to Azure Active Directory
+        run-at-server: true
+        
+      - name: Locate the DevOps server
+        id: locate-devops
+        uses: network/ping@v1
+        with:
+          host: ${{ project.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-devops.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accessible. Are you connected to the Internet?
+        run-at-server: true
+
+      - name: Connect to the DevOps server
+        id: connect-devops
+        uses: azdevops/connect@v1
+        with:
+          server: ${{ project.versionControl.server }}
+          personal-access-token: ${{ server.secrets.AZURE_DEVOPS_PAT }}
+        display:
+          success: Connected to the DevOps server
+          error: There was a problem connecting to the DevOps server. (${{ steps.connect-devops.error-message }})
+        run-at-server: true
+    
+  sync-active-directory:
+    $ref: SyncAzureActiveDirectory.steps.nox.yaml
+    
+  sync-version-control:
+    $ref: SyncVersionControl.steps.nox.yaml
+    
+  nox-project:
+    steps:
+      - name: Get the Nox project
+        id: get-nox-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-devops.outputs.connection }}
+          project-name: ${{ project.versionControl.project }}
+        display:
+          success: Got the ${{ project.versionControl.project }} DevOps project
+          error: There was a problem getting the ${{ project.versionControl.project }} project. (${{ steps.get-nox-project.error-message }})
+        run-at-server: true
+ 
+  sync-infrastructure:
+    $ref: SyncInfrastructure.steps.nox.yaml
+    
+  sync-helm-chart:
+    $ref: SyncHelmChart.steps.nox.yaml
+    
+  devops-project:
+    steps:
+      - name: Get the DevOps project
+        id: get-devops-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-devops.outputs.connection }}
+          project-name: IWG.DevOps
+        display:
+          success: Got the DevOps project
+          error: Unable to get the DevOps project (${{ steps.get-devops-project.error-message }})
+        run-at-server: true
+
+  sync-helm-chart-pipeline:
+    $ref: SyncHelmPipeline.steps.nox.yaml
+
+  sync-project-pipeline:
+    $ref: SyncProjectPipeline.steps.nox.yaml
+  

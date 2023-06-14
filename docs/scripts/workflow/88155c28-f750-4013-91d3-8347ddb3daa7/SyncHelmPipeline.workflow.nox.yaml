@@ -1,0 +1,61 @@
+# NOX Helm Chart Pipeline Sync Command
+
+name: Synchronise the Helm Chart ADO pipeline of your Nox project
+
+cli:
+  branch: sync
+  command: helmchart-pipeline
+  command-alias: hcpipe
+  description: "|helmchart-pipeline - Synchronise the Helm Chart ADO pipeline of your Nox project."
+  examples:
+    - ["sync helmchart-pipeline", "--path <designFolder>"]
+    - ["sync hcpipe", "--path <designFolder>"]
+
+jobs:
+  connect:
+    steps:
+      - name: Locate the DevOps server
+        id: locate-server
+        uses: network/ping@v1
+        with:
+          host: ${{ project.versionControl.server }}
+        display:
+          success: Found the DevOps server in ${{ steps.locate-server-hc.outputs.roundtrip-time }} milliseconds
+          error: The DevOps server is not accessible. Are you connected to the Internet?
+        run-at-server: true
+
+      - name: Connect to the DevOps server
+        id: connect-devops
+        uses: azdevops/connect@v1
+        with:
+          server: ${{ project.versionControl.server }}
+          personal-access-token: ${{ server.secrets.AZURE_DEVOPS_PAT }}
+        display:
+          success: Connected to the DevOps server
+          error: There was a problem connecting to the DevOps server. (${{ steps.connect-devops-hc.error-message }})
+        run-at-server: true
+        
+      - name: Get the current Nox project
+        id: get-nox-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-devops.outputs.connection }}
+          project-name: ${{ project.versionControl.project }}
+        display:
+          success: Got the ${{ project.versionControl.project }} DevOps project
+          error: There was a problem getting the ${{ project.versionControl.project }} project. (${{ steps.get-nox-project.error-message }})
+        run-at-server: true
+        
+      - name: Get the DevOps project
+        id: get-devops-project
+        uses: azdevops/get-project@v1
+        with:
+          connection: ${{ steps.connect-devops.outputs.connection }}
+          project-name: IWG.DevOps
+        display:
+          success: Got the DevOps project
+          error: Unable to get the DevOps project (${{ steps.get-devops-project.error-message }})
+        run-at-server: true
+  
+  sync-pipeline:
+    $ref: SyncHelmPipeline.steps.nox.yaml

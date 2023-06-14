@@ -1,0 +1,33 @@
+steps:
+  - name: Connect to Azure Active Directory
+    id: connect-aad
+    uses: azuread/connect@v1
+    with:
+      tenant-id: ${{ server.secrets.AZURE_TENANT_ID }}
+      client-id: ${{ server.secrets.AZURE_CLIENT_ID }}
+      client-secret: ${{ server.secrets.AZURE_CLIENT_SECRET }}
+    display:
+      success: Successfully connected to Azure Active Directory
+      error: Unable to connect to Azure Active Directory
+    run-at-server: true
+
+  - name: Locate the DevOps server
+    id: locate-devops
+    uses: network/ping@v1
+    with:
+      host: ${{ project.versionControl.server }}
+    display:
+      success: Found the DevOps server in ${{ steps.locate-devops.outputs.roundtrip-time }} milliseconds
+      error: The DevOps server is not accessible. Are you connected to the Internet?
+    run-at-server: true
+
+  - name: Connect to the DevOps server
+    id: connect-devops
+    uses: azdevops/connect@v1
+    with:
+      server: ${{ project.versionControl.server }}
+      personal-access-token: ${{ server.secrets.AZURE_DEVOPS_PAT }}
+    display:
+      success: Connected to the DevOps server
+      error: There was a problem connecting to the DevOps server. (${{ steps.connect-devops.error-message }})
+    run-at-server: true

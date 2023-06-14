@@ -1,0 +1,56 @@
+# NOX Init Solution Command
+
+name: Initialize a Nox Solution
+description: This workflow will initialize a Nox solution and sync it with with Azure AD, Terraform and DevOps
+
+cli:
+  branch: init
+  command: solution
+  command-alias: sln
+  description: "|np - Initialize a Nox solution."
+  examples:
+    - ["init solution", "--path <designFolder>"]
+    - ["init sln", "--path <designFolder>"]
+      
+jobs:
+  local-initialize:
+    $ref: InitSln_DirSetup.steps.nox.yaml
+
+  server-initialize:
+    $ref: InitSln_ServerInit.steps.nox.yaml
+
+  connect:
+    $ref: InitSln_Connect.steps.nox.yaml
+
+  sync-active-directory:
+    $ref: SyncAzureActiveDirectory.steps.nox.yaml
+
+  sync-version-control:
+    $ref: SyncVersionControl.steps.nox.yaml
+
+  nox-project:
+    $ref: InitSln_NoxProject.steps.nox.yaml
+
+  sync-infrastructure:
+    $ref: SyncInfrastructure.steps.nox.yaml
+
+  sync-helm-chart:
+    $ref: SyncHelmChart.steps.nox.yaml
+
+  devops-project:
+    $ref: InitSln_DevopsProject.steps.nox.yaml
+
+  sync-helm-chart-pipeline:
+    $ref: SyncHelmPipeline.steps.nox.yaml
+
+  sync-project-pipeline:
+    $ref: SyncProjectPipeline.steps.nox.yaml
+      
+  sync-repos:
+    $ref: InitSln_SyncRepos.steps.nox.yaml
+      
+  output-table:
+    $ref: InitSln_OutputTable.steps.nox.yaml
+       
+          
+          

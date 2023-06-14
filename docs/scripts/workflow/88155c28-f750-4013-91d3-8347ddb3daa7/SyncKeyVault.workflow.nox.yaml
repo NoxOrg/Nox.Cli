@@ -1,0 +1,27 @@
+# NOX Helm Chart Key Vault Sync Command
+
+name: Synchronise NOX definition with the Helm Chart key vault
+
+cli:
+  branch: sync
+  command: helm-key-vault
+  command-alias: hkv
+  description: "|hkv - Creates or updates your Heimdall Helm Chart with NOX definition."
+  examples:
+    - ["sync helm-key-vault", "--path <designFolder>"]
+    - ["sync hkv", "--path <designFolder>"]
+
+jobs:
+  sync-helm-chart-key-vault:
+    steps:
+      - name: Get Project Short Name
+        id: get-project-short-name
+        uses: core/get-string-capitals@v1
+        with:
+          source-string: ${{ project.versionControl.project }}
+        display:
+          success: Got the project short name.
+          error: Unable to get the project short name (${{ steps.get-project-short-name.error-message }})
+    
+      $ref: SyncKeyVault.steps.nox.yaml
+
