@@ -98,9 +98,18 @@ public static class CliAddinExtensions
                 }
                 else if (typeof(T).IsAssignableTo(typeof(IList<string>)))
                 {
-                    var sourceList = (List<object>)value;
-                    var stringArray = sourceList.ConvertAll(obj => obj.ToString());
-                    result = (T)Convert.ChangeType(stringArray, typeof(T));
+                    if (value.GetType().IsAssignableTo(typeof(List<string>)))
+                    {
+                        // var sourceList = (List<string>)value;
+                        // var stringArray = sourceList.ConvertAll(obj => obj.ToString());
+                        result = (T)Convert.ChangeType(value, typeof(T));
+                    } else if (value.GetType().IsAssignableTo(typeof(List<object>)))
+                    {
+                        var sourceList = (List<object>)value;
+                        var stringArray = sourceList.ConvertAll(obj => obj.ToString());
+                        result = (T)Convert.ChangeType(stringArray, typeof(T));
+                    }
+                    
                 }
                 else if (typeof(T).IsAssignableTo(typeof(IList<object>)))
                 {

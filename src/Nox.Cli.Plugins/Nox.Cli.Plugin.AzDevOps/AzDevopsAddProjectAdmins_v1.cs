@@ -13,7 +13,7 @@ public class AzDevopsAddProjectAdmins_v1 : INoxCliAddin
         {
             Name = "azdevops/add-project-admins@v1",
             Author = "Jan Schutte",
-            Description = "Add a team member as an administrator on a DevOps project",
+            Description = "Add one or more team members as administrator on a DevOps project",
 
             Inputs =
             {
