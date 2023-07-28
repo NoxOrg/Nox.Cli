@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nox.Utilities" Version="1.0.3" />
+    <PackageReference Include="Nox.Utilities" Version="1.0.7" />
   </ItemGroup>
 
 </Project>

@@ -4,17 +4,18 @@ using Newtonsoft.Json;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
+using Nox.Cli.Abstractions.Constants;
 using Nox.Cli.Abstractions.Exceptions;
+using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Configuration;
-using Nox.Core.Constants;
-using Nox.Core.Exceptions;
-using Nox.Core.Helpers;
 using Nox.Utilities.Configuration;
 using Nox.Utilities.Credentials;
 using RestSharp;
+using RestSharp.Serializers;
 using Spectre.Console;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using IDeserializer = YamlDotNet.Serialization.IDeserializer;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Nox.Cli.Caching;
@@ -279,7 +280,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
             Directory.CreateDirectory(_workflowCachePath);
 
             var existingCacheList = Directory
-                .GetFiles(_workflowCachePath, FileExtension.WorflowDefinition)
+                .GetFiles(_workflowCachePath, FileExtension.WorkflowDefinition)
                 .Select(f => (new FileInfo(f)).Name).ToHashSet();
 
             foreach (var file in onlineFiles!)
@@ -394,7 +395,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     private void ResolveWorkflows(IDeserializer deserializer, Dictionary<string, string> yamlFiles)
     {
         _workflows = new List<IWorkflowConfiguration>();
-        foreach (var yaml in yamlFiles.Where(kv => kv.Key.EndsWith(FileExtension.WorflowDefinition.TrimStart('*'))))
+        foreach (var yaml in yamlFiles.Where(kv => kv.Key.EndsWith(FileExtension.WorkflowDefinition.TrimStart('*'))))
         {
             try
             {
@@ -402,14 +403,14 @@ public class NoxCliCacheManager: INoxCliCacheManager
             }
             catch (Exception ex)
             {
-                throw new NoxYamlException($"Unable to deserialize workflow {yaml.Key}. {ex.Message}");
+                throw new NoxCliException($"Unable to deserialize workflow {yaml.Key}. {ex.Message}");
             }
         }
     }
     
     private string[] FindWorkflowsAndManifest(string searchPath = "")
     {
-        var searchPatterns = new string[] { FileExtension.WorflowDefinition, "*.cli.nox.yaml" };
+        var searchPatterns = new string[] { FileExtension.WorkflowDefinition, "*.cli.nox.yaml" };
 
         var path = string.IsNullOrEmpty(searchPath) 
             ? new DirectoryInfo(Directory.GetCurrentDirectory())

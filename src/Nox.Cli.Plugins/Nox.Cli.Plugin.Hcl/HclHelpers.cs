@@ -1,5 +1,4 @@
 using Nox.Cli.Abstractions.Exceptions;
-using Nox.Core.Exceptions;
 using Octopus.CoreParsers.Hcl;
 
 namespace Nox.Cli.Plugin.Hcl;
@@ -9,7 +8,7 @@ public static class HclHelpers
     public static bool ValueExists(HclElement template, string valuePath)
     {
         var pathValues = valuePath.Split('/');
-        if (pathValues.Length == 0) throw new NoxException("Node path is invalid!");
+        if (pathValues.Length == 0) throw new NoxCliException("Node path is invalid!");
         var foundNode = template.Child;
         if (foundNode == null) throw new NoxCliException("HCL template contains no children.");
         for (var i = 0; i < pathValues.Length; i++)
@@ -52,7 +51,7 @@ public static class HclHelpers
             }
             catch (Exception ex)
             {
-                throw new NoxException(ex.Message);
+                throw new NoxCliException(ex.Message);
             }
         }
 

@@ -1,5 +1,4 @@
 ﻿using Nox.Cli.Helpers;
-using Nox.Core.Interfaces;
 
 namespace Nox.Cli.Commands;
 
@@ -11,15 +10,15 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
 {
     protected readonly IAnsiConsole _console;
     protected readonly IConsoleWriter _consoleWriter;
-    protected readonly IProjectConfiguration _noxConfiguration;
+    protected readonly Solution.Solution _solution;
     protected readonly IConfiguration _configuration;
 
     public NoxCliCommand(IAnsiConsole console, IConsoleWriter consoleWriter,
-        IProjectConfiguration noxConfiguration, IConfiguration configuration)
+        Solution.Solution solution, IConfiguration configuration)
     {
         _console = console;
         _consoleWriter = consoleWriter;
-        _noxConfiguration = noxConfiguration;
+        _solution = solution;
         _configuration = configuration;
     }
 
@@ -29,16 +28,16 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
         _consoleWriter.WriteInfo($"Design folder:");
         _console.WriteLine(_configuration["NoxCli:DesignFolder"]!);
 
-        if (string.IsNullOrEmpty(_noxConfiguration.Name))
+        if (string.IsNullOrEmpty(_solution.Name))
         {
             return Task.FromResult(0);
         }
 
-        if (_noxConfiguration.Team is null
-            || _noxConfiguration.Team.Developers is null
-            || _noxConfiguration.Team.Developers.Count == 0)
+        if (_solution.Team is null
+            || _solution.Team is null
+            || _solution.Team.Count == 0)
         {
-            throw new Exception($"The nox definition contains no 'Developers' in the 'Team' section. This section is required.");
+            throw new Exception($"The nox definition contains no members in the 'Team' section. This section is required.");
         }
 
         _console.WriteLine();
@@ -46,7 +45,7 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
 
         _console.WriteLine();
         _consoleWriter.WriteInfo($"Project:");
-        _console.WriteLine(_noxConfiguration.Name);
+        _console.WriteLine(_solution.Name);
 
         return Task.FromResult(0);
     }

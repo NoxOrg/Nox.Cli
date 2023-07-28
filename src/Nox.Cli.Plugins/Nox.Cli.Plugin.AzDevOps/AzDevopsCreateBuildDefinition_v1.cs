@@ -2,8 +2,8 @@ using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Core.Exceptions;
 
 namespace Nox.Cli.Plugin.AzDevOps;
 
@@ -121,7 +121,7 @@ public class AzDevopsCreateBuildDefinition_v1 : INoxCliAddin
             try
             {
                 var repo = await _repoClient.GetRepositoryAsync(_repoId!.Value.ToString());
-                if (repo == null) throw new NoxException("Unable to locate the source repository!");
+                if (repo == null) throw new NoxCliException("Unable to locate the source repository!");
                 
                 var ymlProcess = new YamlProcess
                 {

@@ -4,8 +4,6 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Secrets;
-using Nox.Core.Interfaces;
-using Nox.Core.Interfaces.Configuration;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -16,23 +14,20 @@ public class ClientVariableProvider: IClientVariableProvider
     private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
     private readonly Dictionary<string, object?> _variables;
-    private readonly IProjectSecretResolver _projectSecretResolver;
     private readonly IOrgSecretResolver _orgSecretResolver;
-    private IProjectConfiguration? _projectConfig;
+    private Solution.Solution? _projectConfig;
     private readonly INoxCliCache? _cache;
     private readonly ILocalTaskExecutorConfiguration? _lteConfig;
     
     
     public ClientVariableProvider(
         IWorkflowConfiguration workflow, 
-        IProjectSecretResolver projectSecretResolver,
         IOrgSecretResolver orgSecretResolver,
-        IProjectConfiguration? projectConfig = null,
+        Solution.Solution? projectConfig = null,
         ILocalTaskExecutorConfiguration? lteConfig = null,
         INoxCliCache? cache = null)
     {
         _variables = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-        _projectSecretResolver = projectSecretResolver;
         _orgSecretResolver = orgSecretResolver;
         _projectConfig = projectConfig;
         _lteConfig = lteConfig;
@@ -97,7 +92,7 @@ public class ClientVariableProvider: IClientVariableProvider
         ResolveAllVariables(action);
     }
 
-    public void SetProjectConfiguration(IProjectConfiguration projectConfig)
+    public void SetProjectConfiguration(Solution.Solution projectConfig)
     {
         _projectConfig = projectConfig;
     }
@@ -113,11 +108,6 @@ public class ClientVariableProvider: IClientVariableProvider
         if (_lteConfig != null)
         {
             await _orgSecretResolver.Resolve(_variables, _lteConfig);
-        }
-
-        if (_projectConfig != null)
-        {
-            await _projectSecretResolver.Resolve(_variables, _projectConfig);
         }
 
         await ResolveProjectVariables();

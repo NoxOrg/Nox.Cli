@@ -2,14 +2,11 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Spectre.Console.Cli;
-
 using Nox.Cli;
 using Nox.Cli.Abstractions;
-using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Actions;
 using Nox.Cli.Caching;
@@ -19,10 +16,6 @@ using Nox.Cli.Commands;
 using Nox.Cli.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Utilities.Secrets;
-
-var appConfig = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
-    .Build();
 
 var isLoggingOut = (args.Length > 0 && args[0].ToLower().Equals("logout")); 
 
@@ -48,7 +41,6 @@ services.AddTransient<INoxWorkflowExecutor, NoxWorkflowExecutor>();
 services.AddNoxTokenCache();
 services.AddNoxCliServices(args);
 services.AddPersistedSecretStore();
-services.AddProjectSecretResolver();
 services.AddOrgSecretResolver();
 services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
@@ -68,7 +60,7 @@ app.Configure(config =>
 
     if(!isGettingVersion && !isLoggingOut)
     {
-        config.AddNoxCommands(services, isOnline, appConfig["OnlineScriptsUrl"]!);
+        config.AddNoxCommands(services, isOnline);
     }
 
     config.AddCommand<LogoutCommand>("logout")

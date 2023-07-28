@@ -4,7 +4,7 @@ using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Secrets;
 using Nox.Cli.Server.Integration;
-using Nox.Core.Interfaces;
+using Nox.Secrets.Abstractions;
 using Spectre.Console;
 
 namespace Nox.Cli.Actions;
@@ -14,31 +14,31 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
     private readonly INoxCliServerIntegration? _serverIntegration;
     private readonly List<INoxAction> _processedActions = new();
     private readonly IAnsiConsole _console;
-    private readonly IProjectConfiguration _noxConfig;
+    private readonly Solution.Solution _noxConfig;
     private readonly IConfiguration _appConfig;
-    private readonly IProjectSecretResolver _projectSecretResolver;
     private readonly IOrgSecretResolver _orgSecretResolver;
     private readonly ILocalTaskExecutorConfiguration? _lteConfig;
     private readonly INoxCliCacheManager _cacheManager;
+    private readonly INoxSecretsResolver? _noxSecretsResolver;
     
     public NoxWorkflowExecutor(
         IAnsiConsole console,
-        IProjectConfiguration noxConfig,
+        Solution.Solution noxConfig,
         IConfiguration appConfig,
-        IProjectSecretResolver projectSecretResolver,
         IOrgSecretResolver orgSecretResolver,
         INoxCliCacheManager cacheManager,
         ILocalTaskExecutorConfiguration? lteConfig = null,
-        INoxCliServerIntegration? serverIntegration = null)
+        INoxCliServerIntegration? serverIntegration = null,
+        INoxSecretsResolver? noxSecretsResolver = null)
     {
         _serverIntegration = serverIntegration;
         _console = console;
         _noxConfig = noxConfig;
         _appConfig = appConfig;
         _lteConfig = lteConfig;
-        _projectSecretResolver = projectSecretResolver;
         _orgSecretResolver = orgSecretResolver;
         _cacheManager = cacheManager;
+        _noxSecretsResolver = noxSecretsResolver;
     }
     
     public async Task<bool> Execute(IWorkflowConfiguration workflow)
@@ -51,7 +51,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         var ctx = _console.Status()
             .Spinner(Spinner.Known.Clock)
-            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _projectSecretResolver, _orgSecretResolver, _cacheManager, _lteConfig));
+            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _orgSecretResolver, _cacheManager, _lteConfig, _noxSecretsResolver));
 
         bool success = true;
 

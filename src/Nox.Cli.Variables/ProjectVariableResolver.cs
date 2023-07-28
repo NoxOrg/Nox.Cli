@@ -1,11 +1,8 @@
-using Nox.Core.Interfaces;
-using Nox.Core.Interfaces.Configuration;
-
 namespace Nox.Cli.Variables;
 
 public static class ProjectVariableResolver
 {
-    public static Task ResolveProjectVariables(this IDictionary<string, object?> variables, IProjectConfiguration config)
+    public static Task ResolveProjectVariables(this IDictionary<string, object?> variables, Solution.Solution config)
     {
         var projectKeys = variables
             //.Where(pk => pk.Value == null)

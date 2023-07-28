@@ -1,8 +1,8 @@
 using Azure.Identity;
 using Azure.ResourceManager;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Core.Exceptions;
 
 namespace Nox.Cli.Plugin.Arm;
 
@@ -64,7 +64,7 @@ public class ArmConnect_v1 : INoxCliAddin
                 var subs = client.GetSubscriptions();
                 var subResponse = await subs.GetAsync(_subscriptionId);
                 var sub = subResponse.Value;
-                outputs["subscription"] = sub ?? throw new NoxException($"Unable to connect to subscription {_subscriptionId}");
+                outputs["subscription"] = sub ?? throw new NoxCliException($"Unable to connect to subscription {_subscriptionId}");
                 ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)

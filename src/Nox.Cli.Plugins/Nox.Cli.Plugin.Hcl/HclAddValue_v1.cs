@@ -1,6 +1,5 @@
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Core.Exceptions;
 using Octopus.CoreParsers.Hcl;
 using Sprache;
 

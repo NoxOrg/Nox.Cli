@@ -6,8 +6,8 @@ using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
 using System.Diagnostics;
 using Nox.Cli.Abstractions.Caching;
-using Nox.Core.Exceptions;
-using Nox.Core.Interfaces;
+using Nox.Cli.Abstractions.Exceptions;
+using Nox.Secrets.Abstractions;
 
 namespace Nox.Cli.Actions;
 
@@ -17,6 +17,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private readonly IDictionary<string, INoxAction> _steps;
     private readonly IClientVariableProvider _varProvider;
     private readonly INoxCliCacheManager _cacheManager;
+    private readonly INoxSecretsResolver? _secretsResolver;
     
     private int _currentActionSequence = 0;
 
@@ -30,16 +31,17 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     public NoxWorkflowContext(
         IWorkflowConfiguration workflow, 
-        IProjectConfiguration projectConfig,
-        IProjectSecretResolver projectSecretResolver,
+        Solution.Solution projectConfig,
         IOrgSecretResolver orgSecretResolver,
         INoxCliCacheManager cacheManager,
-        ILocalTaskExecutorConfiguration? lteConfig)
+        ILocalTaskExecutorConfiguration? lteConfig,
+        INoxSecretsResolver? secretsResolver)
     {
         WorkflowId = Guid.NewGuid();
         _workflow = workflow;
-        _varProvider = new ClientVariableProvider(workflow, projectSecretResolver, orgSecretResolver, projectConfig, lteConfig, cacheManager.Cache);
+        _varProvider = new ClientVariableProvider(workflow, orgSecretResolver, projectConfig, lteConfig, cacheManager.Cache);
         _cacheManager = cacheManager;
+        _secretsResolver = secretsResolver;
         _steps = ParseSteps();
         _currentActionSequence = 0;
         NextStep();
@@ -66,12 +68,11 @@ public class NoxWorkflowContext : INoxWorkflowContext
         }
     }
 
-    public INoxCliCacheManager? CacheManager
-    {
-        get => _cacheManager;
-    }
+    public INoxCliCacheManager? CacheManager => _cacheManager;
 
-    public void SetProjectConfiguration(IProjectConfiguration projectConfiguration)
+    public INoxSecretsResolver? NoxSecretsResolver => _secretsResolver;
+
+    public void SetProjectConfiguration(Solution.Solution projectConfiguration)
     {
         _varProvider.SetProjectConfiguration(projectConfiguration);
         _varProvider.ResolveProjectVariables();
@@ -134,7 +135,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
             {
                 if (steps.ContainsKey(step.Id))
                 {
-                    throw new NoxException($"Step Id {step.Id} exists more than once in your workflow configuration. Step Ids must be unique in a workflow configuration");
+                    throw new NoxCliException($"Step Id {step.Id} exists more than once in your workflow configuration. Step Ids must be unique in a workflow configuration");
                 }
                 
                 sequence++;

@@ -1,6 +1,8 @@
+using System.Reflection;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Core.Builders;
+using Nox.Solution;
 
 namespace Nox.Cli.Plugin.Core;
 
@@ -36,6 +38,7 @@ public class CoreLoadNoxConfiguration_v1: INoxCliAddin
 
     public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        if (ctx.IsServer) throw new NoxCliException("This action cannot be executed on a server. remove the run-at-server attribute for this step in your Nox workflow.");
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
@@ -49,18 +52,20 @@ public class CoreLoadNoxConfiguration_v1: INoxCliAddin
             try
             {
                 var fullPath = Path.GetFullPath(_path);
-                var projectConfig = new ProjectConfigurationBuilder(fullPath)
+                var solution = new NoxSolutionBuilder()
+                    .OnResolveSecrets((_, args) =>
+                    {
+                        var secretsConfig = args.SecretsConfig;
+                        var secretKeys =  args.Variables;
+                        var resolver = ctx.NoxSecretsResolver;
+                        if (resolver == null) throw new NoxCliException("Cannot load Nox solution definition, Secrets resolved has not been initialized.");
+                        resolver.Configure(secretsConfig!, Assembly.GetEntryAssembly());
+                        args.Secrets = resolver.Resolve(secretKeys!);
+                    })
                     .Build();
-                if (projectConfig == null)
-                {
-                    ctx.SetErrorMessage($"Unable to load Nox project configuration from {fullPath}");
-                }
-                else
-                {
-                    ctx.SetProjectConfiguration(projectConfig);
+                ctx.SetProjectConfiguration(solution);
                     
-                    ctx.SetState(ActionState.Success);
-                }
+                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {

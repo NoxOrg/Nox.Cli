@@ -1,7 +1,6 @@
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Core.Configuration;
-using Nox.Core.Models;
+using Nox.Solution;
 
 namespace Nox.Cli.Plugin.Project;
 
@@ -72,15 +71,18 @@ public class ProjectGetAdminEmails_v1: INoxCliAddin
                 var result = "";
                 foreach (var item in _members)
                 {
-                    if (!string.IsNullOrEmpty(item.Email) && item.IsAdmin)
+                    if (!string.IsNullOrEmpty(item.UserName) && item.Roles != null && item.Roles.Contains(TeamRole.Administrator))
                     {
-                        if (string.IsNullOrEmpty(result))
+                        if (item.UserName.Contains("@"))
                         {
-                            result = item.Email;
-                        }
-                        else
-                        {
-                            result += _delimiter + item.Email;
+                            if (string.IsNullOrEmpty(result))
+                            {
+                                result = item.UserName;
+                            }
+                            else
+                            {
+                                result += _delimiter + item.UserName;
+                            }    
                         }
                     }
                 }
