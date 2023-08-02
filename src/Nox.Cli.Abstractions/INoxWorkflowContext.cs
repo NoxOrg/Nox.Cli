@@ -1,5 +1,6 @@
 ﻿using Nox.Cli.Abstractions.Caching;
 using Nox.Secrets.Abstractions;
+using Nox.Solution;
 
 namespace Nox.Cli.Abstractions
 {
@@ -16,6 +17,6 @@ namespace Nox.Cli.Abstractions
         
         INoxCliCacheManager? CacheManager { get; }
         INoxSecretsResolver? NoxSecretsResolver { get; }
-        void SetProjectConfiguration(Solution.Solution projectConfiguration);
+        void SetProjectConfiguration(NoxSolution projectConfiguration);
     }
 }

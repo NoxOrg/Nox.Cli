@@ -1,4 +1,5 @@
 ﻿using Nox.Cli.Abstractions;
+using Nox.Solution;
 
 namespace Nox.Cli.Commands;
 
@@ -16,9 +17,8 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
         INoxWorkflowExecutor executor,
         IAnsiConsole console, 
         IConsoleWriter consoleWriter,
-        Solution.Solution solution, 
-        IConfiguration configuration)
-        : base(console, consoleWriter, solution, configuration)
+        NoxSolution solution)
+        : base(console, consoleWriter, solution)
     {
         _executor = executor;
     }

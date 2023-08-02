@@ -2,8 +2,8 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "init solution",
-      "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "init solution --remoteUrl=http://localhost:9000",
+      "workingDirectory": "/home/jan/demo/CliDemo",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

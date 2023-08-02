@@ -1,4 +1,5 @@
 ﻿using Nox.Cli.Helpers;
+using Nox.Solution;
 
 namespace Nox.Cli.Commands;
 
@@ -10,23 +11,20 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
 {
     protected readonly IAnsiConsole _console;
     protected readonly IConsoleWriter _consoleWriter;
-    protected readonly Solution.Solution _solution;
-    protected readonly IConfiguration _configuration;
+    protected readonly NoxSolution _solution;
 
     public NoxCliCommand(IAnsiConsole console, IConsoleWriter consoleWriter,
-        Solution.Solution solution, IConfiguration configuration)
+        NoxSolution solution)
     {
         _console = console;
         _consoleWriter = consoleWriter;
         _solution = solution;
-        _configuration = configuration;
     }
 
     public override Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
         _console.WriteLine();
         _consoleWriter.WriteInfo($"Design folder:");
-        _console.WriteLine(_configuration["NoxCli:DesignFolder"]!);
 
         if (string.IsNullOrEmpty(_solution.Name))
         {

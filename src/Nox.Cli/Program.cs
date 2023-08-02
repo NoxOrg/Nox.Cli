@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.PowerShell.Commands;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using Nox.Cli;
@@ -21,6 +22,14 @@ var isLoggingOut = (args.Length > 0 && args[0].ToLower().Equals("logout"));
 
 var isGettingVersion = (args.Length > 0 && args[0].ToLower().Equals("version"));
 
+var remoteUrl = string.Empty;
+
+var remoteUrlArg = args.FirstOrDefault(arg => arg.StartsWith("--remoteUrl="));
+if (remoteUrlArg != null)
+{
+    remoteUrl = remoteUrlArg.Replace("--remoteUrl=", "");
+}
+
 if (!isGettingVersion || args.Length == 0)
 {
     var installedVersion = VersionChecker.GetInstalledNoxCliVersion();
@@ -32,16 +41,15 @@ if (!isGettingVersion || args.Length == 0)
 }
 
 var isOnline = InternetChecker.CheckForInternet();
-
 var services = new ServiceCollection();
 
 services.AddSingleton<IFileSystem, FileSystem>();
 services.AddSingleton<IConsoleWriter, ConsoleWriter>();
-services.AddTransient<INoxWorkflowExecutor, NoxWorkflowExecutor>();
 services.AddNoxTokenCache();
 services.AddNoxCliServices(args);
 services.AddPersistedSecretStore();
 services.AddOrgSecretResolver();
+services.AddTransient<INoxWorkflowExecutor, NoxWorkflowExecutor>();
 services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 var registrar = new TypeRegistrar(services);
@@ -60,7 +68,7 @@ app.Configure(config =>
 
     if(!isGettingVersion && !isLoggingOut)
     {
-        config.AddNoxCommands(services, isOnline);
+        config.AddNoxCommands(services, isOnline, remoteUrl);
     }
 
     config.AddCommand<LogoutCommand>("logout")

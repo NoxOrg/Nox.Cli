@@ -11,7 +11,6 @@ using Nox.Cli.Configuration;
 using Nox.Utilities.Configuration;
 using Nox.Utilities.Credentials;
 using RestSharp;
-using RestSharp.Serializers;
 using Spectre.Console;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -78,6 +77,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
             try
             {
                 var uri = new Uri(_remoteUrl);
+                if (uri.Host == "localhost") return true;
                 var reply = ping.Send(uri.Host, 3000);
                 if (reply.Status == IPStatus.Success)
                 {

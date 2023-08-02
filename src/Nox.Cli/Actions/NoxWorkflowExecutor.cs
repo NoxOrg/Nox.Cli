@@ -5,6 +5,7 @@ using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Secrets;
 using Nox.Cli.Server.Integration;
 using Nox.Secrets.Abstractions;
+using Nox.Solution;
 using Spectre.Console;
 
 namespace Nox.Cli.Actions;
@@ -14,8 +15,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
     private readonly INoxCliServerIntegration? _serverIntegration;
     private readonly List<INoxAction> _processedActions = new();
     private readonly IAnsiConsole _console;
-    private readonly Solution.Solution _noxConfig;
-    private readonly IConfiguration _appConfig;
+    private readonly NoxSolution _noxConfig;
     private readonly IOrgSecretResolver _orgSecretResolver;
     private readonly ILocalTaskExecutorConfiguration? _lteConfig;
     private readonly INoxCliCacheManager _cacheManager;
@@ -23,8 +23,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
     
     public NoxWorkflowExecutor(
         IAnsiConsole console,
-        Solution.Solution noxConfig,
-        IConfiguration appConfig,
+        NoxSolution noxConfig,
         IOrgSecretResolver orgSecretResolver,
         INoxCliCacheManager cacheManager,
         ILocalTaskExecutorConfiguration? lteConfig = null,
@@ -34,7 +33,6 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         _serverIntegration = serverIntegration;
         _console = console;
         _noxConfig = noxConfig;
-        _appConfig = appConfig;
         _lteConfig = lteConfig;
         _orgSecretResolver = orgSecretResolver;
         _cacheManager = cacheManager;

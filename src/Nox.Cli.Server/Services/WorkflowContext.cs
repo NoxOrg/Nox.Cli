@@ -5,6 +5,7 @@ using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
 using Nox.Secrets.Abstractions;
+using Nox.Solution;
 
 namespace Nox.Cli.Server.Services;
 
@@ -109,7 +110,7 @@ public class WorkflowContext: INoxWorkflowContext
 
     public INoxSecretsResolver? NoxSecretsResolver => throw new NotImplementedException();
 
-    public void SetProjectConfiguration(Solution.Solution projectConfiguration)
+    public void SetProjectConfiguration(NoxSolution projectConfiguration)
     {
         
     }

@@ -12,13 +12,14 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddNoxCliServices(this IServiceCollection services, string[] args)
     {
         return services
-            .AddSingleton(CreateSolution)
+            .AddSingleton(typeof(NoxSolution), CreateSolution)
             .AddSecretsResolver();
     }
     
     private static NoxSolution CreateSolution(IServiceProvider serviceProvider)
     {
         return new NoxSolutionBuilder()
+            .AllowMissingSolutionYaml()
             .OnResolveSecrets((_, args) =>
             {
                 var secretsConfig = args.SecretsConfig;

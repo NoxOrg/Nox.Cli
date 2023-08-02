@@ -8,6 +8,7 @@ using System.Diagnostics;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Secrets.Abstractions;
+using Nox.Solution;
 
 namespace Nox.Cli.Actions;
 
@@ -31,7 +32,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     public NoxWorkflowContext(
         IWorkflowConfiguration workflow, 
-        Solution.Solution projectConfig,
+        NoxSolution projectConfig,
         IOrgSecretResolver orgSecretResolver,
         INoxCliCacheManager cacheManager,
         ILocalTaskExecutorConfiguration? lteConfig,
@@ -72,7 +73,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     public INoxSecretsResolver? NoxSecretsResolver => _secretsResolver;
 
-    public void SetProjectConfiguration(Solution.Solution projectConfiguration)
+    public void SetProjectConfiguration(NoxSolution projectConfiguration)
     {
         _varProvider.SetProjectConfiguration(projectConfiguration);
         _varProvider.ResolveProjectVariables();

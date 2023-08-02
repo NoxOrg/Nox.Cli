@@ -42,13 +42,13 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Microsoft.Graph" Version="5.20.0" />
     <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.205.1" />
-    <PackageReference Include="Nox.Secrets" Version="7.0.11" />
-    <PackageReference Include="Nox.Solution" Version="7.0.11" />
+    <PackageReference Include="Nox.Secrets" Version="7.2.0-BETA1" />
+    <PackageReference Include="Nox.Solution" Version="7.2.0-BETA3" />
     <PackageReference Include="Nox.Utilities" Version="1.0.7" />
     <PackageReference Include="RestSharp" Version="110.2.0" />
     <PackageReference Include="Spectre.Console" Version="0.47.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.47.0" />
-    <PackageReference Include="System.IO.Abstractions" Version="19.2.29" />
+    <PackageReference Include="System.IO.Abstractions" Version="19.2.51" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
@@ -72,5 +72,10 @@
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Teams\Nox.Cli.Plugin.Teams.csproj" />
     <ProjectReference Include="..\Nox.Cli.Server.Integration\Nox.Cli.Server.Integration.csproj" />
     <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\.nox\design\SampleCurrency.solution.nox.yaml">
+      <Link>design\SampleCurrency.solution.nox.yaml</Link>
+    </Content>
   </ItemGroup>
 </Project>

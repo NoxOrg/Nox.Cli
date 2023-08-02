@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-    <PackageReference Include="Nox.Secrets" Version="7.0.11" />
-    <PackageReference Include="Nox.Solution" Version="7.0.11" />
+    <PackageReference Include="Nox.Secrets" Version="7.2.0-BETA1" />
+    <PackageReference Include="Nox.Solution" Version="7.2.0-BETA3" />
   </ItemGroup>
 </Project>
