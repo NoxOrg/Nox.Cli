@@ -32,7 +32,6 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
         }
 
         if (_solution.Team is null
-            || _solution.Team is null
             || _solution.Team.Count == 0)
         {
             throw new Exception($"The nox definition contains no members in the 'Team' section. This section is required.");
