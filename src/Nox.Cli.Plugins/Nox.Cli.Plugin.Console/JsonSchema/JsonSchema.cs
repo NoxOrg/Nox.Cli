@@ -8,7 +8,7 @@ internal class JsonSchema
     public string? Title { get; set; } = string.Empty;
     public string? Description { get; set; } = string.Empty;
     
-    [Newtonsoft.Json.JsonConverter(typeof(JsonSchemaTypeConverter))]
+    [JsonConverter(typeof(JsonSchemaTypeConverter))]
     [JsonPropertyName("type")]
     public JsonSchemaType? JsonSchemaType { get; set; }
     
