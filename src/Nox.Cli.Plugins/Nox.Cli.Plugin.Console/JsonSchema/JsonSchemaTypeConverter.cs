@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Nox.Cli.Plugin.Console;
+namespace Nox.Cli.Plugin.Console.JsonSchema;
 
 internal class JsonSchemaTypeConverter : JsonConverter<JsonSchemaType>
 {
@@ -18,7 +18,7 @@ internal class JsonSchemaTypeConverter : JsonConverter<JsonSchemaType>
                 reader.Read();
                 result.TypeName = reader.GetString();
                 reader.Read();
-                result.Default = reader.GetString()!;
+                result.DefaultValue = reader.GetString()!;
                 reader.Read();
                 break;
         }
