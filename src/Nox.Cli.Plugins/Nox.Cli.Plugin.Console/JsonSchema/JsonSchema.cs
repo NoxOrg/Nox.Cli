@@ -8,8 +8,9 @@ internal class JsonSchema
     public string? Title { get; set; } = string.Empty;
     public string? Description { get; set; } = string.Empty;
     
-    [Newtonsoft.Json.JsonConverter(typeof(JsonSchemaTypeConverter))]    
-    public JsonSchemaType? Type { get; set; }
+    [Newtonsoft.Json.JsonConverter(typeof(JsonSchemaTypeConverter))]
+    [JsonPropertyName("type")]
+    public JsonSchemaType? JsonSchemaType { get; set; }
     
     public object? Default { get; set; } = null;
     
@@ -24,8 +25,4 @@ internal class JsonSchema
     public List<string>? Enum { get; set; }
 }
 
-internal class JsonSchemaType
-{
-    public string? TypeName { get; set; } = "object";
-    public object? DefaultValue { get; set; } = null;
-}
+

@@ -4,14 +4,14 @@ public static class ProjectVariableResolver
 {
     public static Task ResolveProjectVariables(this IDictionary<string, object?> variables, Solution.Solution config)
     {
-        var projectKeys = variables
+        var solutionKeys = variables
             //.Where(pk => pk.Value == null)
             .Select(pk => pk.Key)
-            .Where(pk => pk.StartsWith("project.", StringComparison.OrdinalIgnoreCase))
-            .Select(pk => pk[8..])
+            .Where(pk => pk.StartsWith("solution.", StringComparison.OrdinalIgnoreCase))
+            .Select(pk => pk[9..])
             .ToArray();
 
-        config.WalkProperties( (name, value) => { if (projectKeys.Contains(name, StringComparer.OrdinalIgnoreCase)) { variables[$"project.{name}"] = value; } });
+        config.WalkProperties( (name, value) => { if (solutionKeys.Contains(name, StringComparer.OrdinalIgnoreCase)) { variables[$"solution.{name}"] = value; } });
 
         return Task.CompletedTask;
     }

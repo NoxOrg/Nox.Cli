@@ -10,7 +10,7 @@ public static class ObjectExtensions
     /// <param name="obj">The object to walk the properties of.</param>
     /// <param name="propertyAction">The action to perform on each property. The action will be passed the full path of the property and its value as arguments.</param>
     /// <param name="path">The current path of the object being walked. This parameter is for internal use and should not be specified when calling the method.</param>
-    public static void WalkProperties(this object obj, Action<string, object> propertyAction, string path = "")
+    public static void WalkProperties(this object? obj, Action<string, object> propertyAction, string path = "")
     {
         if (obj == null)
         {

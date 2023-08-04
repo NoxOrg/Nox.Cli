@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Nox.Cli.Plugin.Console.JsonSchema;
 
-internal class JsonSchemaTypeConverter : JsonConverter<JsonSchemaType>
+internal class JsonSchemaTypeConverter : JsonConverter<JsonSchemaType?>
 {
     public override JsonSchemaType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -12,13 +12,13 @@ internal class JsonSchemaTypeConverter : JsonConverter<JsonSchemaType>
         switch (reader.TokenType)
         {
             case JsonTokenType.String:
-                result.TypeName = reader.GetString();
+                result.Type = GetSchemaTypeFromString(reader.GetString());
                 break;
             case JsonTokenType.StartArray:
                 reader.Read();
-                result.TypeName = reader.GetString();
+                result.Type = GetSchemaTypeFromString(reader.GetString());
                 reader.Read();
-                result.DefaultValue = reader.GetString()!;
+                result.Default = reader.GetString()!;
                 reader.Read();
                 break;
         }
@@ -26,8 +26,20 @@ internal class JsonSchemaTypeConverter : JsonConverter<JsonSchemaType>
         return result;
     }
 
-    public override void Write(Utf8JsonWriter writer, JsonSchemaType value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, JsonSchemaType? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
+    }
+
+    private SchemaType GetSchemaTypeFromString(string? source)
+    {
+        return source?.ToLower() switch
+        {
+            "object" => SchemaType.Object,
+            "array" => SchemaType.Array,
+            "boolean" => SchemaType.Boolean,
+            "integer" => SchemaType.Integer,
+            _ => SchemaType.String
+        };
     }
 }

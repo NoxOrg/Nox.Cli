@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.PowerShell.Commands;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using Nox.Cli;
