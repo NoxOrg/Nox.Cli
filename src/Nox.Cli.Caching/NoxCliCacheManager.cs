@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Text.Json;
 using Newtonsoft.Json;
@@ -480,6 +481,8 @@ public class NoxCliCacheManager: INoxCliCacheManager
             {
                 throw new NoxCliException($"GetOnlineTemplates:-> {onlineFilesJson.ErrorException?.Message}");
             }
+
+            if (onlineFilesJson.StatusCode != HttpStatusCode.OK) return;
 
             var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
             {
