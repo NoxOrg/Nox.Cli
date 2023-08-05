@@ -2,14 +2,11 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Spectre.Console.Cli;
-
 using Nox.Cli;
 using Nox.Cli.Abstractions;
-using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Actions;
 using Nox.Cli.Caching;
@@ -20,13 +17,17 @@ using Nox.Cli.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Utilities.Secrets;
 
-var appConfig = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
-    .Build();
-
 var isLoggingOut = (args.Length > 0 && args[0].ToLower().Equals("logout")); 
 
 var isGettingVersion = (args.Length > 0 && args[0].ToLower().Equals("version"));
+
+var remoteUrl = string.Empty;
+
+var remoteUrlArg = args.FirstOrDefault(arg => arg.StartsWith("--remoteUrl="));
+if (remoteUrlArg != null)
+{
+    remoteUrl = remoteUrlArg.Replace("--remoteUrl=", "");
+}
 
 if (!isGettingVersion || args.Length == 0)
 {
@@ -39,17 +40,15 @@ if (!isGettingVersion || args.Length == 0)
 }
 
 var isOnline = InternetChecker.CheckForInternet();
-
 var services = new ServiceCollection();
 
 services.AddSingleton<IFileSystem, FileSystem>();
 services.AddSingleton<IConsoleWriter, ConsoleWriter>();
-services.AddTransient<INoxWorkflowExecutor, NoxWorkflowExecutor>();
 services.AddNoxTokenCache();
 services.AddNoxCliServices(args);
 services.AddPersistedSecretStore();
-services.AddProjectSecretResolver();
 services.AddOrgSecretResolver();
+services.AddTransient<INoxWorkflowExecutor, NoxWorkflowExecutor>();
 services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 var registrar = new TypeRegistrar(services);
@@ -68,7 +67,7 @@ app.Configure(config =>
 
     if(!isGettingVersion && !isLoggingOut)
     {
-        config.AddNoxCommands(services, isOnline, appConfig["OnlineScriptsUrl"]!);
+        config.AddNoxCommands(services, isOnline, remoteUrl);
     }
 
     config.AddCommand<LogoutCommand>("logout")

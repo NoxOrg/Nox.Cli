@@ -3,7 +3,7 @@
     "Nox.Cli": {
       "commandName": "Project",
       "commandLineArgs": "init solution",
-      "workingDirectory": "$(ProjectDir)",
+      "workingDirectory": "/home/jan/demo/CliDemo",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

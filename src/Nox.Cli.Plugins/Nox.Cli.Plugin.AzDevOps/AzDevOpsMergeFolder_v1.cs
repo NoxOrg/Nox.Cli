@@ -1,9 +1,9 @@
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
 using Nox.Cli.Plugin.AzDevOps.Helpers;
-using Nox.Core.Exceptions;
 
 namespace Nox.Cli.Plugin.AzDevOps;
 
@@ -148,7 +148,7 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
     private async Task<int> CreatePush(string branchName, GitCommitRef commit)
     {
         var serverBranches = await _gitClient!.GetRefsAsync(_repoId!.Value.ToString(), filter: $"heads/{branchName}");
-        if (serverBranches.Count != 1) throw new NoxException($"Unable to locate branch {branchName}");
+        if (serverBranches.Count != 1) throw new NoxCliException($"Unable to locate branch {branchName}");
         
         var branch = new GitRefUpdate
         {

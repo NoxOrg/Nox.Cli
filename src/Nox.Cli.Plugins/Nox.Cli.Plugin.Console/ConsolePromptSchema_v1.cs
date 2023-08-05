@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Plugin.Console.JsonSchema;
 using RestSharp;
 using Spectre.Console;
 
@@ -79,6 +80,8 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
     private string? _schema = null!;
 
+    private IDictionary<string, string?>? _schemaCache;
+
     private string[]? _includedPrompts;
 
     private string[]? _excludedPrompts;
@@ -91,10 +94,11 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
     private readonly RestClient _client = new();
 
-    private readonly Regex resolveRefs = new("\"\\$ref\\\"\\s*:\\s*\\\"(?<url>[\\w:/\\.]+)\\\"", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private readonly Regex _resolveRefs = new("\"\\$ref\\\"\\s*:\\s*\\\"(?<url>[\\w:/\\.]+)\\\"", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private readonly Dictionary<string, object> _responses = new();
 
+    private bool _isArrayStart = false;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
@@ -104,7 +108,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         if (Uri.IsWellFormedUriString(schemaUrl, UriKind.Absolute))
         {
             _schemaUrl = (new Uri(schemaUrl)).AbsoluteUri;
-        };
+        }
 
         _schema = inputs.Value<string>("schema");
 
@@ -137,18 +141,35 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         {
             try
             {
+                var json = _schema;
 
-                var json = _schema ?? await AnsiConsole.Status()
-                    .Spinner(Spinner.Known.Clock)
-                    .StartAsync("Reading schemas...", ctx =>
-                        ReadSchemaFromUrl(_schemaUrl!, ctx)
-                    );
-
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    var baseUrl = "";
+                    var schemaName = "";
+                    var lastIndex = _schemaUrl!.LastIndexOf('/');
+                    if (lastIndex != -1)
+                    {
+                        baseUrl = _schemaUrl![..lastIndex];
+                        schemaName = _schemaUrl!.Substring(lastIndex + 1);
+                    }
+                    json = await AnsiConsole.Status()
+                        .Spinner(Spinner.Known.Clock)
+                        .StartAsync("Reading schemas...", fn =>
+                            ReadSchemaFromUrl(baseUrl, schemaName, fn)
+                        );                    
+                }
+                
                 if (json != null)
                 {
-                    var jsonSchema = JsonSerializer.Deserialize<JsonSchema.JsonSchema>(json, new JsonSerializerOptions {
+                    var serializeOptions = new JsonSerializerOptions
+                    {
+                        WriteIndented = false,
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                    });
+                    };
+                    serializeOptions.Converters.Add(new JsonSchemaTypeConverter());
+                    
+                    var jsonSchema = JsonSerializer.Deserialize<JsonSchema.JsonSchema>(json, serializeOptions);
 
                     if (jsonSchema != null)
                     {
@@ -160,12 +181,13 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                         _sbYaml.AppendLine($"#");
                         _sbYaml.AppendLine($"");
 
-                        await AskForProperties(jsonSchema);
+                        await ProcessSchema(jsonSchema);
 
                         foreach(var (key,value) in _responses)
                         {
                             outputs[key] = value;
                         }
+
 
                         if (_fileOptions != null && _fileOptions.ContainsKey("filename"))
                         {
@@ -173,6 +195,8 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                             _sbYaml.Insert(0,$"#{Environment.NewLine}");
 
                             var contents = _sbYaml.ToString();
+
+                            //await File.WriteAllTextAsync("/home/jan/Downloads/solution.yaml", contents);
 
                             var outputFilePath = _fileOptions["filename"];
                             if (_fileOptions.TryGetValue("folder", out var folder))
@@ -205,243 +229,299 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         return Task.CompletedTask;
     }
 
-    private async Task<string?> ReadSchemaFromUrl(string url, StatusContext ctx)
+    private async Task<string?> ReadSchemaFromUrl(string baseUrl, string schemaName, StatusContext ctx, bool isRecursiveCall = false)
     {
-        ctx.Status = $"Reading schema {url}...";
+        ctx.Status = $"Reading schema {schemaName}...";
 
-        var request = new RestRequest(url) { Method = Method.Get };
+        if (!isRecursiveCall) _schemaCache = new Dictionary<string, string?>();
 
-        request.AddHeader("Accept", "application/json");
+        var json = "";
 
-        var onlineFilesJson = await _client.ExecuteAsync(request);
-
-        var json = onlineFilesJson.Content;
-
-        if (json == null)
+        if (!_schemaCache!.ContainsKey(schemaName))
         {
-            return null;
-        }
 
-        var matches = resolveRefs.Matches(json);
+            var request = new RestRequest($"{baseUrl}/{schemaName}") { Method = Method.Get };
 
-        foreach(Match match in matches) 
-        {
-            var subRef = await ReadSchemaFromUrl(match.Groups["url"].Value, ctx);
-            if (subRef != null)
+            request.AddHeader("Accept", "application/json");
+
+            var onlineFilesJson = await _client.ExecuteAsync(request);
+
+            json = onlineFilesJson.Content;
+
+            _schemaCache![schemaName] = json;
+
+            if (json == null)
             {
-                subRef = subRef.Trim();
-                subRef = subRef.Substring(1, subRef.Length - 2);
-                json = json.Replace(match.Value, subRef);
+                return null;
+            }
+
+            var matches = _resolveRefs.Matches(json);
+
+            foreach (Match match in matches)
+            {
+                var subRef = await ReadSchemaFromUrl(baseUrl, match.Groups["url"].Value, ctx, true);
+                if (!string.IsNullOrWhiteSpace(subRef))
+                {
+                    subRef = subRef.Trim();
+                    subRef = subRef.Substring(1, subRef.Length - 2);
+                    json = json.Replace(match.Value, subRef);
+                }
             }
         }
 
         return json;
     }
 
-    private async Task AskForProperties(JsonSchema.JsonSchema jsonSchema, string indent = "", string fullKey = "")
+    /// <summary>
+    /// This method is recursive through the schema, it is quite complicated, proceed with caution.
+    /// </summary>
+    /// <param name="schema">The input schema</param>
+    /// <param name="rootKey">the root path of the current key</param>
+    /// <param name="key">The current key to process</param>
+    private async Task ProcessSchema(JsonSchema.JsonSchema schema, string rootKey = "", string key = "")
     {
-        if (!string.IsNullOrWhiteSpace(jsonSchema.Description))
-        {
-            AnsiConsole.WriteLine();
-            AnsiConsole.MarkupLine($"[yellow]{jsonSchema.Description.EscapeMarkup()}[/]");
-        }
-
-        var yamlSpacing = indent.Replace('.', ' ');
+        var newKey = $"{rootKey}.{key}".TrimStart('.');
+        var prefix = $"[grey]{newKey.PadRight(40, '.').EscapeMarkup()}[/] ";
+        var yamlSpacing = new string(' ', newKey.Count(d => d == '.') * 2);
+        
         var yamlSpacingPostfix = "";
 
-        if (fullKey.EndsWith(']'))
+        if (_isArrayStart)
         {
             yamlSpacingPostfix = "- ";
         }
-
-        indent += "..";
-
-        foreach (var (key,prop) in jsonSchema.Properties)
+        else
         {
-            var newFullKey = $"{fullKey}.{key}".TrimStart('.');
+            if (rootKey.EndsWith(']')) yamlSpacing += "  ";    
+        }
 
-            if (_includedPrompts != null && !_includedPrompts.Any(f => newFullKey.StartsWith(f,StringComparison.OrdinalIgnoreCase)))
+        if (!string.IsNullOrWhiteSpace(key) && _includedPrompts != null && !_includedPrompts.Any(f => newKey.StartsWith(f, StringComparison.OrdinalIgnoreCase)))
+        {
+            if (_defaults != null && _defaults.Any(d => key.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
             {
-                if (_defaults != null && _defaults.Any(d => newFullKey.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
-                {
-                    _sbYaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {_defaults[newFullKey]}");
-                    _responses[newFullKey] = _defaults[newFullKey];
-                }
-                continue;
+                _sbYaml.AppendLine($"{key}: {_defaults[key]}");
+                _responses[newKey] = _defaults[newKey];
             }
 
-            if (_excludedPrompts != null && _excludedPrompts.Any(f => newFullKey.StartsWith(f, StringComparison.OrdinalIgnoreCase)))
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(key) && _excludedPrompts != null && _excludedPrompts.Any(f => newKey.StartsWith(f, StringComparison.OrdinalIgnoreCase)))
+        {
+            if (_defaults != null && _defaults.Any(d => newKey.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
             {
-                if (_defaults != null && _defaults.Any(d => newFullKey.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
-                {
-                    _sbYaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {_defaults[newFullKey]}");
-                    _responses[newFullKey] = _defaults[newFullKey];
-                }
-                continue;
+                _sbYaml.AppendLine($"{key}: {_defaults[newKey]}");
+                _responses[prefix] = _defaults[newKey];
             }
 
-            if (prop.Type.Equals("object", StringComparison.OrdinalIgnoreCase))
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(schema.Description))
+        {
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine($"[yellow]{schema.Description.EscapeMarkup()}[/]");
+        }
+
+        var message = (schema.Description ?? newKey).EscapeMarkup();
+        var prompt = $"{prefix}[bold]{message}[/]:";
+        var isRequired = schema.Required != null && schema.Required.Contains(newKey);
+
+        if (schema.JsonSchemaType == null)
+        {
+            if (schema.AnyOf != null)
             {
-                _sbYaml.AppendLine($"{yamlSpacing}{key}:");
-                await AskForProperties(prop, indent, newFullKey);
+                await ProcessSchema(schema.AnyOf[0], rootKey, key);
             }
-
-            else if (prop.Type.Equals("array", StringComparison.OrdinalIgnoreCase))
+        }
+        else
+        {
+            switch (schema.JsonSchemaType.Type)
             {
-                var index = 0;
-                if (prop.Items != null)
-                {
-                    _sbYaml.AppendLine($"{yamlSpacing}{key}:");
-
-                    do
+                case SchemaType.Boolean:
+                    _isArrayStart = false;
+                    PromptBoolean(prompt, rootKey, key, yamlSpacing + yamlSpacingPostfix);
+                    break;
+                case SchemaType.Integer:
+                    _isArrayStart = false;
+                    PromptInteger(prompt, rootKey, key, yamlSpacing + yamlSpacingPostfix, isRequired);
+                    break;
+                case SchemaType.String:
+                    _isArrayStart = false;
+                    if (schema.Enum != null)
                     {
-                        await AskForProperties(prop.Items, indent, $"{newFullKey}[{index}]");
-                        AnsiConsole.WriteLine();
-                        index++;
+                        PromptEnum(prompt, rootKey, key, yamlSpacing + yamlSpacingPostfix, schema.Enum);                        
                     }
-                    while (
-                        AnsiConsole.Prompt(
-                            new TextPrompt<char>($"[grey]{new string('.',30)}[/] [bold]Add another[/]?")
-                                .DefaultValueStyle(Style.Parse("mediumpurple3_1"))
-                                .ChoicesStyle(Style.Parse("mediumpurple3_1"))
-                                .PromptStyle(Style.Parse("seagreen1"))
-                                .DefaultValue('n')
-                                .AddChoice('y')
-                                .AddChoice('n')
-                    ) == 'y');
-                }
-            }
-            else 
-            {
-                var prefix = $"[grey]{newFullKey.PadRight(30, '.').EscapeMarkup()}[/] ";
-                var message = (prop.Description ?? newFullKey).EscapeMarkup();
-                var prompt = $"{prefix}[bold]{message}[/]:";
-
-                AnsiConsole.WriteLine();
-
-                switch (prop.Type.ToLower())
-                {
-                    case "boolean":
-                        var responseBool = AnsiConsole.Prompt(
-                            new TextPrompt<char>(prompt)
-                                .DefaultValueStyle(Style.Parse("mediumpurple3_1"))
-                                .ChoicesStyle(Style.Parse("mediumpurple3_1"))
-                                .PromptStyle(Style.Parse("seagreen1"))
-                                .DefaultValue('y')
-                                .AddChoice('y')
-                                .AddChoice('n')
-                        ) == 'y';
-
-                        _sbYaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {responseBool.ToString().ToLower()}");
-                        _responses[newFullKey] = responseBool;
-
-                        break;
-
-                    case "integer":
-                        var promptObjInt = new TextPrompt<int>(prompt)
-                            .PromptStyle(Style.Parse("seagreen1"))
-                            .DefaultValueStyle(Style.Parse("mediumpurple3_1"));
-
-                        var defaultValueInt = GetDefaultInt(prop, newFullKey);
-
-                        if (defaultValueInt != 0)
+                    else
+                    {
+                        PromptString(prompt, rootKey, key, yamlSpacing + yamlSpacingPostfix, isRequired);    
+                    }
+                    break;
+                case SchemaType.Object:
+                    if (!key.EndsWith(']'))
+                    {
+                        _sbYaml.AppendLine();
+                        AppendKey(yamlSpacing, key);
+                    }
+                    foreach (var prop in schema.Properties!)
+                    {
+                        await ProcessSchema(prop.Value, newKey, prop.Key);
+                    }
+                    break;
+                case SchemaType.Array:
+                    _isArrayStart = false;
+                    if (schema.Items != null)
+                    {
+                        if (schema.Items.AnyOf != null)
                         {
-                            promptObjInt.DefaultValue(defaultValueInt);
-                        }
-                        var responseInt = AnsiConsole.Prompt(promptObjInt);
-
-                        _sbYaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {responseInt}");
-                        _responses[newFullKey] = responseInt;
-
-                        break;
-
-                    default:
-                        if (prop.OneOf == null)
-                        {
-                            var promptObjString = new TextPrompt<string>(prompt)
-                                .PromptStyle(Style.Parse("seagreen1"))
-                                .DefaultValueStyle(Style.Parse("mediumpurple3_1"));
-
+                            _sbYaml.AppendLine();
+                            AppendKey(yamlSpacing, key);
                             
-                            promptObjString.AllowEmpty = !jsonSchema.Required.Contains(key);
-
-                            var defaultValueString = GetDefaultString(prop, newFullKey);
-
-                            if (!string.IsNullOrWhiteSpace(defaultValueString))
+                            var index = 0;
+                            do
                             {
-                                promptObjString.DefaultValue(defaultValueString);
-                            }
-                            
-                            var responseString = AnsiConsole.Prompt(promptObjString);
-                            if (!string.IsNullOrEmpty(responseString))
-                            {
-                                _sbYaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {responseString}");
-                                _responses[newFullKey] = responseString;    
-                            }
-                        }
-                        else
+                                _isArrayStart = true;
+                                await ProcessSchema(schema.Items.AnyOf[0], rootKey, $"{key}[{index}]");
+                                _sbYaml.AppendLine();
+                                AnsiConsole.WriteLine();
+                                index++;
+                            } while (
+                                AnsiConsole.Prompt(
+                                    new TextPrompt<char>($"[grey]{yamlSpacing}[/] [bold]Add another[/]?")
+                                        .DefaultValueStyle(Style.Parse("mediumpurple3_1"))
+                                        .ChoicesStyle(Style.Parse("mediumpurple3_1"))
+                                        .PromptStyle(Style.Parse("seagreen1"))
+                                        .DefaultValue('n')
+                                        .AddChoice('y')
+                                        .AddChoice('n')
+                                ) == 'y');    
+                        } else if (schema.Items.Enum != null)
                         {
-                            var responseChoice = AnsiConsole.Prompt(
-                                new SelectionPrompt<string>()
-                                    .Title(prompt)
-                                    .HighlightStyle(Style.Parse("mediumpurple3_1"))
-                                    .AddChoices(prop.OneOf.Select(c => c.Const).ToArray())
-                            );
-
-                            _responses[newFullKey] = responseChoice;
-                            _sbYaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {responseChoice}");
-                            AnsiConsole.MarkupLine($"{prompt} [seagreen1]{_responses[newFullKey]}[/]");
-
+                            schema.Items.JsonSchemaType!.Type = SchemaType.EnumList;
+                            await ProcessSchema(schema.Items, rootKey, key);
                         }
-                        break;
-                }
+                    }
+                    break;
+                case SchemaType.EnumList:
+                    _isArrayStart = false;
+                    PromptMultipleEnum(prompt, rootKey, key, yamlSpacing + yamlSpacingPostfix, schema.Enum!);    
+                    break;
             }
+        }
+    }
+    
+    private void PromptBoolean(string prompt, string rootKey, string key, string yamlPrefix)
+    {
+        var newKey = $"{rootKey}.{key}".TrimStart('.');
+        var response = AnsiConsole.Prompt(
+            new TextPrompt<char>(prompt)
+                .DefaultValueStyle(Style.Parse("mediumpurple3_1"))
+                .ChoicesStyle(Style.Parse("mediumpurple3_1"))
+                .PromptStyle(Style.Parse("seagreen1"))
+                .DefaultValue('y')
+                .AddChoice('y')
+                .AddChoice('n')
+        ) == 'y';
 
-            if (fullKey.EndsWith(']'))
-            {
-                yamlSpacingPostfix = "  ";
-            }
+        _sbYaml.AppendLine($"{yamlPrefix}{key}: {response.ToString().ToLower()}");
+        _responses[newKey] = response;
+    }
+    
+    private void PromptInteger(string prompt, string rootKey, string key, string yamlPrefix, bool isRequired)
+    {
+        var newKey = $"{rootKey}.{key}".TrimStart('.');
+        var spectrePrompt = new TextPrompt<int>(prompt)
+            .PromptStyle(Style.Parse("seagreen1"))
+            .DefaultValueStyle(Style.Parse("mediumpurple3_1"));
 
+        spectrePrompt.AllowEmpty = !isRequired;
+
+        var defaultValue = GetDefault<int>(newKey);
+
+        if (defaultValue != 0)
+        {
+            spectrePrompt.DefaultValue(defaultValue);
+        }
+
+        var response = AnsiConsole.Prompt(spectrePrompt);
+
+        _sbYaml.AppendLine($"{yamlPrefix}{key}: {response}");
+        _responses[newKey] = response;
+    }
+
+    private void PromptString(string prompt, string rootKey, string key, string yamlPrefix, bool isRequired)
+    {
+        var newKey = $"{rootKey}.{key}".TrimStart('.');
+        var spectrePrompt = new TextPrompt<string>(prompt)
+            .PromptStyle(Style.Parse("seagreen1"))
+            .DefaultValueStyle(Style.Parse("mediumpurple3_1"));
+
+        spectrePrompt.AllowEmpty = !isRequired;
+
+        var defaultValue = GetDefault<string>(newKey);
+
+        if (!string.IsNullOrWhiteSpace(defaultValue))
+        {
+            spectrePrompt.DefaultValue(defaultValue);
+        }
+
+        var response = AnsiConsole.Prompt(spectrePrompt);
+        if (!string.IsNullOrEmpty(response))
+        {
+            _sbYaml.AppendLine($"{yamlPrefix}{key}: {response}");
+            _responses[newKey] = response;
         }
     }
 
-    private string GetDefaultString(JsonSchema.JsonSchema prop, string key)
+    private void PromptEnum(string prompt, string rootKey, string key, string yamlPrefix, List<string> enumList)
     {
-        string? defaultValue = null;
-        
+        var newKey = $"{rootKey}.{key}".TrimStart('.');
+        var response = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title(prompt)
+                .HighlightStyle(Style.Parse("mediumpurple3_1"))
+                .AddChoices(enumList.ToArray())
+        );
+                                    
+        _responses[newKey] = response;
+        _sbYaml.AppendLine($"{yamlPrefix}{key}: {response}");
+        AnsiConsole.MarkupLine($"{prompt} [seagreen1]{_responses[newKey]}[/]");
+    }
+    
+    private void PromptMultipleEnum(string prompt, string rootKey, string key, string yamlPrefix, List<string> enumList)
+    {
+        var newKey = $"{rootKey}.{key}".TrimStart('.');
+        var response = AnsiConsole.Prompt(
+            new MultiSelectionPrompt<string>()
+                .Title(prompt)
+                .HighlightStyle(Style.Parse("mediumpurple3_1"))
+                .AddChoices(enumList.ToArray())
+        );
+
+        var responseValue = String.Join(',', response);
+        _responses[newKey] = responseValue; 
+        _sbYaml.AppendLine($"{yamlPrefix}{key}: [{responseValue}]");
+        AnsiConsole.MarkupLine($"{prompt} [seagreen1]{_responses[newKey]}[/]");
+    }
+
+    private void AppendKey(string yamlSpacing, string key)
+    {
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            _sbYaml.AppendLine($"{yamlSpacing}{key}:");    
+        }
+    }
+    
+    
+    private T? GetDefault<T>(string key)
+    {
         if (_defaults?.ContainsKey(key) ?? false)
         {
-            defaultValue = (string)_defaults[key];
+            return (T)_defaults[key];
         }
 
-        if (string.IsNullOrWhiteSpace(defaultValue))
-        {
-            if (!string.IsNullOrWhiteSpace(prop.Default?.ToString()))
-            {
-                defaultValue = prop.Default.ToString();
-            }
-        }
-        return defaultValue ?? string.Empty;
+        return default;
     }
-
-    private int GetDefaultInt(JsonSchema.JsonSchema prop, string key)
-    {
-        int? defaultValue = null;
-
-        if (_defaults?.ContainsKey(key) ?? false)
-        {
-            defaultValue = int.Parse(_defaults[key]?.ToString() ?? "0");
-        }
-
-        if (defaultValue == 0)
-        {
-            if (!string.IsNullOrWhiteSpace(prop.Default?.ToString()))
-            {
-                defaultValue = int.Parse(prop.Default.ToString() ?? "0");
-            }
-        }
-        return defaultValue ?? 0;
-    }
-
+    
 }
 

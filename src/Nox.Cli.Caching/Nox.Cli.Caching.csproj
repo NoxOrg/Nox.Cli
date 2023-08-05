@@ -12,10 +12,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Nox.Core" Version="6.0.48" />
-      <PackageReference Include="Nox.Utilities" Version="1.0.3" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+      <PackageReference Include="Nox.Utilities" Version="1.0.7" />
       <PackageReference Include="RestSharp" Version="110.2.0" />
       <PackageReference Include="Spectre.Console" Version="0.47.0" />
+      <PackageReference Include="YamlDotNet" Version="13.1.1" />
     </ItemGroup>
 
 </Project>

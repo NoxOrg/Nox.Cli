@@ -9,13 +9,15 @@ public static class TypeExtensions
 	{
 		return
 			type.IsPrimitive ||
+			type.IsEnum ||
 			new Type[] {
 				typeof(String),
 				typeof(Decimal),
 				typeof(DateTime),
 				typeof(DateTimeOffset),
 				typeof(TimeSpan),
-				typeof(Guid)
+				typeof(Guid),
+				typeof(Uri)
 			}.Contains(type) ||
 			Convert.GetTypeCode(type) != TypeCode.Object;
 	}

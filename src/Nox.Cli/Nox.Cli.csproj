@@ -18,9 +18,9 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Copyright>Copyright (c) Andre Sharpe 2022</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.0.18.0</AssemblyVersion>
-    <FileVersion>1.0.18.0</FileVersion>
-    <PackageVersion>1.0.18</PackageVersion>
+    <AssemblyVersion>1.0.19.0</AssemblyVersion>
+    <FileVersion>1.0.19.0</FileVersion>
+    <PackageVersion>1.0.19</PackageVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/NoxOrg/Nox.Cli</PackageProjectUrl>
     <RepositoryUrl>https://github.com/NoxOrg/Nox.Cli.git</RepositoryUrl>
@@ -29,28 +29,26 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\docs\images\nox.png" Pack="true" PackagePath="" />
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageReference Include="Azure.Identity" Version="1.9.0" />
-    <PackageReference Include="Azure.ResourceManager" Version="1.6.0" />
-    <PackageReference Include="Azure.ResourceManager.Resources" Version="1.4.0" />
+    <PackageReference Include="Azure.ResourceManager" Version="1.7.0" />
+    <PackageReference Include="Azure.ResourceManager.Resources" Version="1.6.0" />
     <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.5.0" />
     <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.39" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Graph" Version="5.11.0" />
+    <PackageReference Include="Microsoft.Graph" Version="5.20.0" />
     <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.205.1" />
-    <PackageReference Include="Nox.Utilities" Version="1.0.3" />
+    <PackageReference Include="Nox.Secrets" Version="7.0.14" />
+    <PackageReference Include="Nox.Solution" Version="7.0.15" />
+    <PackageReference Include="Nox.Utilities" Version="1.0.7" />
     <PackageReference Include="RestSharp" Version="110.2.0" />
     <PackageReference Include="Spectre.Console" Version="0.47.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.47.0" />
-    <PackageReference Include="System.IO.Abstractions" Version="19.2.29" />
-    <PackageReference Include="Nox.Core" Version="6.0.48" />
+    <PackageReference Include="System.IO.Abstractions" Version="19.2.51" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
@@ -74,5 +72,10 @@
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Teams\Nox.Cli.Plugin.Teams.csproj" />
     <ProjectReference Include="..\Nox.Cli.Server.Integration\Nox.Cli.Server.Integration.csproj" />
     <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\.nox\design\SampleCurrency.solution.nox.yaml">
+      <Link>design\SampleCurrency.solution.nox.yaml</Link>
+    </Content>
   </ItemGroup>
 </Project>

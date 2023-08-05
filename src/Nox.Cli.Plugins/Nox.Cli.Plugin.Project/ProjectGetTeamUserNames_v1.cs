@@ -1,7 +1,6 @@
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Core.Configuration;
-using Nox.Core.Models;
+using Nox.Solution;
 
 namespace Nox.Cli.Plugin.Project;
 
@@ -81,7 +80,7 @@ public class ProjectGetTeamUserNames_v1: INoxCliAddin
                 var result = "";
                 foreach (var item in _members)
                 {
-                    if (item.IsAdmin && !_includeAdmin == true) continue;
+                    if (item.Roles != null && item.Roles.Contains(TeamRole.Administrator) && !_includeAdmin == true) continue;
                     if (!string.IsNullOrEmpty(item.UserName))
                     {
                         if (string.IsNullOrEmpty(result))

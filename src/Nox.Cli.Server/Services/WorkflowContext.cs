@@ -1,11 +1,11 @@
 using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
-using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
-using Nox.Core.Interfaces;
+using Nox.Secrets.Abstractions;
+using Nox.Solution;
 
 namespace Nox.Cli.Server.Services;
 
@@ -107,8 +107,11 @@ public class WorkflowContext: INoxWorkflowContext
     }
 
     public INoxCliCacheManager? CacheManager { get => _cachManager; }
-    public void SetProjectConfiguration(IProjectConfiguration projectConfiguration)
+
+    public INoxSecretsResolver? NoxSecretsResolver => throw new NotImplementedException();
+
+    public void SetProjectConfiguration(NoxSolution projectConfiguration)
     {
-        throw new NotImplementedException();
+        
     }
 }

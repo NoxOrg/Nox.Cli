@@ -1,65 +1,33 @@
-﻿using Nox.Core.Extensions;
-using Nox.Core.Helpers;
-using Nox.Core.Interfaces;
-using Nox.Core.Models;
-using Spectre.Console;
+﻿using System.Reflection;
+using Nox.Secrets;
+using Nox.Secrets.Abstractions;
+using Nox.Solution;
 
 namespace Nox.Cli;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Nox.Core.Constants;
-using Nox.Core.Exceptions;
-using System.IO;
 
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddNoxCliServices(this IServiceCollection services, string[] args)
     {
-        var configuration = ConfigurationHelper.GetNoxAppSettings();
-
-        if (configuration == null)
-        {
-            throw new ConfigurationException("Could not load Nox configuration.");
-        }
-
-        var designPath = ResolveDesignPath(args, configuration);
-
-        configuration["NoxCli:DesignFolder"] = designPath;
-
-        services.AddSingleton(configuration);
-
-        if (Directory.GetFiles(designPath, FileExtension.ServiceDefinition, SearchOption.AllDirectories).Length > 0)
-        {
-            services.AddNoxConfiguration(designPath);
-            AnsiConsole.MarkupLine($"Found solution configuration in {Path.GetFullPath(designPath)}");
-        }
-        else
-        {
-            services.AddSingleton<IProjectConfiguration>(new ProjectConfiguration());
-        }
-        return services;
+        return services
+            .AddSingleton(typeof(NoxSolution), CreateSolution)
+            .AddSecretsResolver();
     }
-
-    private static string ResolveDesignPath(string[] args, IConfiguration configuration)
+    
+    private static NoxSolution CreateSolution(IServiceProvider serviceProvider)
     {
-        string? path = null;
-        
-        for (var i = args.Length-1; i >= 0; i--)
-        {
-            if (args[i].Equals("--path", StringComparison.OrdinalIgnoreCase))
+        return new NoxSolutionBuilder()
+            .AllowMissingSolutionYaml()
+            .OnResolveSecrets((_, args) =>
             {
-                if (i + 1 < args.Length)
-                {
-                    path = args[i + 1];
-                }
-            }
-        }
-
-        path ??= configuration["Nox:DefinitionRootPath"];
-
-        path ??= Directory.GetCurrentDirectory();
-
-        return path;
+                var secretsConfig = args.SecretsConfig;
+                var secretKeys =  args.Variables;
+                var resolver = serviceProvider.GetRequiredService<INoxSecretsResolver>();
+                resolver.Configure(secretsConfig!, Assembly.GetEntryAssembly());
+                args.Secrets = resolver.Resolve(secretKeys!);
+            })
+            .Build();
     }
 }

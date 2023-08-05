@@ -15,8 +15,10 @@ namespace Nox.Cli;
 
 internal static class ConfiguratorExtensions
 {
-    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline, string onlineCacheUrl = "")
+    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline, string? remoteUrl = null)
     {
+        var onlineCacheUrl = "https://noxorg.dev";
+        if (!string.IsNullOrWhiteSpace(remoteUrl)) onlineCacheUrl = remoteUrl;
         var persistedTokenCache = services.BuildServiceProvider().GetRequiredService<IPersistedTokenCache>();
         var cacheBuilder = new NoxCliCacheBuilder(onlineCacheUrl, persistedTokenCache)
             .WithBuildEventHandler((sender, args) =>

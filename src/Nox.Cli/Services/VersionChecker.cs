@@ -26,7 +26,10 @@ public static class VersionChecker
             if (latestVersion.FirstOrDefault() == 'v')
                 latestVersion = latestVersion[1..]; // remove the 'v' prefix. equivalent to `latest.Substring(1, latest.Length - 1)`
 
-            if (installedVersion != latestVersion)
+            var installedVersionNo = Convert.ToInt32(installedVersion.Replace(".", ""));
+            var latestVersionNo = Convert.ToInt32(latestVersion.Replace(".", ""));
+            
+            if (installedVersionNo < latestVersionNo)
                 AnsiConsole.MarkupLine(@$"{Environment.NewLine}[bold underline seagreen1]This version of NOX.Cli ({installedVersion}) is older than that of the latest version ({latestVersion}) Update the tools for the latest features and bug fixes (`dotnet tool update -g Nox.Cli`).[/]{Environment.NewLine}");
         }
         catch (Exception)
