@@ -28,11 +28,9 @@ public class NoxCliCacheManager: INoxCliCacheManager
     private string _workflowCachePath;
     private string _templateCachePath;
     private string _localWorkflowPath;
-    private string _tenantId;
-    private string _workflowUrl;
-    private string _templateUrl;
     private bool _isServer;
-    private readonly string _remoteUrl;
+    private readonly Uri _remoteUri;
+    private Uri? _workflowUri;
     private List<string> _buildLog;
     private IManifestConfiguration? _manifest;
     private List<IWorkflowConfiguration>? _workflows;
@@ -62,7 +60,8 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
     internal void UseTenantId(string tenantId)
     {
-        _tenantId = tenantId;
+        if (string.IsNullOrEmpty(tenantId)) throw new NoxCliException("Tenant has not been configured!");
+        SetTenantId(tenantId);
     }
 
     internal void AddBuildEventHandler(EventHandler<ICacheManagerBuildEventArgs> handler)
@@ -73,13 +72,12 @@ public class NoxCliCacheManager: INoxCliCacheManager
     public bool IsOnline {
         get
         {
-            if (string.IsNullOrEmpty(_remoteUrl)) return false;
+            if (_remoteUri == null) return false;
             var ping = new Ping();
             try
             {
-                var uri = new Uri(_remoteUrl);
-                if (uri.Host == "localhost") return true;
-                var reply = ping.Send(uri.Host, 3000);
+                if (_remoteUri.Host == "localhost") return true;
+                var reply = ping.Send(_remoteUri.Host, 3000);
                 if (reply.Status == IPStatus.Success)
                 {
                     return true;
@@ -131,8 +129,8 @@ public class NoxCliCacheManager: INoxCliCacheManager
         if (templateInfo == null) throw new NoxCliException($"Unable to find template {name} in the template cache.");
         if (!_isServer && IsOnline)
         {
-            var client = new RestClient(_templateUrl);
-            var infoRequest = new RestRequest("Info") { Method = Method.Post };
+            var client = new RestClient(GetRemoteUri("/templates/info"));
+            var infoRequest = new RestRequest { Method = Method.Post };
             infoRequest.AddHeader("Accept", "application/json");
             infoRequest.AddJsonBody($"{{\"FilePath\": \"{name}\"}}");
             var fileInfo = JsonConvert.DeserializeObject<RemoteFileInfo>(client.Execute(infoRequest).Content!);
@@ -144,24 +142,21 @@ public class NoxCliCacheManager: INoxCliCacheManager
         }
     }
 
-    public NoxCliCacheManager(string remoteUrl, IPersistedTokenCache? tokenCache = null)
+    public NoxCliCacheManager(string? remoteUrl, IPersistedTokenCache? tokenCache = null)
     {
         _buildLog = new List<string>();
         if (string.IsNullOrEmpty(remoteUrl))
         {
-            _remoteUrl = remoteUrl;
+            _remoteUri = new Uri("https://noxorg.dev");
         }
         else
         {
-            _remoteUrl = "https://noxorg.dev";
+            _remoteUri = new Uri(remoteUrl);
         }
-        _remoteUrl = remoteUrl;
+        
         _cachePath = WellKnownPaths.CachePath;
         _workflowCachePath = WellKnownPaths.WorkflowsCachePath;
         _templateCachePath = WellKnownPaths.TemplatesCachePath;
-        _tenantId = "";
-        _workflowUrl = "";
-        _templateUrl = "";
         Directory.CreateDirectory(_cachePath);
         _cacheFile = WellKnownPaths.CacheFile;
         _localWorkflowPath = ".";
@@ -175,8 +170,8 @@ public class NoxCliCacheManager: INoxCliCacheManager
         Dictionary<string,string> yamlFiles = new(StringComparer.OrdinalIgnoreCase);
         if (_isServer)
         {
-            _cache!.TenantId = _tenantId;
-            SetRemoteUrls();
+            if (string.IsNullOrEmpty(_cache!.TenantId)) throw new NoxCliException("Tenant has not been configured!");            
+
             GetOnlineWorkflowsAndManifest(yamlFiles);
             
             GetOnlineTemplates();
@@ -202,7 +197,8 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
     private void GetOrCreateCache()
     {
-        _cache = new NoxCliCache(_remoteUrl, _cachePath, _cacheFile);
+        if (_remoteUri == null) throw new NoxCliException("Remote Uri has not been set!");
+        _cache = new NoxCliCache(_remoteUri, _cachePath, _cacheFile);
 
         if (!File.Exists(_cacheFile) || _isServer) return;
         Load();
@@ -228,9 +224,8 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
             _cache.Username = GetUsernameFromUpn(auth.AuthenticationRecord.Username);
             _cache.UserPrincipalName = auth.AuthenticationRecord.Username;
-            _tenantId = auth.AuthenticationRecord.TenantId;
-            _cache.TenantId = _tenantId;
-            SetRemoteUrls();
+            SetTenantId(auth.AuthenticationRecord.TenantId);
+            
             Save();
             RaiseBuildEvent($"{Emoji.Known.GreenCircle} Logged in as {auth.AuthenticationRecord.Username} on tenant {auth.AuthenticationRecord.TenantId}");
         }
@@ -255,7 +250,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     {
         try
         {
-            var client = new RestClient(_workflowUrl);
+            var client = new RestClient(GetRemoteUri("/scripts"));
 
             var request = new RestRequest() { Method = Method.Get };
 
@@ -466,7 +461,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     {
         try
         {
-            var client = new RestClient(_templateUrl);
+            var client = new RestClient(GetRemoteUri("/templates"));
 
             var fileListRequest = new RestRequest() { Method = Method.Get };
 
@@ -560,7 +555,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
     private string GetOnlineTemplate(string name)
     {
-        var client = new RestClient(_templateUrl);
+        var client = new RestClient(GetRemoteUri("/templates"));
         var fileRequest = new RestRequest() { Method = Method.Post };
         fileRequest.AddHeader("Accept", "application/json");
         fileRequest.AddJsonBody($"{{\"FilePath\": \"{name}\"}}");
@@ -568,13 +563,6 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
         if (fileContent == null) throw new Exception($"Couldn't download template {name}");
         return fileContent;
-    }
-
-    private void SetRemoteUrls()
-    {
-        if (string.IsNullOrEmpty(_tenantId)) throw new NoxCliException("Tenant Id has not been set!");
-        _workflowUrl = $"{_remoteUrl}/workflows/{_tenantId}";
-        _templateUrl = $"{_remoteUrl}/templates/{_tenantId}";
     }
 
     private string GetUsernameFromUpn(string upn)
@@ -587,6 +575,19 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
         result = result.Replace('.', ' ');
         return result;
+    }
+
+    private void SetTenantId(string tenantId)
+    {
+        _cache!.TenantId = tenantId;
+        _workflowUri = new Uri(_remoteUri, $"workflows/{tenantId}");
+    }
+
+    private Uri GetRemoteUri(string path)
+    {
+        var uriBuilder = new UriBuilder(_workflowUri!);
+        uriBuilder.Path += path;
+        return uriBuilder.Uri;
     }
     
 }
