@@ -1,4 +1,4 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Nox.Cli.Caching.Tests")]
+[assembly: InternalsVisibleTo("CachingTests")]
 namespace Nox.Cli.Caching;

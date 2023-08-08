@@ -8,7 +8,7 @@ public interface INoxCliCache: IChangeTracking
     string UserPrincipalName { get; set; }
     string TenantId { get; set; }
     
-    string RemoteUrl { get; set; }
+    Uri? RemoteUri { get; set; }
     
     DateTimeOffset Expires { get; set; }
     

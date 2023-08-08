@@ -12,7 +12,7 @@ public class NoxCliCache : INoxCliCache
 
     private string _tid = string.Empty;
 
-    private string _remoteUrl = string.Empty;
+    private Uri? _remoteUri;
 
     public string Username
     {
@@ -40,27 +40,17 @@ public class NoxCliCache : INoxCliCache
         }
     }
 
-    public string RemoteUrl
+    public Uri? RemoteUri
     {
-        get => _remoteUrl;
+        get => _remoteUri;
         set
         {
-            if (_remoteUrl != value)
+            if (_remoteUri != value)
             {
-                _remoteUrl = value;
+                _remoteUri = value;
                 IsChanged = true;
             }
         }
-    }
-
-    public string TemplateUrl
-    {
-        get => _remoteUrl + "/templates/" + _tid;
-    }
-
-    public string WorkflowUrl
-    {
-        get => _remoteUrl + "/workflows/" + _tid;
     }
 
     public string TenantId
@@ -138,9 +128,9 @@ public class NoxCliCache : INoxCliCache
         
     }
     
-    public NoxCliCache(string remoteUrl, string cachePath, string cacheFile)
+    public NoxCliCache(Uri remoteUri, string cachePath, string cacheFile)
     {
-        _remoteUrl = remoteUrl;
+        _remoteUri = remoteUri;
         Expires = new DateTimeOffset(DateTime.Now.AddDays(7));
     }
 
