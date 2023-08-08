@@ -73,6 +73,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreTests", "CoreTests\Core
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.PersonalAccessToken", "Nox.Cli.PersonalAccessToken\Nox.Cli.PersonalAccessToken.csproj", "{4815F900-D0AB-4237-B401-77D449FBCAFE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CachingTests", "..\tests\CachingTests\CachingTests.csproj", "{A5BC67F2-0570-4F49-8F15-7DED77E12066}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -207,6 +209,10 @@ Global
 		{4815F900-D0AB-4237-B401-77D449FBCAFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4815F900-D0AB-4237-B401-77D449FBCAFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4815F900-D0AB-4237-B401-77D449FBCAFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5BC67F2-0570-4F49-8F15-7DED77E12066}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5BC67F2-0570-4F49-8F15-7DED77E12066}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5BC67F2-0570-4F49-8F15-7DED77E12066}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5BC67F2-0570-4F49-8F15-7DED77E12066}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -231,5 +237,6 @@ Global
 		{E71FC419-2898-485D-8588-8E012F064F48} = {E3FA4748-9B96-42E7-BDE8-1F08AA8AD4D9}
 		{6117EE16-9A61-446F-B409-484DE41FC26E} = {E3FA4748-9B96-42E7-BDE8-1F08AA8AD4D9}
 		{4D25DF29-1045-4F6C-A5EF-C66C94A5B1E4} = {63454657-F25B-4BAB-8868-0766A619BFE6}
+		{A5BC67F2-0570-4F49-8F15-7DED77E12066} = {63454657-F25B-4BAB-8868-0766A619BFE6}
 	EndGlobalSection
 EndGlobal

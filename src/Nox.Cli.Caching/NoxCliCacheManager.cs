@@ -35,6 +35,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     private IManifestConfiguration? _manifest;
     private List<IWorkflowConfiguration>? _workflows;
     private IPersistedTokenCache? _tokenCache;
+    private IDeserializer _deserializer;
 
     internal void ForServer()
     {
@@ -129,10 +130,9 @@ public class NoxCliCacheManager: INoxCliCacheManager
         if (templateInfo == null) throw new NoxCliException($"Unable to find template {name} in the template cache.");
         if (!_isServer && IsOnline)
         {
-            var client = new RestClient(GetRemoteUri("/templates/info"));
-            var infoRequest = new RestRequest { Method = Method.Post };
+            var client = new RestClient(GetRemoteUri($"/templateInfo/{name}"));
+            var infoRequest = new RestRequest() { Method = Method.Get };
             infoRequest.AddHeader("Accept", "application/json");
-            infoRequest.AddJsonBody($"{{\"FilePath\": \"{name}\"}}");
             var fileInfo = JsonConvert.DeserializeObject<RemoteFileInfo>(client.Execute(infoRequest).Content!);
             if (fileInfo!.Size != templateInfo.Size || fileInfo.ShaChecksum != templateInfo.ShaChecksum)
             {
@@ -161,6 +161,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
         _cacheFile = WellKnownPaths.CacheFile;
         _localWorkflowPath = ".";
         _tokenCache = tokenCache;
+        _deserializer = BuildDeserializer();
     }
 
     internal INoxCliCacheManager Build()
@@ -188,14 +189,14 @@ public class NoxCliCacheManager: INoxCliCacheManager
         }
 
         var deserializer = BuildDeserializer();
-        ResolveManifest(deserializer, yamlFiles);
-        ResolveWorkflows(deserializer, yamlFiles);
+        ResolveManifest(yamlFiles);
+        ResolveWorkflows(yamlFiles);
         
         Save();
         return this;
     }
 
-    private void GetOrCreateCache()
+    internal void GetOrCreateCache()
     {
         if (_remoteUri == null) throw new NoxCliException("Remote Uri has not been set!");
         _cache = new NoxCliCache(_remoteUri, _cachePath, _cacheFile);
@@ -246,7 +247,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
         _cache.ClearChanges();
     }
     
-    private void GetOnlineWorkflowsAndManifest(IDictionary<string, string> yamlFiles)
+    internal void GetOnlineWorkflowsAndManifest(IDictionary<string, string> yamlFiles)
     {
         try
         {
@@ -380,22 +381,22 @@ public class NoxCliCacheManager: INoxCliCacheManager
             .Build();
     }
     
-    private void ResolveManifest(IDeserializer deserializer, Dictionary<string, string> yamlFiles)
+    internal void ResolveManifest(Dictionary<string, string> yamlFiles)
     {
         _manifest = yamlFiles
             .Where(kv => kv.Key.EndsWith(".cli.nox.yaml"))
-            .Select(kv => deserializer.Deserialize<ManifestConfiguration>(kv.Value))
+            .Select(kv => _deserializer.Deserialize<ManifestConfiguration>(kv.Value))
             .FirstOrDefault();
     }
     
-    private void ResolveWorkflows(IDeserializer deserializer, Dictionary<string, string> yamlFiles)
+    internal void ResolveWorkflows(Dictionary<string, string> yamlFiles)
     {
         _workflows = new List<IWorkflowConfiguration>();
         foreach (var yaml in yamlFiles.Where(kv => kv.Key.EndsWith(FileExtension.WorkflowDefinition.TrimStart('*'))))
         {
             try
             {
-                _workflows.Add(deserializer.Deserialize<WorkflowConfiguration>(yaml.Value));
+                _workflows.Add(_deserializer.Deserialize<WorkflowConfiguration>(yaml.Value));
             }
             catch (Exception ex)
             {
@@ -457,7 +458,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
         return files.ToArray();
     }
     
-    private void GetOnlineTemplates()
+    internal void GetOnlineTemplates()
     {
         try
         {
@@ -553,7 +554,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
         BuildEvent?.Invoke(this, new CacheManagerBuildEventArgs(plainMessage, message));
     }
 
-    private string GetOnlineTemplate(string name)
+    internal string GetOnlineTemplate(string name)
     {
         var client = new RestClient(GetRemoteUri("/templates"));
         var fileRequest = new RestRequest() { Method = Method.Post };
