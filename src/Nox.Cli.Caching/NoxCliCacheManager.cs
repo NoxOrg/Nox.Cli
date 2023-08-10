@@ -36,6 +36,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     private List<IWorkflowConfiguration>? _workflows;
     private IPersistedTokenCache? _tokenCache;
     private IDeserializer _deserializer;
+    private string? _tenantId;
 
     internal void ForServer()
     {
@@ -200,6 +201,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     {
         if (_remoteUri == null) throw new NoxCliException("Remote Uri has not been set!");
         _cache = new NoxCliCache(_remoteUri, _cachePath, _cacheFile);
+        _cache.TenantId = _tenantId!;
 
         if (!File.Exists(_cacheFile) || _isServer) return;
         Load();
@@ -580,7 +582,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
     private void SetTenantId(string tenantId)
     {
-        _cache!.TenantId = tenantId;
+        _tenantId = tenantId;
         _workflowUri = new Uri(_remoteUri, $"workflows/{tenantId}");
     }
 
