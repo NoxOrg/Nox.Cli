@@ -14,7 +14,8 @@ namespace Nox.Cli.Abstractions
         void AddToVariables(string key, object value);
         void SetErrorMessage(string errorMessage);
         void SetState(ActionState state);
-        
+        INoxWorkflowCancellationToken? CancellationToken { get; }
+        void RequestCancellation(string reason);
         INoxCliCacheManager? CacheManager { get; }
         INoxSecretsResolver? NoxSecretsResolver { get; }
         void SetProjectConfiguration(NoxSolution projectConfiguration);

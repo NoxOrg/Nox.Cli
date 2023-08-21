@@ -69,6 +69,16 @@ public class NoxWorkflowContext : INoxWorkflowContext
         }
     }
 
+    public INoxWorkflowCancellationToken? CancellationToken { get; internal set; }
+
+    public void RequestCancellation(string reason)
+    {
+        CancellationToken = new NoxWorkflowCancellationToken
+        {
+            Reason = reason
+        };
+    }
+
     public INoxCliCacheManager? CacheManager => _cacheManager;
 
     public INoxSecretsResolver? NoxSecretsResolver => _secretsResolver;

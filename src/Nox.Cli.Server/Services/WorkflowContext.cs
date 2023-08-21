@@ -106,6 +106,13 @@ public class WorkflowContext: INoxWorkflowContext
         _state = state;
     }
 
+    public INoxWorkflowCancellationToken? CancellationToken { get; }
+
+    public void RequestCancellation(string reason)
+    {
+        throw new NotImplementedException();
+    }
+
     public INoxCliCacheManager? CacheManager { get => _cachManager; }
 
     public INoxSecretsResolver? NoxSecretsResolver => throw new NotImplementedException();

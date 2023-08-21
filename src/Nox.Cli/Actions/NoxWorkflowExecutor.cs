@@ -55,10 +55,12 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         while (ctx.CurrentAction != null)
         {
-            if (ctx.CurrentAction.Id == "git-pull-remote")
+            if (ctx.CancellationToken != null)
             {
-                Console.WriteLine();
+                _console.MarkupLine($"[yellow3]Workflow cancelled due to: {ctx.CancellationToken.Reason}[/]");
+                break;
             }
+            
             var taskDescription = $"Step {ctx.CurrentAction.Sequence}: {ctx.CurrentAction.Name}".EscapeMarkup();
 
             var formattedTaskDescription = $"[bold mediumpurple3_1]{taskDescription}[/]";
