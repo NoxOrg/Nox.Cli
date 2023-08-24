@@ -79,7 +79,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
             try
             {
                 if (_remoteUri.Host == "localhost") return true;
-                var reply = ping.Send(_remoteUri.Host, 3000);
+                var reply = ping.Send(_remoteUri.Host, 10000);
                 if (reply.Status == IPStatus.Success)
                 {
                     return true;
@@ -186,6 +186,10 @@ public class NoxCliCacheManager: INoxCliCacheManager
                 GetOnlineWorkflowsAndManifest(yamlFiles);
                 GetOnlineTemplates();
                 GetLocalWorkflowsAndManifest(yamlFiles);
+            }
+            else
+            {
+                RaiseBuildEvent($"Unable to contact remote workflow cache server at: {_remoteUri}. Will user local cache.");
             }
         }
 
