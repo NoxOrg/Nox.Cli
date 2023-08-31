@@ -74,7 +74,6 @@ public class NoxCliCacheManager: INoxCliCacheManager
     public bool IsOnline {
         get
         {
-            if (_remoteUri == null) return false;
             var ping = new Ping();
             try
             {
@@ -181,6 +180,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
         else
         {
             GetCredentialsFromAzureToken();
+            RaiseBuildEvent($"Connecting to remote workflow cache server at: {_remoteUri}.");
             if (IsOnline)
             {
                 GetOnlineWorkflowsAndManifest(yamlFiles);
@@ -189,7 +189,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
             }
             else
             {
-                RaiseBuildEvent($"Unable to contact remote workflow cache server at: {_remoteUri}. Will user local cache.");
+                RaiseBuildEvent($"{Emoji.Known.ExclamationQuestionMark} [bold yellow]Unable to connect to remote workflow cache server at: {_remoteUri}. Reverting to local cache.[/]");
             }
         }
 
@@ -286,6 +286,8 @@ public class NoxCliCacheManager: INoxCliCacheManager
                 .GetFiles(_workflowCachePath, FileExtension.WorkflowDefinition)
                 .Select(f => (new FileInfo(f)).Name).ToHashSet();
 
+            var hasRefreshed = false;
+
             foreach (var file in onlineFiles!)
             {
                 string? yaml = null;
@@ -302,6 +304,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
                     if (yaml == null) throw new NoxCliException($"Couldn't download workflow {file.Name}");
 
                     File.WriteAllText(Path.Combine(_workflowCachePath, file.Name), yaml);
+                    hasRefreshed = true;
                 }
                 else
                 {
@@ -327,6 +330,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
             }
 
             _cache!.WorkflowInfo = onlineFiles;
+            if (hasRefreshed) RaiseBuildEvent($"[bold yellow]Workflow cache successfully updated from remote.[/]");
 
         }
         catch (Exception ex)
@@ -468,6 +472,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     {
         try
         {
+            var hasRefreshed = false;
             var client = new RestClient(GetRemoteUri("/templates"));
 
             var fileListRequest = new RestRequest() { Method = Method.Get };
@@ -515,6 +520,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
                     var templateFullPath = Path.Combine(_templateCachePath, file.Name);
                     Directory.CreateDirectory(Path.GetDirectoryName(templateFullPath)!);
                     File.WriteAllText(templateFullPath, fileContent);
+                    hasRefreshed = true;
                 }
 
                 if (existingCacheList.Contains(file.Name))
@@ -530,6 +536,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
             _cache!.TemplateInfo = onlineFiles;
             Save();
+            if (hasRefreshed) RaiseBuildEvent($"[bold yellow]Template cache successfully updated from remote.[/]");
         }
         catch (Exception ex)
         {
