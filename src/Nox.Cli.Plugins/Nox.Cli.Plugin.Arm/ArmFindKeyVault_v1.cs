@@ -1,4 +1,5 @@
 using Azure.ResourceManager.KeyVault;
+using Azure.ResourceManager.KeyVault.Models;
 using Azure.ResourceManager.Resources;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
@@ -95,6 +96,14 @@ public class ArmFindKeyVault_v1 : INoxCliAddin
                         {
                             outputs["is-found"] = true;
                             outputs["key-vault"] = vaultResponse.Value;
+                            await vaultResponse.Value.UpdateAccessPolicyAsync(AccessPolicyUpdateKind.Add, new KeyVaultAccessPolicyParameters(new KeyVaultAccessPolicyProperties(new[]
+                            {
+                                new KeyVaultAccessPolicy(new Guid("88155c28-f750-4013-91d3-8347ddb3daa7"), "5387ffe4-19f2-4d90-a6c0-3eaf510e2baf", new IdentityAccessPermissions
+                                {
+                                    Secrets = { new IdentityAccessSecretPermission("all") }
+                                })
+                            })));
+
                         }
                     }
                     catch
