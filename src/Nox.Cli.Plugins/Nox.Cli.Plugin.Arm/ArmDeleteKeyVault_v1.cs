@@ -71,7 +71,6 @@ public class ArmDeleteKeyVault_v1 : INoxCliAddin
         {
             try
             {
-                
                 var resourceGroups = _sub.GetResourceGroups();
                 var resourceGroupResponse = await resourceGroups.GetAsync(_rgName);
                 if (resourceGroupResponse.HasValue)
@@ -83,18 +82,15 @@ public class ArmDeleteKeyVault_v1 : INoxCliAddin
                     {
                         var vault = vaultResponse.Value;
                         await vault.DeleteAsync(WaitUntil.Completed);
-                        var deletedKvResponse = await _sub.GetDeletedKeyVaultAsync(resourceGroup.Data.Location, _kvName);
-                        if (deletedKvResponse.HasValue)
-                        {
-                            var deletedKv = deletedKvResponse.Value;
-                            await deletedKv.PurgeDeletedAsync(WaitUntil.Completed);
-                        }
                         ctx.SetState(ActionState.Success);
                     }
-                    else
+                    var deletedKvResponse = await _sub.GetDeletedKeyVaultAsync(resourceGroup.Data.Location, _kvName);
+                    if (deletedKvResponse.HasValue)
                     {
-                        ctx.SetErrorMessage($"Key vault {_kvName} does not exist.");
+                        var deletedKv = deletedKvResponse.Value;
+                        await deletedKv.PurgeDeletedAsync(WaitUntil.Completed);
                     }
+                    ctx.SetState(ActionState.Success);
                 }
                 else
                 {
