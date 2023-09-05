@@ -6,7 +6,7 @@ public enum ActionState
     Running,
     WaitingApproval,
     Success,
-    Error,
+    Error
 }
 
 

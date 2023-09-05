@@ -55,7 +55,7 @@ public class CoreAddVariables_v1 : INoxCliAddin
         }
 
         ctx.SetState( ActionState.Success );
-
+        
         return Task.FromResult((IDictionary<string,object>)outputs);
     }
 

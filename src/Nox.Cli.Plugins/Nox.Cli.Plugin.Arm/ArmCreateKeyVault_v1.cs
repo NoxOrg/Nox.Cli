@@ -94,7 +94,6 @@ public class ArmCreateKeyVault_v1 : INoxCliAddin
                     {
                         ctx.SetErrorMessage("Unable to create the specified Key Vault!");
                     }
-                          
                 }
               
             }
@@ -134,6 +133,17 @@ public class ArmCreateKeyVault_v1 : INoxCliAddin
         };
         await vaults.CreateOrUpdateAsync(WaitUntil.Completed, _kvName, new KeyVaultCreateOrUpdateContent(location, kvProps));
         var vaultResponse = await vaults.GetAsync(_kvName);
+        if (vaultResponse.HasValue && vaultResponse.Value.HasData)
+        {
+            await vaultResponse.Value.UpdateAccessPolicyAsync(AccessPolicyUpdateKind.Add, new KeyVaultAccessPolicyParameters(new KeyVaultAccessPolicyProperties(new[]
+            {
+                //Add the access policy for Nox.Cli
+                new KeyVaultAccessPolicy(new Guid("88155c28-f750-4013-91d3-8347ddb3daa7"), "5387ffe4-19f2-4d90-a6c0-3eaf510e2baf", new IdentityAccessPermissions
+                {
+                    Secrets = { new IdentityAccessSecretPermission("all") }
+                })
+            })));
+        }
         return vaultResponse.HasValue ? vaultResponse.Value : null;
     }
 }

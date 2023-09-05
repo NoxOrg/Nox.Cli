@@ -1,3 +1,4 @@
+using Azure;
 using Azure.ResourceManager.KeyVault;
 using Azure.ResourceManager.KeyVault.Models;
 using Azure.ResourceManager.Resources;
@@ -6,15 +7,15 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugin.Arm;
 
-public class ArmFindKeyVault_v1 : INoxCliAddin
+public class ArmDeleteKeyVault_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "arm/find-key-vault@v1",
+            Name = "arm/delete-key-vault@v1",
             Author = "Jan Schutte",
-            Description = "Find an Azure key vault",
+            Description = "Delete an Azure key vault",
 
             Inputs =
             {
@@ -32,27 +33,10 @@ public class ArmFindKeyVault_v1 : INoxCliAddin
                 },
                 ["key-vault-name"] = new NoxActionInput {
                     Id = "key-vault-name",
-                    Description = "The name of the key vault to find",
+                    Description = "The name of the key vault to delete",
                     Default = string.Empty,
                     IsRequired = true
                 }
-            },
-            
-            Outputs =
-            {
-                ["is-found"] = new NoxActionOutput {
-                    Id =  "is-found",
-                    Description = "Indicates if the Azure Key Vault exists"
-                },
-                ["is-deleted"] = new NoxActionOutput {
-                    Id =  "is-deleted",
-                    Description = "Indicates if the Azure Key Vault has been soft deleted."
-                },
-                
-                ["key-vault"] = new NoxActionOutput {
-                    Id = "key-vault",
-                    Description = "The Azure Key Vault instance. Will return null if it does not exist.",
-                },
             }
         };
     }
@@ -81,49 +65,25 @@ public class ArmFindKeyVault_v1 : INoxCliAddin
             string.IsNullOrEmpty(_rgName) ||
             string.IsNullOrEmpty(_kvName))
         {
-            ctx.SetErrorMessage("The arm find-key-vault action was not initialized");
+            ctx.SetErrorMessage("The arm delete-key-vault action was not initialized");
         }
         else
         {
             try
             {
-                outputs["is-found"] = false;
-                outputs["is-deleted"] = false;
-                
                 var resourceGroups = _sub.GetResourceGroups();
                 var resourceGroupResponse = await resourceGroups.GetAsync(_rgName);
                 if (resourceGroupResponse.HasValue)
                 {
                     var resourceGroup = resourceGroupResponse.Value;
                     var vaults = resourceGroup.GetKeyVaults();
-                    try
+                    var vaultResponse = await vaults.GetAsync(_kvName);
+                    if (vaultResponse.HasValue)
                     {
-                        var vaultResponse = await vaults.GetAsync(_kvName);
-                        if (vaultResponse.HasValue)
-                        {
-                            outputs["is-found"] = true;
-                            outputs["key-vault"] = vaultResponse.Value;
-                        }
+                        var vault = vaultResponse.Value;
+                        await vault.DeleteAsync(WaitUntil.Completed);
+                        ctx.SetState(ActionState.Success);
                     }
-                    catch
-                    {
-                        //ignore - key vault does not exist
-                    }
-                    
-                    //Check in deleted vaults
-                    try
-                    {
-                        var deletedKvResponse = await _sub.GetDeletedKeyVaultAsync(resourceGroup.Data.Location, _kvName);
-                        if (deletedKvResponse.HasValue)
-                        {
-                            outputs["is-deleted"] = true;
-                        }
-                    }
-                    catch
-                    {
-                        //ignore
-                    }
-
                     ctx.SetState(ActionState.Success);
                 }
                 else
@@ -135,7 +95,6 @@ public class ArmFindKeyVault_v1 : INoxCliAddin
             {
                 ctx.SetErrorMessage(ex.Message);
             }
-            
         }
 
         return outputs;
