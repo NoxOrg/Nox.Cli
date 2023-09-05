@@ -77,19 +77,35 @@ public class ArmDeleteKeyVault_v1 : INoxCliAddin
                 {
                     var resourceGroup = resourceGroupResponse.Value;
                     var vaults = resourceGroup.GetKeyVaults();
-                    var vaultResponse = await vaults.GetAsync(_kvName);
-                    if (vaultResponse.HasValue)
+                    try
                     {
-                        var vault = vaultResponse.Value;
-                        await vault.DeleteAsync(WaitUntil.Completed);
-                        ctx.SetState(ActionState.Success);
+                        var vaultResponse = await vaults.GetAsync(_kvName);
+                        if (vaultResponse.HasValue)
+                        {
+                            var vault = vaultResponse.Value;
+                            await vault.DeleteAsync(WaitUntil.Completed);
+                            ctx.SetState(ActionState.Success);
+                        }
                     }
-                    var deletedKvResponse = await _sub.GetDeletedKeyVaultAsync(resourceGroup.Data.Location, _kvName);
-                    if (deletedKvResponse.HasValue)
+                    catch
                     {
-                        var deletedKv = deletedKvResponse.Value;
-                        await deletedKv.PurgeDeletedAsync(WaitUntil.Completed);
+                        //ignore 
                     }
+
+                    try
+                    {
+                        var deletedKvResponse = await _sub.GetDeletedKeyVaultAsync(resourceGroup.Data.Location, _kvName);
+                        if (deletedKvResponse.HasValue)
+                        {
+                            var deletedKv = deletedKvResponse.Value;
+                            await deletedKv.PurgeDeletedAsync(WaitUntil.Completed);
+                        }
+                    }
+                    catch
+                    {
+                        //ignore
+                    }
+                    
                     ctx.SetState(ActionState.Success);
                 }
                 else
