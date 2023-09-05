@@ -101,9 +101,10 @@ public class ArmDeleteKeyVault_v1 : INoxCliAddin
                             await deletedKv.PurgeDeletedAsync(WaitUntil.Completed);
                         }
                     }
-                    catch
+                    catch(Exception ex)
                     {
                         //ignore
+                        throw;
                     }
                     
                     ctx.SetState(ActionState.Success);
