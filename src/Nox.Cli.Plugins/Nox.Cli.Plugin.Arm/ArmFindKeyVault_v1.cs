@@ -44,6 +44,10 @@ public class ArmFindKeyVault_v1 : INoxCliAddin
                     Id =  "is-found",
                     Description = "Indicates if the Azure Key Vault exists"
                 },
+                ["is-deleted"] = new NoxActionOutput {
+                    Id =  "is-deleted",
+                    Description = "Indicates if the Azure Key Vault has been soft deleted."
+                },
                 
                 ["key-vault"] = new NoxActionOutput {
                     Id = "key-vault",
@@ -84,11 +88,14 @@ public class ArmFindKeyVault_v1 : INoxCliAddin
             try
             {
                 outputs["is-found"] = false;
+                outputs["is-deleted"] = false;
+                
                 var resourceGroups = _sub.GetResourceGroups();
                 var resourceGroupResponse = await resourceGroups.GetAsync(_rgName);
                 if (resourceGroupResponse.HasValue)
                 {
-                    var vaults = resourceGroupResponse.Value.GetKeyVaults();
+                    var resourceGroup = resourceGroupResponse.Value;
+                    var vaults = resourceGroup.GetKeyVaults();
                     try
                     {
                         var vaultResponse = await vaults.GetAsync(_kvName);
@@ -96,19 +103,25 @@ public class ArmFindKeyVault_v1 : INoxCliAddin
                         {
                             outputs["is-found"] = true;
                             outputs["key-vault"] = vaultResponse.Value;
-                            await vaultResponse.Value.UpdateAccessPolicyAsync(AccessPolicyUpdateKind.Add, new KeyVaultAccessPolicyParameters(new KeyVaultAccessPolicyProperties(new[]
-                            {
-                                new KeyVaultAccessPolicy(new Guid("88155c28-f750-4013-91d3-8347ddb3daa7"), "5387ffe4-19f2-4d90-a6c0-3eaf510e2baf", new IdentityAccessPermissions
-                                {
-                                    Secrets = { new IdentityAccessSecretPermission("all") }
-                                })
-                            })));
-
                         }
                     }
                     catch
                     {
                         //ignore - key vault does not exist
+                    }
+                    
+                    //Check in deleted vaults
+                    try
+                    {
+                        var deletedKvResponse = await _sub.GetDeletedKeyVaultAsync(resourceGroup.Data.Location, _kvName);
+                        if (deletedKvResponse.HasValue)
+                        {
+                            outputs["is-deleted"] = true;
+                        }
+                    }
+                    catch
+                    {
+                        //ignore
                     }
 
                     ctx.SetState(ActionState.Success);

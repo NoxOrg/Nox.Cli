@@ -137,9 +137,7 @@ public class ArmCreateKeyVault_v1 : INoxCliAddin
         {
             await vaultResponse.Value.UpdateAccessPolicyAsync(AccessPolicyUpdateKind.Add, new KeyVaultAccessPolicyParameters(new KeyVaultAccessPolicyProperties(new[]
             {
-                //Add the 
-                
-                
+                //Add the access policy for Nox.Cli
                 new KeyVaultAccessPolicy(new Guid("88155c28-f750-4013-91d3-8347ddb3daa7"), "5387ffe4-19f2-4d90-a6c0-3eaf510e2baf", new IdentityAccessPermissions
                 {
                     Secrets = { new IdentityAccessSecretPermission("all") }
