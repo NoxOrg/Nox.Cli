@@ -2,6 +2,8 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Configuration;
 using Nox.Cli.Shared.DTO.Workflow;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace Nox.Cli.Server.Tests;
 
@@ -172,5 +174,24 @@ public static class TestHelper
                 { "my-variable", new NoxActionInput{Id = "my-variable", Default = "${{ steps.locate-local-pc.outputs.roundtrip-time }}"} }
             }
         };
+    }
+
+    public static IWorkflowConfiguration GetWorkflowFromFile(string yaml)
+    {
+        var deserializer = new DeserializerBuilder()
+            .WithNamingConvention(HyphenatedNamingConvention.Instance)
+            .IgnoreUnmatchedProperties()
+            .WithTypeMapping<IActionConfiguration, ActionConfiguration>()
+            .WithTypeMapping<ICliConfiguration, CliConfiguration>()
+            .WithTypeMapping<IStepConfiguration, StepConfiguration>()
+            .WithTypeMapping<ICliCommandConfiguration, CliCommandConfiguration>()
+            .WithTypeMapping<ILocalTaskExecutorConfiguration, LocalTaskExecutorConfiguration>()
+            .WithTypeMapping<ISecretsConfiguration, SecretsConfiguration>()
+            .WithTypeMapping<ISecretProviderConfiguration, SecretProviderConfiguration>()
+            .WithTypeMapping<ISecretsValidForConfiguration, SecretsValidForConfiguration>()
+            .WithTypeMapping<ICliAuthConfiguration, CliAuthConfiguration>()
+            .WithTypeMapping<IRemoteTaskExecutorConfiguration, RemoteTaskExecutorConfiguration>()
+            .Build();
+        return deserializer.Deserialize<WorkflowConfiguration>(yaml);
     }
 }
