@@ -61,7 +61,7 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
                 ["is-found"] = new NoxActionOutput
                 {
                     Id = "is-found",
-                    Description = "Boolean indicating if the group was found or not.",
+                    Description = "Boolean indicating if the private dns was found or not.",
                 }
             }
         };
@@ -115,6 +115,13 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
                     if (zoneResponse.HasValue)
                     {
                         var zone = zoneResponse.Value;
+                        switch (_recordType.ToLower())
+                        {
+                            case "a":
+                                var record = await zone.GetPrivateDnsARecordAsync(_recordName);
+                                outputs["is-found"] = true;        
+                                break;
+                        }
                         
                     }
                     else
