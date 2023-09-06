@@ -2,7 +2,7 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "delete key-vault",
+      "commandLineArgs": "test workflow",
       "workingDirectory": "/home/jan/demo/CliDemo",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
