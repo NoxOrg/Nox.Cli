@@ -9,6 +9,7 @@ using Nox.Cli.Abstractions.Constants;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Configuration;
+using Nox.Cli.Helpers;
 using Nox.Utilities.Configuration;
 using Nox.Utilities.Credentials;
 using RestSharp;
@@ -74,20 +75,8 @@ public class NoxCliCacheManager: INoxCliCacheManager
     public bool IsOnline {
         get
         {
-            var ping = new Ping();
-            try
-            {
-                if (_remoteUri.Host == "localhost") return true;
-                var reply = ping.Send(_remoteUri.Host, 10000);
-                if (reply.Status == IPStatus.Success)
-                {
-                    return true;
-                }
-            }
-            catch { 
-                // Ignore
-            }
-            return false;
+            if (_remoteUri.Host == "localhost") return true;
+            return PingHelper.ServicePing(_remoteUri.Host);
         }
     }
 

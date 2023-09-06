@@ -1,5 +1,6 @@
 using Azure;
 using Azure.ResourceManager.Dns;
+
 using Azure.ResourceManager.Resources;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;

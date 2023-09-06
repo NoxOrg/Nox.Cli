@@ -3,7 +3,7 @@
     "Nox.Cli": {
       "commandName": "Project",
       "commandLineArgs": "test workflow",
-      "workingDirectory": "/home/jan/demo/CliDemo",
+      "workingDirectory": "/home/jan/demo/CliDemoApi",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

@@ -1,4 +1,5 @@
 ﻿using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
@@ -35,7 +36,7 @@ public class NetworkPing_v1 : INoxCliAddin
         };
     }
 
-    private Ping? _ping;
+    private TcpClient? _client;
 
     private string? _host;
 
@@ -48,7 +49,7 @@ public class NetworkPing_v1 : INoxCliAddin
             _host = uri.Host;
         }
 
-        _ping = new Ping();
+        _client = new TcpClient();
 
         return Task.FromResult(true);
     }
@@ -59,7 +60,7 @@ public class NetworkPing_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (_ping == null)
+        if (_client == null)
         {
             ctx.SetErrorMessage("The ping action was not initialized");
         }
@@ -67,15 +68,7 @@ public class NetworkPing_v1 : INoxCliAddin
         {
             try
             {
-                var reply = await _ping.SendPingAsync(_host!);
-
-                if (reply.Status == IPStatus.Success)
-                {
-                    ctx.SetState(ActionState.Success);
-
-                    outputs["roundtrip-time"] = reply.RoundtripTime;
-                }
-
+                await _client.ConnectAsync(_host!, 80);
             }
             catch (Exception ex)
             {
@@ -89,11 +82,6 @@ public class NetworkPing_v1 : INoxCliAddin
     public Task EndAsync()
 
     {
-        if (_ping != null)
-        {
-            _ping.SendAsyncCancel();
-        }
-
         return Task.FromResult(true);
     }
 }
