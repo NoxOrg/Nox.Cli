@@ -119,7 +119,8 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
                         {
                             case "a":
                                 var record = await zone.GetPrivateDnsARecordAsync(_recordName);
-                                outputs["is-found"] = true;        
+                                outputs["is-found"] = true; 
+                                ctx.SetState(ActionState.Success);
                                 break;
                         }
                         
