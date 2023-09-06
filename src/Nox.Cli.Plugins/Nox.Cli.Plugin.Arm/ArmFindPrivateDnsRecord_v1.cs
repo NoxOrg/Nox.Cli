@@ -1,6 +1,4 @@
-using Azure;
-using Azure.ResourceManager.Dns;
-
+using Azure.ResourceManager.PrivateDns;
 using Azure.ResourceManager.Resources;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
@@ -113,7 +111,7 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
                 }
                 else
                 {
-                    var zoneResponse = await rg.GetDnsZoneAsync(_zoneName);
+                    var zoneResponse = await rg.GetPrivateDnsZoneAsync(_zoneName);
                     if (zoneResponse.HasValue)
                     {
                         var zone = zoneResponse.Value;
