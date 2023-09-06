@@ -72,7 +72,7 @@ public class AzDevOpsFindProject_v1 : INoxCliAddin
                 await _projectClient.GetProject(_projectName);
                 outputs["is-found"] = true;
             }
-            catch (Exception ex)
+            catch
             {
                 outputs["is-found"] = false;
             }
