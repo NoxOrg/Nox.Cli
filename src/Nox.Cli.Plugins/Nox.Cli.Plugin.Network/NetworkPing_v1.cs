@@ -1,4 +1,5 @@
-﻿using System.Net.NetworkInformation;
+﻿using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
@@ -29,7 +30,7 @@ public class NetworkPing_v1 : INoxCliAddin
             {
                 ["roundtrip-time"] = new NoxActionOutput {
                     Id = "roundtrip-time",
-                    Description = "The hostname or IP address",
+                    Description = "The time (ms) taken to lookup the host",
                     Value = 0L,
                 },
             },
@@ -68,7 +69,12 @@ public class NetworkPing_v1 : INoxCliAddin
         {
             try
             {
+                var sw = new Stopwatch();
+                sw.Start();
                 await _client.ConnectAsync(_host!, 80);
+                sw.Stop();
+                outputs["roundtrip-time"] = sw.ElapsedMilliseconds;
+                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {
