@@ -1,19 +1,22 @@
+using System.Net;
+using Azure;
 using Azure.ResourceManager.PrivateDns;
+using Azure.ResourceManager.PrivateDns.Models;
 using Azure.ResourceManager.Resources;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugin.AzureAd;
 
-public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
+public class ArmCreatePrivateDnsRecord_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "arm/find-private-dns-record@v1",
+            Name = "arm/create-private-dns-record@v1",
             Author = "Jan Schutte",
-            Description = "Find a private DNS record",
+            Description = "Create a private DNS record",
 
             Inputs =
             {
@@ -25,7 +28,7 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
                 },
                 ["resource-group-name"] = new NoxActionInput {
                     Id = "resource-group-name",
-                    Description = "The name of the Resource Group in which to find the record",
+                    Description = "The name of the Resource Group in which to create the record",
                     Default = string.Empty,
                     IsRequired = true
                 },
@@ -33,7 +36,7 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
                 ["zone-name"] = new NoxActionInput
                 {
                     Id = "zone-name",
-                    Description = "The name of the DNS zone in which to find the record",
+                    Description = "The name of the DNS zone in which to create the record",
                     Default = string.Empty,
                     IsRequired = true
                 },
@@ -41,7 +44,7 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
                 ["record-name"] = new NoxActionInput
                 {
                     Id = "record-name",
-                    Description = "The name of the DNS record to find",
+                    Description = "The name of the DNS record to create",
                     Default = string.Empty,
                     IsRequired = true
                 },
@@ -49,20 +52,18 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
                 ["record-type"] = new NoxActionInput
                 {
                     Id = "record-type",
-                    Description = "The type of the DNS record to find",
+                    Description = "The type of the DNS record to create",
                     Default = "A",
                     IsRequired = true
                 },
                 
-            },
-
-            Outputs =
-            {
-                ["is-found"] = new NoxActionOutput
+                ["ip-address"] = new NoxActionInput
                 {
-                    Id = "is-found",
-                    Description = "Boolean indicating if the private dns was found or not.",
-                }
+                    Id = "ip-address",
+                    Description = "The IP address of the DNS record to create",
+                    Default = "10.232.144.29",
+                    IsRequired = true
+                },
             }
         };
     }
@@ -72,6 +73,7 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
     private string? _zoneName;
     private string? _recordName;
     private string? _recordType;
+    private string? _ipAddress;
     private bool _isServerContext = false;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
@@ -81,6 +83,7 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
         _zoneName = inputs.Value<string>("zone-name");
         _recordName = inputs.Value<string>("record-name");
         _recordType = inputs.ValueOrDefault<string>("record-type", this);
+        _ipAddress = inputs.ValueOrDefault<string>("ip-address", this);
         return Task.CompletedTask;
     }
 
@@ -95,9 +98,10 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
             string.IsNullOrEmpty(_rgName) ||
             string.IsNullOrEmpty(_zoneName) ||
             string.IsNullOrWhiteSpace(_recordName) ||
-            string.IsNullOrWhiteSpace(_recordType))
+            string.IsNullOrWhiteSpace(_recordType) ||
+            string.IsNullOrWhiteSpace(_ipAddress))
         {
-            ctx.SetErrorMessage("The arm find-private-dns-record action was not initialized");
+            ctx.SetErrorMessage("The arm create-private-dns-record action was not initialized");
         }
         else
         {
@@ -118,9 +122,24 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
                         switch (_recordType.ToLower())
                         {
                             case "a":
-                                var record = await zone.GetPrivateDnsARecordAsync(_recordName);
-                                outputs["is-found"] = true; 
-                                ctx.SetState(ActionState.Success);
+                                try
+                                {
+                                    var records = zone.GetPrivateDnsARecords();
+                                    await records!.CreateOrUpdateAsync(WaitUntil.Completed, _recordName, new PrivateDnsARecordData
+                                    {
+                                        TtlInSeconds = 300,
+                                        PrivateDnsARecords = { new PrivateDnsARecordInfo
+                                        {
+                                            IPv4Address = IPAddress.Parse(_ipAddress)
+                                        }}
+                                    });
+                                    ctx.SetState(ActionState.Success);
+                                }
+                                catch(Exception ex)
+                                {
+                                    ctx.SetErrorMessage(ex.Message);
+                                }
+
                                 break;
                         }
                         
