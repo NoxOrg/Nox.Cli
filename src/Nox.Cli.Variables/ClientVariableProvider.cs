@@ -240,6 +240,11 @@ public class ClientVariableProvider: IClientVariableProvider
             action.Display.Error = ReplaceVariable(action.Display.Error).ToString()!;
         }
 
+        if (!string.IsNullOrWhiteSpace(action.Display?.IfCondition))
+        {
+            action.Display.IfCondition = ReplaceVariable(action.Display.IfCondition).ToString()!;
+        }
+
         if (!string.IsNullOrWhiteSpace(action.If))
         {
             action.If = ReplaceVariable(action.If).ToString()!;
