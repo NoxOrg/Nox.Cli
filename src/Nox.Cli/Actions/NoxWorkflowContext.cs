@@ -200,6 +200,10 @@ public class NoxWorkflowContext : INoxWorkflowContext
                     {
                         newAction.Display.Success = MaskSecretsInDisplayText(newAction.Display.Success);
                     }
+                    if (newAction.Display.IfCondition != null)
+                    {
+                        newAction.Display.IfCondition = MaskSecretsInDisplayText(newAction.Display.IfCondition);
+                    }
                 }
 
                 steps[newAction.Id] = newAction;

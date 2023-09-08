@@ -134,7 +134,14 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                 console.WriteLine();
                 console.MarkupLine(formattedTaskDescription);
             }
-            console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} is false");
+            if (string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.IfCondition))
+            {
+                console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because, if condition proved true");
+            }
+            else
+            {
+                console.MarkupLine($"{Emoji.Known.BlueCircle} {ctx.CurrentAction.Display.IfCondition.EscapeMarkup()}");
+            }
             return true;
         }
         
@@ -214,7 +221,15 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                 console.WriteLine();
                 console.MarkupLine(formattedTaskDescription);
             }
-            console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because {ctx.CurrentAction.If.EscapeMarkup()} is false");
+
+            if (string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.IfCondition))
+            {
+                console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because, if condition proved true");
+            }
+            else
+            {
+                console.MarkupLine($"{Emoji.Known.BlueCircle} {ctx.CurrentAction.Display.IfCondition.EscapeMarkup()}");
+            }
             return true;
         }
 
