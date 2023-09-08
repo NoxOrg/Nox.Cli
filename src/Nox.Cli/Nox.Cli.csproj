@@ -18,9 +18,9 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Copyright>Copyright (c) Andre Sharpe 2022</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>7.0.4.0</AssemblyVersion>
-    <FileVersion>7.0.4.0</FileVersion>
-    <PackageVersion>7.0.4</PackageVersion>
+    <AssemblyVersion>7.0.5.0</AssemblyVersion>
+    <FileVersion>7.0.5.0</FileVersion>
+    <PackageVersion>7.0.5</PackageVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/NoxOrg/Nox.Cli</PackageProjectUrl>
     <RepositoryUrl>https://github.com/NoxOrg/Nox.Cli.git</RepositoryUrl>
