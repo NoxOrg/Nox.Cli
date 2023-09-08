@@ -1,3 +1,4 @@
+using Azure;
 using Azure.ResourceManager.PrivateDns;
 using Azure.ResourceManager.Resources;
 using Nox.Cli.Abstractions;
@@ -103,7 +104,7 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
         {
             try
             {
-                
+                outputs["is-found"] = false;
                 var rg = await GetResourceGroup();
                 if (rg == null)
                 {
@@ -112,7 +113,7 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
                 else
                 {
                     var zoneResponse = await rg.GetPrivateDnsZoneAsync(_zoneName);
-                    if (zoneResponse.HasValue)
+                    if (zoneResponse is { HasValue: true })
                     {
                         var zone = zoneResponse.Value;
                         switch (_recordType.ToLower())
@@ -120,15 +121,10 @@ public class ArmFindPrivateDnsRecord_v1 : INoxCliAddin
                             case "a":
                                 var record = await zone.GetPrivateDnsARecordAsync(_recordName);
                                 outputs["is-found"] = true; 
-                                ctx.SetState(ActionState.Success);
                                 break;
                         }
-                        
                     }
-                    else
-                    {
-                        ctx.SetErrorMessage($"Unable to locate the zone: {_zoneName} in resource group: {_rgName}");
-                    }
+                    ctx.SetState(ActionState.Success);
                 }
               
             }
