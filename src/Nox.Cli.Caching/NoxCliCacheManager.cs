@@ -240,6 +240,32 @@ public class NoxCliCacheManager: INoxCliCacheManager
     {
         _cache = JsonSerializer.Deserialize<NoxCliCache>(File.ReadAllText(_cacheFile))!;
         _cache.ClearChanges();
+        ValidateLocalCache();
+    }
+
+    private void ValidateLocalCache()
+    {
+        var workflows = new List<RemoteFileInfo>();
+        foreach (var item in _cache!.WorkflowInfo)
+        {
+            if (File.Exists(Path.Combine(_workflowCachePath, item.Name)))
+            {
+                workflows.Add(item);
+            }
+        }
+
+        _cache.WorkflowInfo = workflows;
+
+        var templates = new List<RemoteFileInfo>();
+        foreach (var item in _cache!.TemplateInfo)
+        {
+            if (File.Exists(Path.Combine(_templateCachePath, item.Name)))
+            {
+                templates.Add(item);
+            }
+        }
+
+        _cache.TemplateInfo = templates;
     }
     
     internal void GetOnlineWorkflowsAndManifest(IDictionary<string, string> yamlFiles)
