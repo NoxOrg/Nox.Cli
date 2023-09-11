@@ -584,10 +584,9 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
     internal string GetOnlineTemplate(string name)
     {
-        var client = new RestClient(GetRemoteUri("/templates"));
-        var fileRequest = new RestRequest() { Method = Method.Post };
+        var client = new RestClient(GetRemoteUri($"/templates/{name}"));
+        var fileRequest = new RestRequest() { Method = Method.Get };
         fileRequest.AddHeader("Accept", "application/json");
-        fileRequest.AddJsonBody($"{{\"FilePath\": \"{name}\"}}");
         var fileContent = client.Execute(fileRequest).Content;
 
         if (fileContent == null) throw new Exception($"Couldn't download template {name}");
