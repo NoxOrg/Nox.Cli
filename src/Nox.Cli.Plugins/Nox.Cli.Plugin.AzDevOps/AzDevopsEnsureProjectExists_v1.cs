@@ -48,7 +48,7 @@ public class AzDevopsEnsureProjectExists_v1 : INoxCliAddin
                 },
                 ["success-message"] = new NoxActionOutput {
                     Id = "success-message",
-                    Description = "A message specifying if the project was found or created",
+                    Description = "A message indicating if the project was found or created",
                 },
             }
         };

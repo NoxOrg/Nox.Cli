@@ -46,7 +46,7 @@ public class ArmFindCnameRecord_v1 : INoxCliAddin
                 ["is-found"] = new NoxActionOutput
                 {
                     Id = "is-found",
-                    Description = "Boolean indicating if the group was found or not.",
+                    Description = "Boolean indicating if the record was found or not.",
                 }
             }
         };
