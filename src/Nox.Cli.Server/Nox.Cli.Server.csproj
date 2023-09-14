@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-Nox.Cli.Server-EDB29744-0909-49A3-8A3D-4A9E3529BF5A</UserSecretsId>
-    <AssemblyVersion>1.0.17.0</AssemblyVersion>
+    <AssemblyVersion>7.0.7.0</AssemblyVersion>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
   <ItemGroup>
@@ -16,7 +16,7 @@
     <PackageReference Include="RestSharp" Version="110.2.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="7.0.8" />
-    <PackageReference Include="YamlDotNet" Version="13.1.1" />
+    <PackageReference Include="YamlDotNet" Version="13.3.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Nox.Cli.Caching\Nox.Cli.Caching.csproj" />

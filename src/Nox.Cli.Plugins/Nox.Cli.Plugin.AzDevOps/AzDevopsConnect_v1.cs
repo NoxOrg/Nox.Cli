@@ -37,7 +37,7 @@ public class AzDevopsConnect_v1 : INoxCliAddin
             {
                 ["connection"] = new NoxActionOutput {
                     Id = "connection",
-                    Description = "The connection to the devops project",
+                    Description = "The connection to the devops instance",
                 },
             }
         };

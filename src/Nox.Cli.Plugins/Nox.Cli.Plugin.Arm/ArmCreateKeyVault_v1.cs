@@ -27,13 +27,13 @@ public class ArmCreateKeyVault_v1 : INoxCliAddin
                 },
                 ["resource-group-name"] = new NoxActionInput {
                     Id = "resource-group-name",
-                    Description = "The name of the Resource Group in which to find the Key Vault",
+                    Description = "The name of the Resource Group in which to create the Key Vault",
                     Default = string.Empty,
                     IsRequired = true
                 },
                 ["key-vault-name"] = new NoxActionInput {
                     Id = "key-vault-name",
-                    Description = "The name of the key vault to find",
+                    Description = "The name of the key vault to create",
                     Default = string.Empty,
                     IsRequired = true
                 }

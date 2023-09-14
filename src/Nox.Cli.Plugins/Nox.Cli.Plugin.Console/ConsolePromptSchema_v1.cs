@@ -4,6 +4,8 @@ using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Abstractions.Helpers;
+using Nox.Cli.Helpers;
 using Nox.Cli.Plugin.Console.JsonSchema;
 using RestSharp;
 using Spectre.Console;
@@ -50,6 +52,13 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                     Default = new string[] {},
                     IsRequired = false
                 },
+                
+                ["optional-prompts"] = new NoxActionInput {
+                    Id = "optional-prompts",
+                    Description = "The properties to include optional prompts for",
+                    Default = new Dictionary<string, string>(),
+                    IsRequired = false
+                },
 
                 ["defaults"] = new NoxActionInput {
                     Id = "defaults",
@@ -86,9 +95,11 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
     private string[]? _excludedPrompts;
     
+    private Dictionary<string, string>? _optionalPrompts;
+    
     private Dictionary<string,object>? _defaults = null;
 
-    private readonly StringBuilder _sbYaml = new();
+    private StringBuilder _yaml = new();
 
     private Dictionary<string,string>? _fileOptions = null;
 
@@ -113,13 +124,13 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         _schema = inputs.Value<string>("schema");
 
         _includedPrompts = inputs.Value<string[]>("include-prompts");
-
+        
+        _optionalPrompts = inputs.Value<Dictionary<string, string>>("optional-prompts");
 
         _excludedPrompts = inputs.Value<string[]>("exclude-prompts");
 
         _defaults = inputs.Value<Dictionary<string,object>>("defaults");
 
-        //_fileOptions = inputs.Value<Dictionary<string, string>>("output-file");
         _fileOptions = inputs.Value<Dictionary<string, string>>("output-file");
 
         return Task.CompletedTask;
@@ -173,14 +184,6 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
                     if (jsonSchema != null)
                     {
-                        if (_schemaUrl != null)
-                        {
-                            _sbYaml.AppendLine($"#");
-                            _sbYaml.AppendLine($"# yaml-language-server: $schema={_schemaUrl}");
-                        }
-                        _sbYaml.AppendLine($"#");
-                        _sbYaml.AppendLine($"");
-
                         await ProcessSchema(jsonSchema);
 
                         foreach(var (key,value) in _responses)
@@ -191,20 +194,27 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
                         if (_fileOptions != null && _fileOptions.ContainsKey("filename"))
                         {
-                            _sbYaml.Insert(0,$"# {Path.GetFileName(_fileOptions["filename"])}{Environment.NewLine}");
-                            _sbYaml.Insert(0,$"#{Environment.NewLine}");
-
-                            var contents = _sbYaml.ToString();
-
-                            //await File.WriteAllTextAsync("/home/jan/Downloads/solution.yaml", contents);
-
+                            _yaml = YamlCleaner.RemoveEmptyNodes(_yaml);
+                            
+                            _yaml.Insert(0, Environment.NewLine);
+                            
+                            if (_schemaUrl != null)
+                            {
+                                _yaml.Insert(0, $"#{Environment.NewLine}");
+                                _yaml.Insert(0, $"# yaml-language-server: $schema={_schemaUrl}{Environment.NewLine}");
+                            }
+                            
+                            _yaml.Insert(0, $"#{Environment.NewLine}");
+                            _yaml.Insert(0, $"# {Path.GetFileName(_fileOptions["filename"])}{Environment.NewLine}");
+                            _yaml.Insert(0, $"#{Environment.NewLine}");
+                            
                             var outputFilePath = _fileOptions["filename"];
                             if (_fileOptions.TryGetValue("folder", out var folder))
                             {
                                 outputFilePath = Path.Combine(folder, outputFilePath);
                             }
                             
-                            File.WriteAllText(outputFilePath,contents);
+                            await File.WriteAllTextAsync(outputFilePath, _yaml.ToString());
                             outputs["file-path"] = outputFilePath;
 
                             AnsiConsole.WriteLine();
@@ -281,6 +291,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     private async Task ProcessSchema(JsonSchema.JsonSchema schema, string rootKey = "", string key = "")
     {
         var newKey = $"{rootKey}.{key}".TrimStart('.');
+        
         var prefix = $"[grey]{newKey.PadRight(40, '.').EscapeMarkup()}[/] ";
         var yamlSpacing = new string(' ', newKey.Count(d => d == '.') * 2);
         
@@ -299,7 +310,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         {
             if (_defaults != null && _defaults.Any(d => key.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
             {
-                _sbYaml.AppendLine($"{key}: {_defaults[key]}");
+                _yaml.AppendLine($"{key}: {_defaults[key]}");
                 _responses[newKey] = _defaults[newKey];
             }
 
@@ -310,7 +321,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         {
             if (_defaults != null && _defaults.Any(d => newKey.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
             {
-                _sbYaml.AppendLine($"{key}: {_defaults[newKey]}");
+                _yaml.AppendLine($"{key}: {_defaults[newKey]}");
                 _responses[prefix] = _defaults[newKey];
             }
 
@@ -323,6 +334,21 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
             AnsiConsole.MarkupLine($"[yellow]{schema.Description.EscapeMarkup()}[/]");
         }
 
+        if (_optionalPrompts != null && _optionalPrompts.TryGetValue(newKey, out var optionalPrompt) && schema.AnyOf == null)
+        {
+            if (AnsiConsole.Prompt(
+                    new TextPrompt<char>($"[grey]{yamlSpacing}[/] [bold]{optionalPrompt}[/]?")
+                        .DefaultValueStyle(Style.Parse("mediumpurple3_1"))
+                        .ChoicesStyle(Style.Parse("mediumpurple3_1"))
+                        .PromptStyle(Style.Parse("seagreen1"))
+                        .DefaultValue('y')
+                        .AddChoice('y')
+                        .AddChoice('n')
+                ) != 'y')
+                return;
+        }
+
+        
         var message = (schema.Description ?? newKey).EscapeMarkup();
         var prompt = $"{prefix}[bold]{message}[/]:";
         var isRequired = schema.Required != null && schema.Required.Contains(newKey);
@@ -360,7 +386,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                 case SchemaType.Object:
                     if (!key.EndsWith(']'))
                     {
-                        _sbYaml.AppendLine();
+                        _yaml.AppendLine("");
                         AppendKey(yamlSpacing, key);
                     }
                     foreach (var prop in schema.Properties!)
@@ -374,7 +400,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                     {
                         if (schema.Items.AnyOf != null)
                         {
-                            _sbYaml.AppendLine();
+                            _yaml.AppendLine("");
                             AppendKey(yamlSpacing, key);
                             
                             var index = 0;
@@ -382,7 +408,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                             {
                                 _isArrayStart = true;
                                 await ProcessSchema(schema.Items.AnyOf[0], rootKey, $"{key}[{index}]");
-                                _sbYaml.AppendLine();
+                                _yaml.AppendLine("");
                                 AnsiConsole.WriteLine();
                                 index++;
                             } while (
@@ -423,7 +449,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                 .AddChoice('n')
         ) == 'y';
 
-        _sbYaml.AppendLine($"{yamlPrefix}{key}: {response.ToString().ToLower()}");
+        _yaml.AppendLine($"{yamlPrefix}{key}: {response.ToString().ToLower()}");
         _responses[newKey] = response;
     }
     
@@ -445,7 +471,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
         var response = AnsiConsole.Prompt(spectrePrompt);
 
-        _sbYaml.AppendLine($"{yamlPrefix}{key}: {response}");
+        _yaml.AppendLine($"{yamlPrefix}{key}: {response}");
         _responses[newKey] = response;
     }
 
@@ -468,7 +494,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         var response = AnsiConsole.Prompt(spectrePrompt);
         if (!string.IsNullOrEmpty(response))
         {
-            _sbYaml.AppendLine($"{yamlPrefix}{key}: {response}");
+            _yaml.AppendLine($"{yamlPrefix}{key}: {response}");
             _responses[newKey] = response;
         }
     }
@@ -476,15 +502,16 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     private void PromptEnum(string prompt, string rootKey, string key, string yamlPrefix, List<string> enumList)
     {
         var newKey = $"{rootKey}.{key}".TrimStart('.');
-        var response = AnsiConsole.Prompt(
-            new SelectionPrompt<string>()
-                .Title(prompt)
-                .HighlightStyle(Style.Parse("mediumpurple3_1"))
-                .AddChoices(enumList.ToArray())
-        );
+
+        var spectrePrompt = new SelectionPrompt<string>()
+            .Title(prompt)
+            .HighlightStyle(Style.Parse("mediumpurple3_1"))
+            .AddChoices(enumList.ToArray());
+        
+        var response = AnsiConsole.Prompt(spectrePrompt);
                                     
         _responses[newKey] = response;
-        _sbYaml.AppendLine($"{yamlPrefix}{key}: {response}");
+        _yaml.AppendLine($"{yamlPrefix}{key}: {response}");
         AnsiConsole.MarkupLine($"{prompt} [seagreen1]{_responses[newKey]}[/]");
     }
     
@@ -496,11 +523,12 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                 .Title(prompt)
                 .HighlightStyle(Style.Parse("mediumpurple3_1"))
                 .AddChoices(enumList.ToArray())
+                
         );
 
         var responseValue = String.Join(',', response);
         _responses[newKey] = responseValue; 
-        _sbYaml.AppendLine($"{yamlPrefix}{key}: [{responseValue}]");
+        _yaml.AppendLine($"{yamlPrefix}{key}: [{responseValue}]");
         AnsiConsole.MarkupLine($"{prompt} [seagreen1]{_responses[newKey]}[/]");
     }
 
@@ -508,7 +536,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     {
         if (!string.IsNullOrWhiteSpace(key))
         {
-            _sbYaml.AppendLine($"{yamlSpacing}{key}:");    
+            _yaml.AppendLine($"{yamlSpacing}{key}:");    
         }
     }
     
@@ -517,11 +545,10 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     {
         if (_defaults?.ContainsKey(key) ?? false)
         {
-            return (T)_defaults[key];
+            return (T)Convert.ChangeType(_defaults[key], typeof(T));
         }
 
         return default;
     }
-    
 }
 
