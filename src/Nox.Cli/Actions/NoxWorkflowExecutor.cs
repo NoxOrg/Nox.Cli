@@ -53,50 +53,54 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         bool success = true;
 
-        while (ctx.CurrentAction != null)
+        while (ctx.CurrentJob != null)
         {
-            if (ctx.CancellationToken != null)
+            while (ctx.CurrentAction != null)
             {
-                _console.MarkupLine($"[yellow3]Workflow cancelled due to: {ctx.CancellationToken.Reason}[/]");
-                break;
-            }
+                if (ctx.CancellationToken != null)
+                {
+                    _console.MarkupLine($"[yellow3]Workflow cancelled due to: {ctx.CancellationToken.Reason}[/]");
+                    break;
+                }
             
-            var taskDescription = $"Step {ctx.CurrentAction.Sequence}: {ctx.CurrentAction.Name}".EscapeMarkup();
+                var taskDescription = $"Step {ctx.CurrentAction.Sequence}: {ctx.CurrentAction.Name}".EscapeMarkup();
 
-            var formattedTaskDescription = $"[bold mediumpurple3_1]{taskDescription}[/]";
+                var formattedTaskDescription = $"[bold mediumpurple3_1]{taskDescription}[/]";
 
-            var requiresConsole = ctx.CurrentAction.ActionProvider.Discover().RequiresConsole;
+                var requiresConsole = ctx.CurrentAction.ActionProvider.Discover().RequiresConsole;
             
-            if (ctx.CurrentAction.RunAtServer == true)
-            {
-                _console.WriteLine();
-                _console.MarkupLine(formattedTaskDescription);
-                _console.MarkupLine($"    {Emoji.Known.DesktopComputer} [bold yellow]Running at: {_serverIntegration!.Endpoint}[/]");
-                success = await _console.Status().Spinner(Spinner.Known.Clock)
-                    .StartAsync(formattedTaskDescription, async _ =>
-                        await ProcessServerTask(_console, ctx, formattedTaskDescription)
-                    );
-            }
-            else
-            {
-                if (requiresConsole)
+                if (ctx.CurrentAction.RunAtServer == true)
                 {
                     _console.WriteLine();
                     _console.MarkupLine(formattedTaskDescription);
-                    success = await ProcessTask(_console, ctx);
-                }
-                else // show spinner
-                {
+                    _console.MarkupLine($"    {Emoji.Known.DesktopComputer} [bold yellow]Running at: {_serverIntegration!.Endpoint}[/]");
                     success = await _console.Status().Spinner(Spinner.Known.Clock)
                         .StartAsync(formattedTaskDescription, async _ =>
-                            await ProcessTask(_console, ctx, formattedTaskDescription)
+                            await ProcessServerTask(_console, ctx, formattedTaskDescription)
                         );
                 }
+                else
+                {
+                    if (requiresConsole)
+                    {
+                        _console.WriteLine();
+                        _console.MarkupLine(formattedTaskDescription);
+                        success = await ProcessTask(_console, ctx);
+                    }
+                    else // show spinner
+                    {
+                        success = await _console.Status().Spinner(Spinner.Known.Clock)
+                            .StartAsync(formattedTaskDescription, async _ =>
+                                await ProcessTask(_console, ctx, formattedTaskDescription)
+                            );
+                    }
+                }
+
+                if (!success) break;
+
+                ctx.NextStep();
             }
-
-            if (!success) break;
-
-            ctx.NextStep();
+            ctx.NextJob();
         }
 
         await Task.WhenAll(_processedActions.Where(p => p.RunAtServer == false).Select(p => p.ActionProvider.EndAsync()));

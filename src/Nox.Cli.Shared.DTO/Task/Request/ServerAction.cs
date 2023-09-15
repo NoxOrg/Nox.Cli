@@ -7,7 +7,7 @@ public class ServerAction: INoxAction
     public int Sequence { get; set; }
     public string Id { get; set; } = string.Empty;
     public string? If { get; set; }
-    public string Job { get; set; } = string.Empty;
+    public string JobId { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Uses { get; set; } = string.Empty;
     public bool? RunAtServer { get; set; }

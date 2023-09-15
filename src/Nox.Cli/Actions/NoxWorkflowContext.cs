@@ -5,6 +5,7 @@ using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
 using System.Diagnostics;
+using System.Threading.Tasks.Dataflow;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Secrets.Abstractions;
@@ -15,19 +16,24 @@ namespace Nox.Cli.Actions;
 public class NoxWorkflowContext : INoxWorkflowContext
 {
     private readonly IWorkflowConfiguration _workflow;
-    private readonly IDictionary<string, INoxAction> _steps;
+    private readonly IDictionary<string, INoxJob> _jobs;
+    private IDictionary<string, INoxAction> _steps;
     private readonly IClientVariableProvider _varProvider;
     private readonly INoxCliCacheManager _cacheManager;
     private readonly INoxSecretsResolver? _secretsResolver;
+
+    private int _currentJobSequence = 0;
+    private INoxJob? _currentJob;
+    private INoxJob? _nextJob;
     
     private int _currentActionSequence = 0;
-
-    private INoxAction? _previousAction;
     private INoxAction? _currentAction;
     private INoxAction? _nextAction;
 
     private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+secret[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+    public INoxJob? CurrentJob => _currentJob;
+    
     public INoxAction? CurrentAction => _currentAction;
 
     public NoxWorkflowContext(
@@ -43,17 +49,30 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _varProvider = new ClientVariableProvider(workflow, orgSecretResolver, projectConfig, lteConfig, cacheManager.Cache);
         _cacheManager = cacheManager;
         _secretsResolver = secretsResolver;
-        _steps = ParseSteps();
+        _jobs = ParseWorkflow();
         _currentActionSequence = 0;
-        NextStep();
+        NextJob();
     }
 
+    public void NextJob()
+    {
+        _currentJobSequence++;
+        _currentJob = _jobs.Select(j => j.Value).FirstOrDefault(j => j.Sequence == _currentJobSequence);
+        _nextJob = _jobs.Select(j => j.Value).FirstOrDefault(j => j.Sequence == _currentJobSequence + 1);
+        
+        if (_currentJob != null)
+        {
+            _currentActionSequence = _currentJob.FirstStepSequence;
+            _steps = _currentJob.Steps;
+            NextStep();
+        }
+    }
+    
     public void NextStep()
     {
+        _currentAction = _steps.Select(kv => kv.Value).FirstOrDefault(a => a.Sequence == _currentActionSequence);
+        _nextAction = _steps.Select(kv => kv.Value).FirstOrDefault(a => a.Sequence == _currentActionSequence + 1);
         _currentActionSequence++;
-        _previousAction = _currentAction;
-        _currentAction = _steps.Select(kv => kv.Value).Where(a => a.Sequence == _currentActionSequence).FirstOrDefault();
-        _nextAction = _steps.Select(kv => kv.Value).Where(a => a.Sequence == _currentActionSequence + 1).FirstOrDefault();
     }
 
     public bool IsServer => false;
@@ -135,80 +154,124 @@ public class NoxWorkflowContext : INoxWorkflowContext
     {
         return _varProvider.GetUnresolvedInputVariables(action);
     }
+
+    private Dictionary<string, INoxJob> ParseWorkflow()
+    {
+        var jobSequence = 1;
+        var stepSequence = 1;
+        var jobs = new Dictionary<string, INoxJob>(StringComparer.OrdinalIgnoreCase);
+        
+        foreach (var jobConfiguration in _workflow.Jobs)
+        {
+            var jobKey = jobConfiguration.Id;
+            
+            if (jobs.ContainsKey(jobConfiguration.Id))
+            {
+                throw new NoxCliException($"Job Id {jobKey} exists more than once in your workflow configuration. Job Ids must be unique in a workflow configuration");
+            }
+
+            var newJob = new NoxJob
+            {
+                Sequence = jobSequence,
+                Id = jobConfiguration.Id,
+                Name = jobConfiguration.Name,
+                If = jobConfiguration.If,
+                Display = jobConfiguration.Display,
+                FirstStepSequence = stepSequence,
+                Steps = ParseSteps(jobConfiguration, ref stepSequence)
+            };
+
+            jobSequence++;
+            
+            if (newJob.Display != null)
+            {
+                if (!string.IsNullOrEmpty(newJob.Display.Success))
+                {
+                    newJob.Display.Success = MaskSecretsInDisplayText(newJob.Display.Success);
+                }
+
+                if (!string.IsNullOrEmpty(newJob.Display.IfCondition))
+                {
+                    newJob.Display.IfCondition = MaskSecretsInDisplayText(newJob.Display.IfCondition);
+                }
+            }
+
+            jobs[jobKey] = newJob;
+        }
+
+        return jobs;
+    }
     
-    private Dictionary<string, INoxAction> ParseSteps()
+    private Dictionary<string, INoxAction> ParseSteps(IJobConfiguration jobConfiguration, ref int sequence)
     {
         var steps = new Dictionary<string, INoxAction>(StringComparer.OrdinalIgnoreCase);
-        var sequence = 0;
-        foreach (var (jobKey, stepConfiguration) in _workflow.Jobs)
+        
+        foreach (var step in jobConfiguration.Steps)
         {
-            foreach (var step in stepConfiguration.Steps)
+            if (steps.ContainsKey(step.Id))
             {
-                if (steps.ContainsKey(step.Id))
-                {
-                    throw new NoxCliException($"Step Id {step.Id} exists more than once in your workflow configuration. Step Ids must be unique in a workflow configuration");
-                }
-                
-                sequence++;
-
-                if (string.IsNullOrWhiteSpace(step.Uses))
-                {
-                    throw new Exception($"Step {sequence} ({step.Name}) is missing a 'uses' property");
-                }
-
-                var actionType = NoxWorkflowContextHelpers.ResolveActionProviderTypeFromUses(step.Uses);
-
-                if (actionType == null)
-                {
-                    throw new Exception($"Step {sequence} ({step.Name}) uses {step.Uses} which was not found");
-                }
-
-                var newAction = new NoxAction()
-                {
-                    Sequence = sequence,
-                    Id = step.Id,
-                    Job = jobKey,
-                    Name = step.Name,
-                    Uses = step.Uses,
-                    If = step.If,
-                    Validate = step.Validate,
-                    Display = step.Display,
-                    RunAtServer = step.RunAtServer,
-                    ContinueOnError = step.ContinueOnError,
-                };
-                newAction.ActionProvider = (INoxCliAddin)Activator.CreateInstance(actionType)!;
-
-                foreach (var (withKey, withValue) in step.With)
-                {
-                    var input = new NoxActionInput
-                    {
-                        Id = withKey,
-                        Default = withValue
-                    };
-
-                    newAction.Inputs.Add(withKey, input);
-                }
-                
-                if (newAction.Display != null)
-                {
-                    if (newAction.Display.Error != null)
-                    {
-                        newAction.Display.Error = MaskSecretsInDisplayText(newAction.Display.Error);
-                    }
-
-                    if (newAction.Display.Success != null)
-                    {
-                        newAction.Display.Success = MaskSecretsInDisplayText(newAction.Display.Success);
-                    }
-                    if (newAction.Display.IfCondition != null)
-                    {
-                        newAction.Display.IfCondition = MaskSecretsInDisplayText(newAction.Display.IfCondition);
-                    }
-                }
-
-                steps[newAction.Id] = newAction;
-
+                throw new NoxCliException($"Step {step.Name} in job: {jobConfiguration.Name} exists more than once. Step Ids must be unique in a job configuration");
             }
+
+            if (string.IsNullOrWhiteSpace(step.Uses))
+            {
+                throw new Exception($"Step: {step.Name} in job: {jobConfiguration.Name} is missing a 'uses' property");
+            }
+
+            var actionType = NoxWorkflowContextHelpers.ResolveActionProviderTypeFromUses(step.Uses);
+
+            if (actionType == null)
+            {
+                throw new Exception($"Step: {step.Name} in job: {jobConfiguration.Name} uses action: {step.Uses} which was not found");
+            }
+
+            var newAction = new NoxAction()
+            {
+                Sequence = sequence,
+                Id = step.Id,
+                JobId = jobConfiguration.Id,
+                Name = step.Name,
+                Uses = step.Uses,
+                If = step.If,
+                Validate = step.Validate,
+                Display = step.Display,
+                RunAtServer = step.RunAtServer,
+                ContinueOnError = step.ContinueOnError,
+            };
+            newAction.ActionProvider = (INoxCliAddin)Activator.CreateInstance(actionType)!;
+            
+            sequence++;
+
+            foreach (var (withKey, withValue) in step.With)
+            {
+                var input = new NoxActionInput
+                {
+                    Id = withKey,
+                    Default = withValue
+                };
+
+                newAction.Inputs.Add(withKey, input);
+            }
+
+            if (newAction.Display != null)
+            {
+                if (!string.IsNullOrEmpty(newAction.Display.Error))
+                {
+                    newAction.Display.Error = MaskSecretsInDisplayText(newAction.Display.Error);
+                }
+
+                if (!string.IsNullOrEmpty(newAction.Display.Success))
+                {
+                    newAction.Display.Success = MaskSecretsInDisplayText(newAction.Display.Success);
+                }
+
+                if (!string.IsNullOrEmpty(newAction.Display.IfCondition))
+                {
+                    newAction.Display.IfCondition = MaskSecretsInDisplayText(newAction.Display.IfCondition);
+                }
+            }
+
+            steps[newAction.Id] = newAction;
         }
 
         return steps;

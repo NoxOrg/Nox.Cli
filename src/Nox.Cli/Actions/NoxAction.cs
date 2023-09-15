@@ -8,7 +8,7 @@ public class NoxAction: INoxAction
     public int Sequence { get; set; } = 0;
     public string Id { get; set; } = string.Empty;
     public string? If { get; set; } = string.Empty;
-    public string Job { get; set; } = string.Empty;
+    public string JobId { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Uses { get; set; } = string.Empty;
     public bool? RunAtServer { get; set; } = false;

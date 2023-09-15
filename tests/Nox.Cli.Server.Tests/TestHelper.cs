@@ -183,7 +183,7 @@ public static class TestHelper
             .IgnoreUnmatchedProperties()
             .WithTypeMapping<IActionConfiguration, ActionConfiguration>()
             .WithTypeMapping<ICliConfiguration, CliConfiguration>()
-            .WithTypeMapping<IStepConfiguration, StepConfiguration>()
+            .WithTypeMapping<IJobConfiguration, JobConfiguration>()
             .WithTypeMapping<ICliCommandConfiguration, CliCommandConfiguration>()
             .WithTypeMapping<ILocalTaskExecutorConfiguration, LocalTaskExecutorConfiguration>()
             .WithTypeMapping<ISecretsConfiguration, SecretsConfiguration>()
