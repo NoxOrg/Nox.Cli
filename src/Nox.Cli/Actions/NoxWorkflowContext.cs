@@ -5,7 +5,6 @@ using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
 using System.Diagnostics;
-using System.Threading.Tasks.Dataflow;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Secrets.Abstractions;
@@ -31,7 +30,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private INoxAction? _nextAction;
 
     private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+secret[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
+    
     public INoxJob? CurrentJob => _currentJob;
     
     public INoxAction? CurrentAction => _currentAction;
@@ -51,6 +50,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _secretsResolver = secretsResolver;
         _jobs = ParseWorkflow();
         _currentActionSequence = 0;
+        _steps = new Dictionary<string, INoxAction>();
         NextJob();
     }
 

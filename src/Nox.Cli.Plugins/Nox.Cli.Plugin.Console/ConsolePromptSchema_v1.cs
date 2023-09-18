@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Helpers;
 using Nox.Cli.Plugin.Console.JsonSchema;
 using RestSharp;
@@ -217,8 +216,8 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                             await File.WriteAllTextAsync(outputFilePath, _yaml.ToString());
                             outputs["file-path"] = outputFilePath;
 
-                            AnsiConsole.WriteLine();
-                            AnsiConsole.MarkupLine($"[bold mediumpurple3_1]Created {_fileOptions["filename"].EscapeMarkup()}[/]");
+                            //AnsiConsole.WriteLine();
+                            //AnsiConsole.MarkupLine($"[bold mediumpurple3_1]Created {_fileOptions["filename"].EscapeMarkup()}[/]");
                         }
 
                         ctx.SetState(ActionState.Success);
