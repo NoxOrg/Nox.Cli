@@ -11,10 +11,4 @@
     <PackageReference Include="Nox.Secrets" Version="7.0.14" />
     <PackageReference Include="Nox.Solution" Version="7.0.15" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Spectre.Console">
-      <HintPath>..\Nox.Cli\bin\Debug\net7.0\Spectre.Console.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 </Project>
