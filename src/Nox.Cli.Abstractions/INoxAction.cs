@@ -5,7 +5,7 @@ public interface INoxAction
     int Sequence { get; set; }
     string Id { get; set; }
     string? If { get; set; }
-    string Job { get; set; }
+    string JobId { get; set; }
     string Name { get; set; }
     string Uses { get; set; }
     

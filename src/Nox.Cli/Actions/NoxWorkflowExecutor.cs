@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Nox.Cli.Abstractions;
+﻿using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Secrets;
@@ -38,7 +37,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         _cacheManager = cacheManager;
         _noxSecretsResolver = noxSecretsResolver;
     }
-    
+
     public async Task<bool> Execute(IWorkflowConfiguration workflow)
     {
         var workflowDescription = $"[seagreen1]Executing workflow: {workflow.Name.EscapeMarkup()}[/]";
@@ -47,56 +46,73 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         var watch = System.Diagnostics.Stopwatch.StartNew();
 
-        var ctx = _console.Status()
+        var success = true;
+
+        var workflowCtx = _console.Status()
             .Spinner(Spinner.Known.Clock)
             .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _orgSecretResolver, _cacheManager, _lteConfig, _noxSecretsResolver));
 
-        bool success = true;
-
-        while (ctx.CurrentAction != null)
+        while (workflowCtx.CurrentJob != null)
         {
-            if (ctx.CancellationToken != null)
+            if (workflowCtx.CancellationToken != null)
             {
-                _console.MarkupLine($"[yellow3]Workflow cancelled due to: {ctx.CancellationToken.Reason}[/]");
+                _console.MarkupLine($"[yellow3]Workflow cancelled due to: {workflowCtx.CancellationToken.Reason}[/]");
                 break;
             }
-            
-            var taskDescription = $"Step {ctx.CurrentAction.Sequence}: {ctx.CurrentAction.Name}".EscapeMarkup();
 
-            var formattedTaskDescription = $"[bold mediumpurple3_1]{taskDescription}[/]";
+            _console.WriteLine();
+            ConsoleRootLine($"[mediumpurple3_1]{workflowCtx.CurrentJob.Name.EscapeMarkup()}: [/]");
 
-            var requiresConsole = ctx.CurrentAction.ActionProvider.Discover().RequiresConsole;
-            
-            if (ctx.CurrentAction.RunAtServer == true)
+            while (workflowCtx.CurrentAction != null)
             {
-                _console.WriteLine();
-                _console.MarkupLine(formattedTaskDescription);
-                _console.MarkupLine($"    {Emoji.Known.DesktopComputer} [bold yellow]Running at: {_serverIntegration!.Endpoint}[/]");
-                success = await _console.Status().Spinner(Spinner.Known.Clock)
-                    .StartAsync(formattedTaskDescription, async _ =>
-                        await ProcessServerTask(_console, ctx, formattedTaskDescription)
-                    );
+                if (workflowCtx.CancellationToken != null)
+                {
+                    break;
+                }
+
+                var taskDescription = $"{workflowCtx.CurrentAction.Name}".EscapeMarkup();
+                
+                if (workflowCtx.CurrentAction.RunAtServer == true)
+                {
+                    success = await _console
+                        .Status()
+                        .Spinner(Spinner.Known.Clock)
+                        .StartAsync(taskDescription, async _ => await ProcessServerTask(workflowCtx, taskDescription));
+                }
+                else
+                {
+                    var requiresConsole = workflowCtx.CurrentAction.ActionProvider.Discover().RequiresConsole;
+                    if (requiresConsole)
+                    {
+                        success = await ProcessTask(workflowCtx, taskDescription);
+                    }
+                    else
+                    {
+                        
+                        success = await _console
+                            .Status()
+                            .Spinner(Spinner.Known.Clock)
+                            .StartAsync(taskDescription, async _ => await ProcessTask(workflowCtx, taskDescription));
+                    }
+                    
+                }
+
+                if (!success) break;
+
+                workflowCtx.NextStep();
             }
-            else
+
+            if (!success)
             {
-                if (requiresConsole)
-                {
-                    _console.WriteLine();
-                    _console.MarkupLine(formattedTaskDescription);
-                    success = await ProcessTask(_console, ctx);
-                }
-                else // show spinner
-                {
-                    success = await _console.Status().Spinner(Spinner.Known.Clock)
-                        .StartAsync(formattedTaskDescription, async _ =>
-                            await ProcessTask(_console, ctx, formattedTaskDescription)
-                        );
-                }
+                break;
             }
 
-            if (!success) break;
+            if (workflowCtx.CurrentJob.Display != null && !string.IsNullOrWhiteSpace(workflowCtx.CurrentJob.Display.Success))
+            {
+                ConsoleRootLine($"{Emoji.Known.GreenSquare} [lightgreen]{workflowCtx.CurrentJob.Display.Success}[/]");
+            }
 
-            ctx.NextStep();
+            workflowCtx.NextJob();
         }
 
         await Task.WhenAll(_processedActions.Where(p => p.RunAtServer == false).Select(p => p.ActionProvider.EndAsync()));
@@ -118,10 +134,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         return success;
     }
 
-    private async Task<bool> ProcessTask(
-        IAnsiConsole console, 
-        NoxWorkflowContext ctx, 
-        string? formattedTaskDescription = null)
+    private async Task<bool> ProcessTask(NoxWorkflowContext ctx, string taskDescription)
     {
         if (ctx.CurrentAction == null) return false;
         
@@ -129,19 +142,22 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         if (!ctx.CurrentAction.EvaluateIf())
         {
-            if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
+            var skipMessage = "";
+            if (!string.IsNullOrWhiteSpace(taskDescription))
             {
-                console.WriteLine();
-                console.MarkupLine(formattedTaskDescription);
+                skipMessage += $"{taskDescription}...";
             }
+            
             if (string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.IfCondition))
             {
-                console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because, if condition proved true");
+                skipMessage += "Skipped because, if condition evaluated true";
             }
             else
             {
-                console.MarkupLine($"{Emoji.Known.BlueCircle} {ctx.CurrentAction.Display.IfCondition.EscapeMarkup()}");
+                skipMessage += ctx.CurrentAction.Display.IfCondition.EscapeMarkup();
             }
+            
+            ConsoleStatusLine($"{Emoji.Known.BlueCircle} [deepskyblue1]{skipMessage}[/]");
             return true;
         }
         
@@ -149,11 +165,11 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         if (unresolved.Any())
         {
-            console.WriteLine();
-            console.MarkupLine($"{Emoji.Known.RedCircle} Some variables are unresolved. Did you misspell or forget to define them? Is the service.nox.yaml available?");
+            _console.WriteLine();
+            ConsoleStatusLine($"{Emoji.Known.RedCircle} Some variables are unresolved. Did you misspell or forget to define them? Is the service.nox.yaml available?");
             foreach (var kv in unresolved)
             {
-                console.MarkupLine($"  [bold mediumpurple3_1]{kv.Key}[/]: [indianred1]{kv.Value}[/]");
+                ConsoleStatusLine($"[bold mediumpurple3_1]{kv.Key}[/]: [indianred1]{kv.Value}[/]");
             }
             return false;
         }
@@ -168,22 +184,22 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         _processedActions.Add(ctx.CurrentAction);
 
-        if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
+        if (ctx.CurrentAction.ActionProvider.Discover().RequiresConsole)
         {
-            console.WriteLine();
-            console.MarkupLine(formattedTaskDescription);
+            _console.WriteLine();
+            ConsoleRootLine($"[mediumpurple3_1]{ctx.CurrentJob!.Name.EscapeMarkup()}: [/]");
         }
-
+        
         if (ctx.CurrentAction.State == ActionState.Error)
         {
             if (ctx.CurrentAction.ContinueOnError)
             {
-                console.MarkupLine($"{Emoji.Known.GreenCircle} {ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}");
+                ConsoleStatusLine($"{Emoji.Known.GreenCircle} {ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}");
             }
             else
             {
                 ctx.SetErrorMessage(ctx.CurrentAction, ctx.CurrentAction.ErrorMessage);
-                console.MarkupLine($"{Emoji.Known.RedCircle} [indianred1]{ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}[/]");
+                ConsoleStatusLine($"{Emoji.Known.RedCircle} [indianred1]{ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}[/]");
                 return false;
             }
         }
@@ -191,45 +207,46 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         {
             if (!string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.Success))
             {
-                console.MarkupLine($"{Emoji.Known.GreenCircle} {ctx.CurrentAction.Display.Success.EscapeMarkup()}");
+                ConsoleStatusLine($"{Emoji.Known.GreenCircle} [seagreen1]{ctx.CurrentAction.Display.Success.EscapeMarkup()}[/]");
             }
         }
 
         return true;
     }
     
-    private async Task<bool> ProcessServerTask(
-        IAnsiConsole console, 
-        NoxWorkflowContext ctx, 
-        string? formattedTaskDescription = null)
+    private async Task<bool> ProcessServerTask(NoxWorkflowContext ctx, string taskDescription)
     {
         if (ctx.CurrentAction == null) return false;
 
         if (!await IsServerHealthy())
         {
             ctx.SetErrorMessage(ctx.CurrentAction, "Unable to connect to Nox Cli Server.");
-            console.MarkupLine($"{Emoji.Known.RedCircle} [indianred1]Unable to connect to Nox Cli Server, you are trying to execute an action on the Nox Cli Server, but the server endpoint is not currently available[/]");
+            ConsoleStatusLine($"{Emoji.Known.RedCircle} [indianred1]Unable to connect to Nox Cli Server, you are trying to execute an action on the Nox Cli Server, but the server endpoint is not currently available[/]");
             return false;
         }
+        
+        ConsoleInfoLine($"{Emoji.Known.DesktopComputer} [bold yellow]Running at: {_serverIntegration!.Endpoint}[/]");
         
         await ctx.GetInputVariables(ctx.CurrentAction, true);
         
         if (!ctx.CurrentAction.EvaluateIf())
         {
-            if (!string.IsNullOrWhiteSpace(formattedTaskDescription))
+            var skipMessage = "";
+            if (!string.IsNullOrWhiteSpace(taskDescription))
             {
-                console.WriteLine();
-                console.MarkupLine(formattedTaskDescription);
+                skipMessage += $"{taskDescription}...";
             }
-
+            
             if (string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.IfCondition))
             {
-                console.MarkupLine($"{Emoji.Known.BlueCircle} Skipped because, if condition proved true");
+                skipMessage += "Skipped because, if condition evaluated true";
             }
             else
             {
-                console.MarkupLine($"{Emoji.Known.BlueCircle} {ctx.CurrentAction.Display.IfCondition.EscapeMarkup()}");
+                skipMessage += ctx.CurrentAction.Display.IfCondition.EscapeMarkup();
             }
+            
+            ConsoleStatusLine($"{Emoji.Known.BlueCircle} [deepskyblue1]{skipMessage}[/]");
             return true;
         }
 
@@ -247,12 +264,12 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         {
             if (ctx.CurrentAction.ContinueOnError)
             {
-                console.MarkupLine($"{Emoji.Known.GreenCircle} {ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}");
+                ConsoleStatusLine($"{Emoji.Known.GreenCircle} {ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}");
             }
             else
             {
                 ctx.SetErrorMessage(ctx.CurrentAction, executeResponse.ErrorMessage!);
-                console.MarkupLine($"{Emoji.Known.RedCircle} [indianred1]{ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}[/]");
+                ConsoleStatusLine($"{Emoji.Known.RedCircle} [indianred1]{ctx.CurrentAction.Display?.Error.EscapeMarkup() ?? string.Empty}[/]");
                 return false;
             }
         }
@@ -260,7 +277,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         {
             if (!string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.Success))
             {
-                console.MarkupLine($"{Emoji.Known.GreenCircle} {ctx.CurrentAction.Display.Success.EscapeMarkup()}");
+                ConsoleStatusLine($"{Emoji.Known.GreenCircle} [seagreen1]{ctx.CurrentAction.Display.Success.EscapeMarkup()}[/]");
             }
         }
 
@@ -274,6 +291,24 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         if (result == null) return false;
         return result.Name == "Nox Cli Server";
     }
+
+    private void ConsoleRootLine(string value)
+    {
+        _console.MarkupLine(value);
+    }
+
+    private void ConsoleStatusLine(string value)
+    {
+        var padding = new string(' ', 4);
+        _console.MarkupLine($"{padding}{value}");
+    }
+
+    private void ConsoleInfoLine(string value)
+    {
+        var padding = new string(' ', 8);
+        _console.MarkupLine($"{padding}{value}");
+    }
+    
 }
 
 

@@ -23,8 +23,6 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
 
     public override Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
-        _console.WriteLine();
-        _consoleWriter.WriteInfo($"Design folder:");
 
         if (string.IsNullOrEmpty(_solution.Name))
         {
@@ -38,11 +36,10 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
         }
 
         _console.WriteLine();
-        _consoleWriter.WriteHelpText("Reading: Project definition...");
+        _consoleWriter.WriteHelpText("Reading","Project definition...");
 
         _console.WriteLine();
-        _consoleWriter.WriteInfo($"Project:");
-        _console.WriteLine(_solution.Name);
+        _consoleWriter.WriteInfo("Project", _solution.Name);
 
         return Task.FromResult(0);
     }

@@ -2,7 +2,7 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "init solution",
+      "commandLineArgs": "test workflow",
       "workingDirectory": "/home/jan/demo/CliDemo",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
