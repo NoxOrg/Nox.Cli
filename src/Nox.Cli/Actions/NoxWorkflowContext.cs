@@ -9,6 +9,7 @@ using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
+using Environment = System.Environment;
 
 namespace Nox.Cli.Actions;
 
@@ -28,6 +29,8 @@ public class NoxWorkflowContext : INoxWorkflowContext
     private int _currentActionSequence = 0;
     private INoxAction? _currentAction;
     private INoxAction? _nextAction;
+
+    private readonly List<JobStep> _jobSteps = new List<JobStep>();
 
     private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+secret[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     
@@ -210,8 +213,32 @@ public class NoxWorkflowContext : INoxWorkflowContext
         {
             if (steps.ContainsKey(step.Id))
             {
-                throw new NoxCliException($"Step {step.Name} in job: {jobConfiguration.Name} exists more than once. Step Ids must be unique in a job configuration");
+                throw new NoxCliException($"Step '{step.Id} ({step.Name})' in job: '{jobConfiguration.Name}' exists more than once. Step Ids must be unique in a job configuration");
             }
+            
+            if (!string.IsNullOrEmpty(step.If))
+            {
+                if (_jobSteps.Any(js => js.StepId == step.Id))
+                {
+                    var errMsg = $"Step '{step.Id} ({step.Name})' in job: '{jobConfiguration.Name}' does not have a unique id.{Environment.NewLine}";
+                    errMsg += $"Steps that contain an If condition must have a unique id in a Nox Workflow.{Environment.NewLine}";
+                    errMsg += $"The duplicate step id exists in the following job(s):{Environment.NewLine}";
+                    foreach (var jobStep in _jobSteps.Where(js => js.StepId == step.Id).ToList())
+                    {
+                        errMsg += $"Job: {jobStep.JobId} ({jobStep.JobName}) Step: {jobStep.StepId} ({jobStep.StepName})";
+                    }
+                    
+                    throw new NoxCliException(errMsg);
+                }
+            }
+            
+            _jobSteps.Add(new JobStep
+            {
+                JobId = jobConfiguration.Id,
+                JobName = jobConfiguration.Name,
+                StepId = step.Id,
+                StepName = step.Name
+            });
 
             if (string.IsNullOrWhiteSpace(step.Uses))
             {
