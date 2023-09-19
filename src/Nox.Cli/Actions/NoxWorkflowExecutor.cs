@@ -231,20 +231,22 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         
         if (!ctx.CurrentAction.EvaluateIf())
         {
+            var skipMessage = "";
             if (!string.IsNullOrWhiteSpace(taskDescription))
             {
-                _console.WriteLine();
-                ConsoleStatusLine(taskDescription);
+                skipMessage += $"{taskDescription}...";
             }
-
+            
             if (string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.IfCondition))
             {
-                ConsoleStatusLine($"{Emoji.Known.BlueCircle} Skipped because, if condition proved true");
+                skipMessage += "Skipped because, if condition evaluated true";
             }
             else
             {
-                ConsoleStatusLine($"{Emoji.Known.BlueCircle} {ctx.CurrentAction.Display.IfCondition.EscapeMarkup()}");
+                skipMessage += ctx.CurrentAction.Display.IfCondition.EscapeMarkup();
             }
+            
+            ConsoleStatusLine($"{Emoji.Known.BlueCircle} [deepskyblue1]{skipMessage}[/]");
             return true;
         }
 
