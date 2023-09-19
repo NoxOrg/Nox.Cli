@@ -1,7 +1,6 @@
 ﻿using Nox.Cli.Abstractions.Caching;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
-using Spectre.Console;
 
 namespace Nox.Cli.Abstractions
 {
