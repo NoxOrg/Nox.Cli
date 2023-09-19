@@ -1,4 +1,5 @@
-﻿using Nox.Cli.Abstractions;
+﻿using Microsoft.Graph.Print.Printers.Item.Jobs;
+using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Secrets;
@@ -60,9 +61,40 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                 break;
             }
 
+            var jobName = workflowCtx.CurrentJob.Name.EscapeMarkup();
+            
             _console.WriteLine();
-            ConsoleRootLine($"[mediumpurple3_1]{workflowCtx.CurrentJob.Name.EscapeMarkup()}: [/]");
-
+            if (workflowCtx.CurrentJob.Steps.Any(s => s.Value.RunAtServer == true))
+            {
+                ConsoleRootLine($"[mediumpurple3_1]{jobName}[/] {Emoji.Known.DesktopComputer} [bold yellow]Running at: {_serverIntegration!.Endpoint}[/]");
+                
+            }
+            else
+            {
+                ConsoleRootLine($"[mediumpurple3_1]{jobName}[/]"); 
+            }
+            
+            if (!workflowCtx.CurrentJob.EvaluateIf())
+            {
+                var skipMessage = "";
+                if (!string.IsNullOrWhiteSpace(jobName))
+                {
+                    skipMessage += $"{jobName}...";
+                }
+            
+                if (string.IsNullOrWhiteSpace(workflowCtx.CurrentJob.Display?.IfCondition))
+                {
+                    skipMessage += "Skipped because an if condition evaluated true";
+                }
+                else
+                {
+                    skipMessage += workflowCtx.CurrentJob.Display.IfCondition.EscapeMarkup();
+                }
+            
+                ConsoleRootLine($"{Emoji.Known.BlueSquare} [deepskyblue1]{skipMessage}[/]");
+                return true;
+            }
+            
             while (workflowCtx.CurrentAction != null)
             {
                 if (workflowCtx.CancellationToken != null)
@@ -94,7 +126,6 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                             .Spinner(Spinner.Known.Clock)
                             .StartAsync(taskDescription, async _ => await ProcessTask(workflowCtx, taskDescription));
                     }
-                    
                 }
 
                 if (!success) break;
@@ -224,8 +255,6 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             ConsoleStatusLine($"{Emoji.Known.RedCircle} [indianred1]Unable to connect to Nox Cli Server, you are trying to execute an action on the Nox Cli Server, but the server endpoint is not currently available[/]");
             return false;
         }
-        
-        ConsoleInfoLine($"{Emoji.Known.DesktopComputer} [bold yellow]Running at: {_serverIntegration!.Endpoint}[/]");
         
         await ctx.GetInputVariables(ctx.CurrentAction, true);
         

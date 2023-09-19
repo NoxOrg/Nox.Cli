@@ -10,4 +10,6 @@ public interface INoxJob
     string? If { get; set; }
     NoxJobDisplayMessage? Display { get; set; }
     IDictionary<string, INoxAction> Steps { get; set; }
+    
+    public bool EvaluateIf();
 }

@@ -1,3 +1,4 @@
+using CodingSeb.ExpressionEvaluator;
 using Nox.Cli.Abstractions;
 
 namespace Nox.Cli.Actions;
@@ -13,4 +14,13 @@ public class NoxJob: INoxJob
     
     public NoxJobDisplayMessage? Display { get; set; } = new();
     public IDictionary<string, INoxAction> Steps { get; set; } = new Dictionary<string, INoxAction>();
+    
+    public bool EvaluateIf()
+    {
+        if (string.IsNullOrEmpty(If)) return true;
+
+        var evaluator = new ExpressionEvaluator();
+
+        return (bool)evaluator.Evaluate(If);
+    }
 }
