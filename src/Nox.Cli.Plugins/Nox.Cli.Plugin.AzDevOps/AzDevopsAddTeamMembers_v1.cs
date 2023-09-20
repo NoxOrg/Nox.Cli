@@ -1,3 +1,4 @@
+using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.Graph.Client;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
@@ -122,29 +123,34 @@ public class AzDevopsAddTeamMembers_v1 : INoxCliAddin
             ctx.SetErrorMessage($"Unable to find the default project Team' that should automatically have been created with the project");
             return false;
         }
- 
-        var usersInGraph = _graphClient.ListUsersAsync(new string[] {"aad"}).Result;
 
         var members = _members!.Split(',').ToList();
+
+        var allUsers = new List<GraphUser>();
         
+        var usersInGraph = await _graphClient.ListUsersAsync(new string[] {"aad"});
+        allUsers.AddRange(usersInGraph.GraphUsers);
+
         while (usersInGraph.ContinuationToken is not null)
         {
-            foreach (var user in usersInGraph.GraphUsers.OrderBy(u => u.DisplayName))
+            usersInGraph = await _graphClient.ListUsersAsync(new string[] {"aad"}, continuationToken: usersInGraph.ContinuationToken.FirstOrDefault());
+            allUsers.AddRange(usersInGraph.GraphUsers);
+        }
+        
+        foreach (var member in members)
+        {
+            var developer = allUsers.FirstOrDefault(gu => gu.PrincipalName.Equals(member, StringComparison.OrdinalIgnoreCase));
+            if (developer != null)
             {
-                var developer = members!.FirstOrDefault(d => d.Equals(user.PrincipalName, StringComparison.OrdinalIgnoreCase));
-    
-                if (developer != null)
+                var isUserInGroup = await _graphClient.CheckMembershipExistenceAsync(developer.Descriptor, graphGroup.Descriptor);
+                if (!isUserInGroup)
                 {
-                    var isUserInGroup = await _graphClient.CheckMembershipExistenceAsync(user.Descriptor, graphGroup.Descriptor);
-                    if (!isUserInGroup)
-                    {
-                        var membership = await _graphClient.AddMembershipAsync(user.Descriptor, graphGroup.Descriptor);
-                    }
+                    var membership = await _graphClient.AddMembershipAsync(developer.Descriptor, graphGroup.Descriptor);
                 }
             }
-            usersInGraph = await _graphClient.ListUsersAsync(new string[] {"aad"}, continuationToken: usersInGraph.ContinuationToken.FirstOrDefault());
         }
-
+        
+        
         return true;
 
     }
