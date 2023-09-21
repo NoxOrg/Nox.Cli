@@ -1,17 +1,18 @@
-﻿using Nox.Cli.Abstractions;
-using Npgsql;
+using Microsoft.Data.SqlClient;
+using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
 
-namespace Nox.Cli.Plugin.Postgres;
+namespace Nox.Cli.Plugin.MsSql;
 
-public class PostgresExecuteScalar_v1 : INoxCliAddin
+public class MsSqlExecuteScalar_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "postgres/execute-scalar@v1",
-            Author = "Andre Sharpe",
-            Description = "Execute a scalar query on Postgres",
+            Name = "mssql/execute-scalar@v1",
+            Author = "Jan Schutte",
+            Description = "Execute a scalar query on Ms Sql Server",
 
             Inputs =
             {
@@ -25,7 +26,7 @@ public class PostgresExecuteScalar_v1 : INoxCliAddin
                 ["connection"] = new NoxActionInput {
                     Id = "connection",
                     Description = "The connection established with action 'postgres/connect@v1'",
-                    Default = new NpgsqlConnection(),
+                    Default = new SqlConnection(),
                     IsRequired = true
                 },
                 ["parameters"] = new NoxActionInput {
@@ -46,7 +47,8 @@ public class PostgresExecuteScalar_v1 : INoxCliAddin
         };
     }
 
-    private NpgsqlConnection? _connection;
+    private bool _isServerContext = false;
+    private SqlConnection? _connection;
 
     private string? _sql;
 
@@ -54,56 +56,47 @@ public class PostgresExecuteScalar_v1 : INoxCliAddin
 
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
-        _connection = (NpgsqlConnection)inputs["connection"];
-
-        _sql = (string)inputs["sql"];
-
-        if (inputs.ContainsKey("parameters"))
-        {
-            _parameters = (List<object>)inputs["parameters"];
-        }
-
+        _connection = inputs.Value<SqlConnection>("connection");
+        _sql = inputs.Value<string>("sql");
+        _parameters = inputs.Value<List<object>>("parameters");
         return Task.FromResult(true);
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object?>();
+        _isServerContext = ctx.IsServer;
+        var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
-        if (_connection == null)
+        if (_connection == null ||
+            string.IsNullOrEmpty(_sql))
         {
-            ctx.SetErrorMessage("The Postgres execute scalar action was not initialized");
+            ctx.SetErrorMessage("The mssql execute scalar action was not initialized");
+            return outputs;
         }
-        else if (_sql == null)
-        {
-            ctx.SetErrorMessage("The sql query was not initialized");
-        }
-        else
-        {
-            try
-            {
-                using var cmd = new NpgsqlCommand(_sql, _connection);
 
-                if (_parameters != null)
+        try
+        {
+            await using var cmd = new SqlCommand(_sql, _connection);
+
+            if (_parameters != null)
+            {
+                foreach (var p in _parameters)
                 {
-                    foreach (var p in _parameters)
-                    {
-                        cmd.Parameters.Add( new NpgsqlParameter { Value = p } );
-                    }
+                    cmd.Parameters.Add(new SqlParameter { Value = p });
                 }
-
-                var result = await cmd.ExecuteScalarAsync();
-
-                outputs["result"] = result ?? new object();
-
-                ctx.SetState(ActionState.Success);
             }
-            catch (Exception ex)
-            {
-                ctx.SetErrorMessage(ex.Message);
-            }
+
+            var result = await cmd.ExecuteScalarAsync();
+
+            outputs["result"] = result ?? new object();
+
+            ctx.SetState(ActionState.Success);
+        }
+        catch (Exception ex)
+        {
+            ctx.SetErrorMessage(ex.Message);
         }
 
         return outputs!;
@@ -114,4 +107,3 @@ public class PostgresExecuteScalar_v1 : INoxCliAddin
         return Task.CompletedTask;
     }
 }
-

@@ -24,6 +24,12 @@ public class NetworkPing_v1 : INoxCliAddin
                     Default = string.Empty,
                     IsRequired = true
                 },
+                ["port"] = new NoxActionInput {
+                    Id = "port",
+                    Description = "The port to ping",
+                    Default = 80,
+                    IsRequired = true
+                },
             },
 
             Outputs =
@@ -40,10 +46,13 @@ public class NetworkPing_v1 : INoxCliAddin
     private TcpClient? _client;
 
     private string? _host;
+    private int? _port;
 
     public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _host = inputs.ValueOrDefault<string>("host", this);
+        _port = inputs.ValueOrDefault<int>("port", this);
+        
         if (Uri.IsWellFormedUriString(_host, UriKind.Absolute))
         {
             var uri = new Uri(_host);
@@ -71,7 +80,7 @@ public class NetworkPing_v1 : INoxCliAddin
             {
                 var sw = new Stopwatch();
                 sw.Start();
-                await _client.ConnectAsync(_host!, 80);
+                await _client.ConnectAsync(_host!, _port!.Value);
                 sw.Stop();
                 outputs["roundtrip-time"] = sw.ElapsedMilliseconds;
                 ctx.SetState(ActionState.Success);

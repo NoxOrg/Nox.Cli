@@ -124,6 +124,24 @@ public class ClientVariableProvider: IClientVariableProvider
         }
     }
 
+    public void ResolveJobVariables(INoxJob job)
+    {
+        if (!string.IsNullOrWhiteSpace(job.Display?.Success))
+        {
+            job.Display.Success = ReplaceVariable(job.Display.Success).ToString()!;
+        }
+
+        if (!string.IsNullOrWhiteSpace(job.Display?.IfCondition))
+        {
+            job.Display.IfCondition = ReplaceVariable(job.Display.IfCondition).ToString()!;
+        }
+
+        if (!string.IsNullOrWhiteSpace(job.If))
+        {
+            job.If = ReplaceVariable(job.If).ToString()!;
+        }
+    }
+
     private void Initialize(IWorkflowConfiguration workflow)
     {
         var serializer = new SerializerBuilder()

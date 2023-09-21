@@ -14,4 +14,6 @@ public interface IClientVariableProvider
     Task ResolveAll();
     Task ResolveForServer();
     Task ResolveProjectVariables();
+
+    void ResolveJobVariables(INoxJob job);
 }
