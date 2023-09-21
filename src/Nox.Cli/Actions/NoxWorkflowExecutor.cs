@@ -75,25 +75,20 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
             }
             
             await workflowCtx.ResolveJobVariables(workflowCtx.CurrentJob);
+
+            var jobSkipped = false;
             
             if (!workflowCtx.CurrentJob.EvaluateIf())
             {
-                var skipMessage = "";
-                if (!string.IsNullOrWhiteSpace(jobName))
-                {
-                    skipMessage += $"{jobName}...";
-                }
-            
+                jobSkipped = true;
                 if (string.IsNullOrWhiteSpace(workflowCtx.CurrentJob.Display?.IfCondition))
                 {
-                    skipMessage += "Skipped because an if condition evaluated true";
+                    ConsoleRootLine($"{Emoji.Known.BlueSquare} [deepskyblue1]Skipped because an if condition evaluated true[/]");
                 }
                 else
                 {
-                    skipMessage += workflowCtx.CurrentJob.Display.IfCondition.EscapeMarkup();
+                    ConsoleRootLine($"{Emoji.Known.BlueSquare} [deepskyblue1]{workflowCtx.CurrentJob.Display.IfCondition.EscapeMarkup()}[/]");
                 }
-            
-                ConsoleRootLine($"{Emoji.Known.BlueSquare} [deepskyblue1]{skipMessage}[/]");
             }
             else
             {
@@ -141,7 +136,9 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                 break;
             }
 
-            if (workflowCtx.CurrentJob.Display != null && !string.IsNullOrWhiteSpace(workflowCtx.CurrentJob.Display.Success))
+            if (workflowCtx.CurrentJob.Display != null && 
+                !string.IsNullOrWhiteSpace(workflowCtx.CurrentJob.Display.Success) &&
+                !jobSkipped)
             {
                 ConsoleRootLine($"{Emoji.Known.GreenSquare} [lightgreen]{workflowCtx.CurrentJob.Display.Success}[/]");
             }

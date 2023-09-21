@@ -122,8 +122,4 @@ public class WorkflowContext: INoxWorkflowContext
         
     }
 
-    public void ResolveVariables()
-    {
-        throw new NotImplementedException();
-    }
 }
