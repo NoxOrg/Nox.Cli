@@ -1,14 +1,14 @@
-﻿using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions;
 
-namespace Nox.Cli.Plugins.Postgres;
+namespace Nox.Cli.Plugin.Database;
 
-public class PostgresSanitizeSqlString_v1 : INoxCliAddin
+public class DatabaseSanitizeSql_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "postgres/sanitize-sql-string@v1",
+            Name = "database/sanitize-sql-string@v1",
             Author = "Andre Sharpe",
             Description = "Removes all non-word characters from a string",
 
@@ -59,4 +59,3 @@ public class PostgresSanitizeSqlString_v1 : INoxCliAddin
         return Task.FromResult(true);
     }
 }
-

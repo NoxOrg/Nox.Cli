@@ -57,6 +57,8 @@
     <ProjectReference Include="..\Nox.Cli.Caching\Nox.Cli.Caching.csproj" />
     <ProjectReference Include="..\Nox.Cli.Configuration\Nox.Cli.Configuration.csproj" />
     <ProjectReference Include="..\Nox.Cli.Helpers\Nox.Cli.Helpers.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Database\Nox.Cli.Plugin.Database.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.MsSql\Nox.Cli.Plugin.MsSql.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Test\Nox.Cli.Plugin.Test.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Arm\Nox.Cli.Plugin.Arm.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.AzDevOps\Nox.Cli.Plugin.AzDevOps.csproj" />

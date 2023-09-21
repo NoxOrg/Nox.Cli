@@ -1,7 +1,7 @@
 ﻿using Nox.Cli.Abstractions;
 using Npgsql;
 
-namespace Nox.Cli.Plugins.Postgres;
+namespace Nox.Cli.Plugin.Postgres;
 
 public class PostgresExecuteScalar_v1 : INoxCliAddin
 {
@@ -74,7 +74,7 @@ public class PostgresExecuteScalar_v1 : INoxCliAddin
 
         if (_connection == null)
         {
-            ctx.SetErrorMessage("The Postgres connect action was not initialized");
+            ctx.SetErrorMessage("The Postgres execute scalar action was not initialized");
         }
         else if (_sql == null)
         {

@@ -75,6 +75,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.PersonalAccessToken
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CachingTests", "..\tests\CachingTests\CachingTests.csproj", "{A5BC67F2-0570-4F49-8F15-7DED77E12066}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.MsSql", "Nox.Cli.Plugins\Nox.Cli.Plugin.MsSql\Nox.Cli.Plugin.MsSql.csproj", "{3705CA33-ABD4-4271-BEB6-BF6D6AE0D648}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nox.Cli.Plugin.Database", "Nox.Cli.Plugins\Nox.Cli.Plugin.Database\Nox.Cli.Plugin.Database.csproj", "{E5B853E8-9077-468D-88E5-A72CCDC16D2E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -213,6 +217,14 @@ Global
 		{A5BC67F2-0570-4F49-8F15-7DED77E12066}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5BC67F2-0570-4F49-8F15-7DED77E12066}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5BC67F2-0570-4F49-8F15-7DED77E12066}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3705CA33-ABD4-4271-BEB6-BF6D6AE0D648}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3705CA33-ABD4-4271-BEB6-BF6D6AE0D648}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3705CA33-ABD4-4271-BEB6-BF6D6AE0D648}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3705CA33-ABD4-4271-BEB6-BF6D6AE0D648}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5B853E8-9077-468D-88E5-A72CCDC16D2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5B853E8-9077-468D-88E5-A72CCDC16D2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5B853E8-9077-468D-88E5-A72CCDC16D2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5B853E8-9077-468D-88E5-A72CCDC16D2E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -238,5 +250,7 @@ Global
 		{6117EE16-9A61-446F-B409-484DE41FC26E} = {E3FA4748-9B96-42E7-BDE8-1F08AA8AD4D9}
 		{4D25DF29-1045-4F6C-A5EF-C66C94A5B1E4} = {63454657-F25B-4BAB-8868-0766A619BFE6}
 		{A5BC67F2-0570-4F49-8F15-7DED77E12066} = {63454657-F25B-4BAB-8868-0766A619BFE6}
+		{3705CA33-ABD4-4271-BEB6-BF6D6AE0D648} = {E3FA4748-9B96-42E7-BDE8-1F08AA8AD4D9}
+		{E5B853E8-9077-468D-88E5-A72CCDC16D2E} = {E3FA4748-9B96-42E7-BDE8-1F08AA8AD4D9}
 	EndGlobalSection
 EndGlobal

@@ -1,17 +1,17 @@
-﻿using Nox.Cli.Abstractions;
-using Npgsql;
+using Microsoft.Data.SqlClient;
+using Nox.Cli.Abstractions;
 
-namespace Nox.Cli.Plugin.Postgres;
+namespace Nox.Cli.Plugin.MsSql;
 
-public class PostgresExecuteNonQuery_v1 : INoxCliAddin
+public class MsSqlExecuteNonQuery_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "postgres/execute-nonquery@v1",
-            Author = "Andre Sharpe",
-            Description = "Execute a non-query statement on Postgres",
+            Name = "mssql/execute-nonquery@v1",
+            Author = "Jan Schutte",
+            Description = "Execute a non-query statement on Ms Sql Server",
 
             Inputs =
             {
@@ -25,7 +25,7 @@ public class PostgresExecuteNonQuery_v1 : INoxCliAddin
                 ["connection"] = new NoxActionInput {
                     Id = "connection",
                     Description = "The connection established with action 'postgres/connect@v1'",
-                    Default = new NpgsqlConnection(),
+                    Default = new SqlConnection(),
                     IsRequired = true
                 },
 
@@ -47,7 +47,7 @@ public class PostgresExecuteNonQuery_v1 : INoxCliAddin
         };
     }
 
-    private NpgsqlConnection? _connection;
+    private SqlConnection? _connection;
 
     private string? _sql;
 
@@ -55,13 +55,13 @@ public class PostgresExecuteNonQuery_v1 : INoxCliAddin
 
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
-        _connection = (NpgsqlConnection)inputs["connection"];
+        _connection = (SqlConnection)inputs["connection"];
 
         _sql = (string)inputs["sql"];
 
-        if (inputs.ContainsKey("parameters"))
+        if (inputs.TryGetValue("parameters", out var input))
         {
-            _parameters = (List<object>)inputs["parameters"];
+            _parameters = (List<object>)input;
         }
 
         return Task.FromResult(true);
@@ -75,7 +75,7 @@ public class PostgresExecuteNonQuery_v1 : INoxCliAddin
 
         if (_connection == null)
         {
-            ctx.SetErrorMessage("The Postgres execute non query action was not initialized");
+            ctx.SetErrorMessage("The mssql execute non query action was not initialized");
         }
         else if (_sql == null)
         {
@@ -85,13 +85,13 @@ public class PostgresExecuteNonQuery_v1 : INoxCliAddin
         {
             try
             {
-                using var cmd = new NpgsqlCommand(_sql, _connection);
+                using var cmd = new SqlCommand(_sql, _connection);
 
                 if (_parameters != null)
                 {
                     foreach (var p in _parameters)
                     {
-                        cmd.Parameters.Add( new NpgsqlParameter { Value = p } );
+                        cmd.Parameters.Add( new SqlParameter() { Value = p } );
                     }
                 }
 
@@ -115,4 +115,3 @@ public class PostgresExecuteNonQuery_v1 : INoxCliAddin
         return Task.FromResult(true);
     }
 }
-

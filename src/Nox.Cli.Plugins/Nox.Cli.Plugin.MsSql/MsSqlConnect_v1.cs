@@ -1,8 +1,8 @@
-﻿using System.Data;
+using System.Data;
+using Microsoft.Data.SqlClient;
 using Nox.Cli.Abstractions;
-using Npgsql;
 
-namespace Nox.Cli.Plugin.Postgres;
+namespace Nox.Cli.Plugin.MsSql;
 
 public class PostgresConnect_v1 : INoxCliAddin
 {
@@ -10,9 +10,9 @@ public class PostgresConnect_v1 : INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "postgres/connect@v1",
-            Author = "Andre Sharpe",
-            Description = "Connect to and execute queries on Postgres",
+            Name = "mssql/connect@v1",
+            Author = "Jan Schutte",
+            Description = "Connect to an MsSql database",
 
             Inputs =
             {
@@ -26,7 +26,7 @@ public class PostgresConnect_v1 : INoxCliAddin
                 ["port"] = new NoxActionInput {
                     Id = "port",
                     Description = "The database port to connect via",
-                    Default = 5432,
+                    Default = 1433,
                     IsRequired = false
                 },
 
@@ -56,26 +56,25 @@ public class PostgresConnect_v1 : INoxCliAddin
             {
                 ["connection"] = new NoxActionOutput {
                     Id = "connection",
-                    Description = "The database hostname or IP",
+                    Description = "The connection to the MsSql database",
                 },
             }
         };
     }
 
-    private NpgsqlConnection? _connection;
+    private SqlConnection? _connection;
 
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
-        var csb = new NpgsqlConnectionStringBuilder
+        var csb = new SqlConnectionStringBuilder
         {
-            Host = (string)inputs["server"],
-            Port = Convert.ToInt32(inputs["port"]),
-            Username = (string)inputs["user"],
+            DataSource = $"{(string)inputs["server"]},{(string)inputs["port"]}",
+            UserID = (string)inputs["user"],
             Password = (string)inputs["password"],
-            Database = (string)inputs["database"],
+            InitialCatalog = (string)inputs["database"],
         };
 
-        _connection = new NpgsqlConnection(csb.ToString());
+        _connection = new SqlConnection(csb.ToString());
 
         return Task.FromResult(true);
     }
@@ -88,7 +87,7 @@ public class PostgresConnect_v1 : INoxCliAddin
 
         if (_connection == null)
         {
-            ctx.SetErrorMessage("The Postgres connect action was not initialized");
+            ctx.SetErrorMessage("The mssql connect action was not initialized");
         }
         else
         {

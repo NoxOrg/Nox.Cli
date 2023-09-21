@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Nox.Cli;
+namespace Nox.Cli.Plugin.Database;
 
 public static class SanitizeStringExtension
 {

@@ -331,13 +331,6 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         var padding = new string(' ', 4);
         _console.MarkupLine($"{padding}{value}");
     }
-
-    private void ConsoleInfoLine(string value)
-    {
-        var padding = new string(' ', 8);
-        _console.MarkupLine($"{padding}{value}");
-    }
-    
 }
 
 
