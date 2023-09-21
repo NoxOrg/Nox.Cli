@@ -148,6 +148,12 @@ public class NoxWorkflowContext : INoxWorkflowContext
         return _varProvider.GetInputVariables(action);        
     }
 
+    public async Task ResolveJobVariables(INoxJob job)
+    {
+        await _varProvider.ResolveAll();
+        _varProvider.ResolveJobVariables(job);
+    }
+
     public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
     {
         _varProvider.StoreOutputVariables(action, outputs);

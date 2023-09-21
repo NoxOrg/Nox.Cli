@@ -74,6 +74,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                 ConsoleRootLine($"[mediumpurple3_1]{jobName}[/]"); 
             }
             
+            await workflowCtx.ResolveJobVariables(workflowCtx.CurrentJob);
+            
             if (!workflowCtx.CurrentJob.EvaluateIf())
             {
                 var skipMessage = "";
@@ -92,45 +94,46 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                 }
             
                 ConsoleRootLine($"{Emoji.Known.BlueSquare} [deepskyblue1]{skipMessage}[/]");
-                return true;
             }
-            
-            while (workflowCtx.CurrentAction != null)
+            else
             {
-                if (workflowCtx.CancellationToken != null)
+                while (workflowCtx.CurrentAction != null)
                 {
-                    break;
-                }
-
-                var taskDescription = $"{workflowCtx.CurrentAction.Name}".EscapeMarkup();
-                
-                if (workflowCtx.CurrentAction.RunAtServer == true)
-                {
-                    success = await _console
-                        .Status()
-                        .Spinner(Spinner.Known.Clock)
-                        .StartAsync(taskDescription, async _ => await ProcessServerTask(workflowCtx, taskDescription));
-                }
-                else
-                {
-                    var requiresConsole = workflowCtx.CurrentAction.ActionProvider.Discover().RequiresConsole;
-                    if (requiresConsole)
+                    if (workflowCtx.CancellationToken != null)
                     {
-                        success = await ProcessTask(workflowCtx, taskDescription);
+                        break;
                     }
-                    else
+
+                    var taskDescription = $"{workflowCtx.CurrentAction.Name}".EscapeMarkup();
+                
+                    if (workflowCtx.CurrentAction.RunAtServer == true)
                     {
-                        
                         success = await _console
                             .Status()
                             .Spinner(Spinner.Known.Clock)
-                            .StartAsync(taskDescription, async _ => await ProcessTask(workflowCtx, taskDescription));
+                            .StartAsync(taskDescription, async _ => await ProcessServerTask(workflowCtx, taskDescription));
                     }
+                    else
+                    {
+                        var requiresConsole = workflowCtx.CurrentAction.ActionProvider.Discover().RequiresConsole;
+                        if (requiresConsole)
+                        {
+                            success = await ProcessTask(workflowCtx, taskDescription);
+                        }
+                        else
+                        {
+                        
+                            success = await _console
+                                .Status()
+                                .Spinner(Spinner.Known.Clock)
+                                .StartAsync(taskDescription, async _ => await ProcessTask(workflowCtx, taskDescription));
+                        }
+                    }
+
+                    if (!success) break;
+
+                    workflowCtx.NextStep();
                 }
-
-                if (!success) break;
-
-                workflowCtx.NextStep();
             }
 
             if (!success)
