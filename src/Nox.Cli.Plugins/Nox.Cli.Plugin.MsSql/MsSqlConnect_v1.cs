@@ -1,10 +1,11 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugin.MsSql;
 
-public class PostgresConnect_v1 : INoxCliAddin
+public class MsSqlConnect_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
@@ -50,6 +51,12 @@ public class PostgresConnect_v1 : INoxCliAddin
                     Default = string.Empty,
                     IsRequired = true
                 },
+                ["options"] = new NoxActionInput {
+                    Id = "options",
+                    Description = "The database options to use when connecting to the database",
+                    Default = string.Empty,
+                    IsRequired = false
+                }
             },
 
             Outputs =
@@ -62,29 +69,53 @@ public class PostgresConnect_v1 : INoxCliAddin
         };
     }
 
+    private bool _isServerContext = false;
+    private string? _server;
+    private string? _options;
+    private int? _port;
+    private string? _userId;
+    private string? _password;
+    private string? _database;
     private SqlConnection? _connection;
-
+    
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
-        var csb = new SqlConnectionStringBuilder
-        {
-            DataSource = $"{(string)inputs["server"]},{(string)inputs["port"]}",
-            UserID = (string)inputs["user"],
-            Password = (string)inputs["password"],
-            InitialCatalog = (string)inputs["database"],
-        };
-
-        _connection = new SqlConnection(csb.ToString());
-
+        _server = inputs.ValueOrDefault<string>("server", this);
+        _port = inputs.ValueOrDefault<int>("port", this);
+        _userId = inputs.Value<string>("user");
+        _password = inputs.Value<string>("password");
+        _options = inputs.ValueOrDefault<string>("options", this);
+        _database = inputs.Value<string>("database");
+        
         return Task.FromResult(true);
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
+        if (string.IsNullOrEmpty(_userId) ||
+            string.IsNullOrEmpty(_password) ||
+            string.IsNullOrEmpty(_database))
+        {
+            ctx.SetErrorMessage("The mssql connect action was not initialized");
+            return outputs;
+        }
+
+        var csb = new SqlConnectionStringBuilder(_options)
+        {
+            DataSource = $"{_server},{_port}",
+            UserID = _userId,
+            Password = _password,
+            InitialCatalog = _database,
+            
+        };
+
+        _connection = new SqlConnection(csb.ToString());
+        
         if (_connection == null)
         {
             ctx.SetErrorMessage("The mssql connect action was not initialized");
@@ -112,11 +143,10 @@ public class PostgresConnect_v1 : INoxCliAddin
     }
 
     public async Task EndAsync()
-
     {
-        if (_connection != null)
+        if (!_isServerContext) 
         {
-            await _connection.CloseAsync();
+            await _connection!.CloseAsync();
             await _connection.DisposeAsync();
         }
     }

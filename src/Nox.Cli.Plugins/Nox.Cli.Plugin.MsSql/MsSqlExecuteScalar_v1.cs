@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugin.MsSql;
 
@@ -46,6 +47,7 @@ public class MsSqlExecuteScalar_v1 : INoxCliAddin
         };
     }
 
+    private bool _isServerContext = false;
     private SqlConnection? _connection;
 
     private string? _sql;
@@ -54,56 +56,47 @@ public class MsSqlExecuteScalar_v1 : INoxCliAddin
 
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
-        _connection = (SqlConnection)inputs["connection"];
-
-        _sql = (string)inputs["sql"];
-
-        if (inputs.TryGetValue("parameters", out var input))
-        {
-            _parameters = (List<object>)input;
-        }
-
+        _connection = inputs.Value<SqlConnection>("connection");
+        _sql = inputs.Value<string>("sql");
+        _parameters = inputs.Value<List<object>>("parameters");
         return Task.FromResult(true);
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
-        var outputs = new Dictionary<string, object?>();
+        _isServerContext = ctx.IsServer;
+        var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
 
-        if (_connection == null)
+        if (_connection == null ||
+            string.IsNullOrEmpty(_sql))
         {
             ctx.SetErrorMessage("The mssql execute scalar action was not initialized");
+            return outputs;
         }
-        else if (_sql == null)
-        {
-            ctx.SetErrorMessage("The sql query was not initialized");
-        }
-        else
-        {
-            try
-            {
-                using var cmd = new SqlCommand(_sql, _connection);
 
-                if (_parameters != null)
+        try
+        {
+            await using var cmd = new SqlCommand(_sql, _connection);
+
+            if (_parameters != null)
+            {
+                foreach (var p in _parameters)
                 {
-                    foreach (var p in _parameters)
-                    {
-                        cmd.Parameters.Add( new SqlParameter { Value = p } );
-                    }
+                    cmd.Parameters.Add(new SqlParameter { Value = p });
                 }
-
-                var result = await cmd.ExecuteScalarAsync();
-
-                outputs["result"] = result ?? new object();
-
-                ctx.SetState(ActionState.Success);
             }
-            catch (Exception ex)
-            {
-                ctx.SetErrorMessage(ex.Message);
-            }
+
+            var result = await cmd.ExecuteScalarAsync();
+
+            outputs["result"] = result ?? new object();
+
+            ctx.SetState(ActionState.Success);
+        }
+        catch (Exception ex)
+        {
+            ctx.SetErrorMessage(ex.Message);
         }
 
         return outputs!;

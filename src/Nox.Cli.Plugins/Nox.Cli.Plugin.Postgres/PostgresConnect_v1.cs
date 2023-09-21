@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Extensions;
 using Npgsql;
 
 namespace Nox.Cli.Plugin.Postgres;
@@ -50,6 +51,12 @@ public class PostgresConnect_v1 : INoxCliAddin
                     Default = string.Empty,
                     IsRequired = true
                 },
+                ["options"] = new NoxActionInput {
+                    Id = "options",
+                    Description = "The database options to use when connecting to the database",
+                    Default = string.Empty,
+                    IsRequired = false
+                }
             },
 
             Outputs =
@@ -62,29 +69,46 @@ public class PostgresConnect_v1 : INoxCliAddin
         };
     }
 
+    private bool _isServerContext = false;
+    private string? _server;
+    private string? _options;
+    private int? _port;
+    private string? _userId;
+    private string? _password;
+    private string? _database;
     private NpgsqlConnection? _connection;
+    
 
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
-        var csb = new NpgsqlConnectionStringBuilder
-        {
-            Host = (string)inputs["server"],
-            Port = Convert.ToInt32(inputs["port"]),
-            Username = (string)inputs["user"],
-            Password = (string)inputs["password"],
-            Database = (string)inputs["database"],
-        };
-
-        _connection = new NpgsqlConnection(csb.ToString());
-
+        _server = inputs.ValueOrDefault<string>("server", this);
+        _port = inputs.ValueOrDefault<int>("port", this);
+        _userId = inputs.Value<string>("user");
+        _password = inputs.Value<string>("password");
+        _options = inputs.ValueOrDefault<string>("options", this);
+        _database = inputs.Value<string>("database");
+        
         return Task.FromResult(true);
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
+        
+        var csb = new NpgsqlConnectionStringBuilder(_options)
+        {
+            Host = _server,
+            Port = _port!.Value,
+            Username = _userId,
+            Password = _password,
+            Database = _database,
+        };
+
+        _connection = new NpgsqlConnection(csb.ToString());
+
 
         if (_connection == null)
         {
@@ -113,11 +137,10 @@ public class PostgresConnect_v1 : INoxCliAddin
     }
 
     public async Task EndAsync()
-
     {
-        if (_connection != null)
+        if (!_isServerContext)
         {
-            await _connection.CloseAsync();
+            await _connection!.CloseAsync();
             await _connection.DisposeAsync();
         }
     }

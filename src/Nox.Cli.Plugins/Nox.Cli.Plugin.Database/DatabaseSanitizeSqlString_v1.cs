@@ -2,7 +2,7 @@ using Nox.Cli.Abstractions;
 
 namespace Nox.Cli.Plugin.Database;
 
-public class DatabaseSanitizeSql_v1 : INoxCliAddin
+public class DatabaseSanitizeSqlString_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
