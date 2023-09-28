@@ -73,9 +73,9 @@ internal static class ConfiguratorExtensions
             {
                 cliConfig.AddBranch(branch.Key, b =>
                 {
-                    if (branchDescriptions.ContainsKey(branch.Key))
+                    if (branchDescriptions.TryGetValue(branch.Key, out var description))
                     {
-                        b.SetDescription(branchDescriptions[branch.Key]);
+                        b.SetDescription(description);
                     }
 
                     foreach(var workflow in branch)

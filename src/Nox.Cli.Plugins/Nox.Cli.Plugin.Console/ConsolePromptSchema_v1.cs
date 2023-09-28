@@ -84,6 +84,8 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         };
     }
     
+    private Regex _defaultArrayRegex = new(@"\[(.*?)\]\.(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+    
     private string? _schemaUrl = null!;
 
     private string? _schema = null!;
@@ -307,13 +309,20 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
         if (!string.IsNullOrWhiteSpace(key) && _includedPrompts != null && !_includedPrompts.Any(f => newKey.StartsWith(f, StringComparison.OrdinalIgnoreCase)))
         {
-            if (_defaults != null && _defaults.Any(d => key.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
+            if (_defaults != null)
             {
-                _yaml.AppendLine($"{key}: {_defaults[key]}");
-                _responses[newKey] = _defaults[newKey];
+                //The exact key exists in defaults
+                if (_defaults.Any(d => newKey.Equals(d.Key, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _yaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {_defaults[newKey]}");
+                    _responses[newKey] = _defaults[newKey];
+                } else if (_defaults.Any(d => d.Key.StartsWith(newKey, StringComparison.CurrentCultureIgnoreCase)))
+                {
+                    //The key is not in included prompts, but there are defaults for the sub-keys
+                    ProcessDefaults(newKey, yamlSpacing, yamlSpacingPostfix);
+                }
+                return;
             }
-
-            return;
         }
 
         if (!string.IsNullOrWhiteSpace(key) && _excludedPrompts != null && _excludedPrompts.Any(f => newKey.StartsWith(f, StringComparison.OrdinalIgnoreCase)))
@@ -438,12 +447,13 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     private void PromptBoolean(string prompt, string rootKey, string key, string yamlPrefix)
     {
         var newKey = $"{rootKey}.{key}".TrimStart('.');
+        var defaultValue = GetDefault<bool>(newKey).ToYesNo();
         var response = AnsiConsole.Prompt(
             new TextPrompt<char>(prompt)
                 .DefaultValueStyle(Style.Parse("mediumpurple3_1"))
                 .ChoicesStyle(Style.Parse("mediumpurple3_1"))
                 .PromptStyle(Style.Parse("seagreen1"))
-                .DefaultValue('y')
+                .DefaultValue(defaultValue)
                 .AddChoice('y')
                 .AddChoice('n')
         ) == 'y';
@@ -548,6 +558,36 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         }
 
         return default;
+    }
+
+    private void ProcessDefaults(string key, string yamlSpacing, string yamlSpacingPostfix)
+    {
+        _yaml.AppendLine($"{yamlSpacing}{key}:");
+        var arrayIndex = -1;
+        foreach (var defaultItem in _defaults!.Where(d => d.Key.StartsWith(key, StringComparison.CurrentCultureIgnoreCase)))
+        {
+            //check if this item is an array
+            var itemKey = defaultItem.Key;
+            var defaultSpacing = new string(' ', itemKey.Count(d => d == '.') * 2);
+            var match = _defaultArrayRegex.Match(itemKey);
+            if (match.Success) //array
+            {
+                if (int.TryParse(match.Groups[1].ToString(), out var itemIndex))
+                {
+                    var defaultPrefix = "  ";
+                    if (itemIndex != arrayIndex)
+                    {
+                        defaultPrefix = "- ";
+                        arrayIndex = itemIndex;
+                    }
+                    _yaml.AppendLine($"{defaultSpacing}{defaultPrefix}{match.Groups[2]}: {defaultItem.Value}");
+                }
+            }
+            else
+            {
+                _yaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {_defaults![key]}");
+            }
+        }
     }
 }
 
