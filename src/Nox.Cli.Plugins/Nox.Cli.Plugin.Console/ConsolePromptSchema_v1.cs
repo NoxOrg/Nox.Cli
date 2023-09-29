@@ -84,8 +84,6 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         };
     }
     
-    private Regex _defaultArrayRegex = new(@"\[(.*?)\]\.(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
-    
     private string? _schemaUrl = null!;
 
     private string? _schema = null!;
@@ -562,6 +560,8 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
     private void ProcessDefaults(string key, string yamlSpacing, string yamlSpacingPostfix)
     {
+        Regex defaultArrayRegex = new(@"\[(.*?)\]\.(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+    
         _yaml.AppendLine($"{yamlSpacing}{key}:");
         var arrayIndex = -1;
         foreach (var defaultItem in _defaults!.Where(d => d.Key.StartsWith(key, StringComparison.CurrentCultureIgnoreCase)))
@@ -569,7 +569,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
             //check if this item is an array
             var itemKey = defaultItem.Key;
             var defaultSpacing = new string(' ', itemKey.Count(d => d == '.') * 2);
-            var match = _defaultArrayRegex.Match(itemKey);
+            var match = defaultArrayRegex.Match(itemKey);
             if (match.Success) //array
             {
                 if (int.TryParse(match.Groups[1].ToString(), out var itemIndex))

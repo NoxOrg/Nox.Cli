@@ -1,12 +1,15 @@
-﻿using Microsoft.Graph.Print.Printers.Item.Jobs;
+﻿using System.Collections;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
+using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Secrets;
 using Nox.Cli.Server.Integration;
+using Nox.Cli.Variables;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
 using Spectre.Console;
+using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Actions;
 
@@ -47,7 +50,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         var watch = System.Diagnostics.Stopwatch.StartNew();
 
-        var success = true;
+        var success = false;
 
         var workflowCtx = _console.Status()
             .Spinner(Spinner.Known.Clock)
@@ -61,93 +64,19 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                 break;
             }
 
-            var jobName = workflowCtx.CurrentJob.Name.EscapeMarkup();
+            if (workflowCtx.CurrentJob.ForEach != null && !string.IsNullOrWhiteSpace(workflowCtx.CurrentJob.ForEach.ToString()))
+            {
+                await AddRecurringJob(workflowCtx);
+            }
+
+            success = await ProcessSingleJob(workflowCtx);
             
-            _console.WriteLine();
-            if (workflowCtx.CurrentJob.Steps.Any(s => s.Value.RunAtServer == true))
-            {
-                ConsoleRootLine($"[mediumpurple3_1]{jobName}[/] {Emoji.Known.DesktopComputer} [bold yellow]Running at: {_serverIntegration!.Endpoint}[/]");
-                
-            }
-            else
-            {
-                ConsoleRootLine($"[mediumpurple3_1]{jobName}[/]"); 
-            }
+            if (!success) break;
             
-            await workflowCtx.ResolveJobVariables(workflowCtx.CurrentJob);
-
-            var jobSkipped = false;
-            
-            if (!workflowCtx.CurrentJob.EvaluateIf())
-            {
-                jobSkipped = true;
-                if (string.IsNullOrWhiteSpace(workflowCtx.CurrentJob.Display?.IfCondition))
-                {
-                    ConsoleRootLine($"{Emoji.Known.BlueSquare} [deepskyblue1]Skipped because an if condition evaluated true[/]");
-                }
-                else
-                {
-                    ConsoleRootLine($"{Emoji.Known.BlueSquare} [deepskyblue1]{workflowCtx.CurrentJob.Display.IfCondition.EscapeMarkup()}[/]");
-                }
-            }
-            else
-            {
-                while (workflowCtx.CurrentAction != null)
-                {
-                    if (workflowCtx.CancellationToken != null)
-                    {
-                        break;
-                    }
-
-                    var taskDescription = $"{workflowCtx.CurrentAction.Name}".EscapeMarkup();
-                
-                    if (workflowCtx.CurrentAction.RunAtServer == true)
-                    {
-                        success = await _console
-                            .Status()
-                            .Spinner(Spinner.Known.Clock)
-                            .StartAsync(taskDescription, async _ => await ProcessServerTask(workflowCtx, taskDescription));
-                    }
-                    else
-                    {
-                        var requiresConsole = workflowCtx.CurrentAction.ActionProvider.Discover().RequiresConsole;
-                        if (requiresConsole)
-                        {
-                            success = await ProcessTask(workflowCtx, taskDescription);
-                        }
-                        else
-                        {
-                        
-                            success = await _console
-                                .Status()
-                                .Spinner(Spinner.Known.Clock)
-                                .StartAsync(taskDescription, async _ => await ProcessTask(workflowCtx, taskDescription));
-                        }
-                    }
-
-                    if (!success) break;
-
-                    workflowCtx.NextStep();
-                }
-            }
-
-            if (!success)
-            {
-                break;
-            }
-
-            if (workflowCtx.CurrentJob.Display != null && 
-                !string.IsNullOrWhiteSpace(workflowCtx.CurrentJob.Display.Success) &&
-                !jobSkipped)
-            {
-                ConsoleRootLine($"{Emoji.Known.GreenSquare} [lightgreen]{workflowCtx.CurrentJob.Display.Success}[/]");
-            }
-
             workflowCtx.NextJob();
         }
 
         await Task.WhenAll(_processedActions.Where(p => p.RunAtServer == false).Select(p => p.ActionProvider.EndAsync()));
-
 
         watch.Stop();
 
@@ -156,13 +85,13 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         if (success)
         {
             _console.MarkupLine($"[seagreen1]Success! ({watch.Elapsed:hh\\:mm\\:ss})[/]");
+            return true;
         }
         else
         {
             _console.MarkupLine($"[indianred1]Workflow halted with an error. ({watch.Elapsed:hh\\:mm\\:ss})[/]");
+            return false;
         }
-
-        return success;
     }
 
     private async Task<bool> ProcessTask(NoxWorkflowContext ctx, string taskDescription)
@@ -331,6 +260,112 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         var padding = new string(' ', 4);
         _console.MarkupLine($"{padding}{value}");
     }
+
+    private async Task<bool> ProcessSingleJob(NoxWorkflowContext context)
+    {
+        var job = context.CurrentJob!;
+        await context.ResolveJobVariables(job);
+            
+        var jobName = job.Name.EscapeMarkup();
+        
+        _console.WriteLine();
+        if (job.Steps.Any(s => s.Value.RunAtServer == true))
+        {
+            ConsoleRootLine($"[mediumpurple3_1]{jobName}[/] {Emoji.Known.DesktopComputer} [bold yellow]Running at: {_serverIntegration!.Endpoint}[/]");
+        }
+        else
+        {
+            ConsoleRootLine($"[mediumpurple3_1]{jobName}[/]");
+        }
+
+        var jobSkipped = false;
+
+        if (!job.EvaluateIf())
+        {
+            jobSkipped = true;
+            if (string.IsNullOrWhiteSpace(job.Display?.IfCondition))
+            {
+                ConsoleRootLine($"{Emoji.Known.BlueSquare} [deepskyblue1]Skipped because an if condition evaluated true[/]");
+            }
+            else
+            {
+                ConsoleRootLine($"{Emoji.Known.BlueSquare} [deepskyblue1]{job.Display.IfCondition.EscapeMarkup()}[/]");
+            }
+        }
+        else
+        {
+            while (context.CurrentAction != null)
+            {
+                if (context.CancellationToken != null)
+                {
+                    break;
+                }
+
+                var taskDescription = $"{context.CurrentAction.Name}".EscapeMarkup();
+
+                bool success;
+                if (context.CurrentAction.RunAtServer == true)
+                {
+                    success = await _console
+                        .Status()
+                        .Spinner(Spinner.Known.Clock)
+                        .StartAsync(taskDescription, async _ => await ProcessServerTask(context, taskDescription));
+                }
+                else
+                {
+                    var requiresConsole = context.CurrentAction.ActionProvider.Discover().RequiresConsole;
+                    if (requiresConsole)
+                    {
+                        success = await ProcessTask(context, taskDescription);
+                    }
+                    else
+                    {
+
+                        success = await _console
+                            .Status()
+                            .Spinner(Spinner.Known.Clock)
+                            .StartAsync(taskDescription, async _ => await ProcessTask(context, taskDescription));
+                    }
+                }
+
+                if (!success) return false;
+
+                context.NextStep();
+            }
+        }
+
+        if (job.Display != null &&
+            !string.IsNullOrWhiteSpace(job.Display.Success) &&
+            !jobSkipped)
+        {
+            ConsoleRootLine($"{Emoji.Known.GreenSquare} [lightgreen]{job.Display.Success}[/]");
+        }
+
+        return true;
+    }
+
+    private async Task AddRecurringJob(NoxWorkflowContext context)
+    {
+        var job = context.CurrentJob!;
+        await context.ResolveJobVariables(job);
+
+        var forEach = job.ForEach!;
+
+        if (forEach is not IList forEachList) throw new NoxCliException("The value of the for-each in a Nox Job must implement IList.");
+        var varProvider = new ForEachVariableProvider(job);
+
+        var index = context.RemoveCurrentJob();
+        
+        //Add the iterations in reverse
+        for (int i = forEachList.Count - 1; i >= 0; i--)
+        {
+            var jobInstance = job.Clone(Guid.NewGuid().ToString());
+            varProvider.ResolveAll(jobInstance, forEachList[i]!);
+            context.InjectJobIteration(index, jobInstance, i == 0);
+        }
+        
+    }
+    
 }
 
 
