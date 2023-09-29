@@ -182,7 +182,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
             }
         }
 
-        var deserializer = BuildDeserializer();
+        BuildDeserializer();
         ResolveManifest(yamlFiles);
         ResolveWorkflows(yamlFiles);
         

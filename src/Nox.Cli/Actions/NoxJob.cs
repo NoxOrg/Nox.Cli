@@ -11,7 +11,8 @@ public class NoxJob: INoxJob
 
     public string Name { get; set; } = string.Empty;
     public string? If { get; set; }
-    
+    public object? ForEach { get; set; }
+
     public NoxJobDisplayMessage? Display { get; set; } = new();
     public IDictionary<string, INoxAction> Steps { get; set; } = new Dictionary<string, INoxAction>();
     

@@ -10,7 +10,8 @@ public class JobConfiguration: IJobConfiguration
     public string Name { get; set; } = string.Empty;
 
     public string? If { get; set; }
-    
+    public string? ForEach { get; set; }
+
     public NoxJobDisplayMessage? Display { get; set; }
     public List<IActionConfiguration> Steps { get; set; } = new();
 }

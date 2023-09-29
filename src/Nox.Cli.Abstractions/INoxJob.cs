@@ -8,6 +8,7 @@ public interface INoxJob
     
     string Name { get; set; }
     string? If { get; set; }
+    object? ForEach { get; set; }
     NoxJobDisplayMessage? Display { get; set; }
     IDictionary<string, INoxAction> Steps { get; set; }
     

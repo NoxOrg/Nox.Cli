@@ -140,6 +140,11 @@ public class ClientVariableProvider: IClientVariableProvider
         {
             job.If = ReplaceVariable(job.If).ToString()!;
         }
+
+        if (job.ForEach != null && !string.IsNullOrWhiteSpace(job.ForEach.ToString()))
+        {
+            job.ForEach = ReplaceVariable(job.ForEach.ToString()!);
+        }
     }
 
     private void Initialize(IWorkflowConfiguration workflow)
