@@ -8,11 +8,11 @@
 
     <ItemGroup>
       <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.2.2" />
-      <PackageReference Include="Azure.Identity" Version="1.9.0" />
-      <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="7.0.9" />
+      <PackageReference Include="Azure.Identity" Version="1.10.1" />
+      <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="7.0.11" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-      <PackageReference Include="Microsoft.Identity.Client" Version="4.55.0" />
-      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.32.1" />
+      <PackageReference Include="Microsoft.Identity.Client" Version="4.56.0" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.2" />
     </ItemGroup>
 
     <ItemGroup>
