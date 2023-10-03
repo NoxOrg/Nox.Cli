@@ -181,15 +181,21 @@ public class NoxWorkflowContext : INoxWorkflowContext
     /// Injects a job iteration of a recurring job at the current location
     /// </summary>
     public void InjectJobIteration(int index, INoxJob job, bool setAsCurrent)
-    { 
-        job.Sequence = _jobs[index].Sequence;
-        _jobs.Insert(index, job);
-        //increment the sequence of the rest of the jobs
-        for (int i = index + 1; i <= _jobs.Count - 1; i++)
+    {
+        job.Sequence = index + 1;
+        if (_jobs.Count == index)
         {
-            _jobs[i].Sequence++;
+            _jobs.Add(job);
         }
-
+        else
+        {
+            _jobs.Insert(index, job);
+            //increment the sequence of the rest of the jobs
+            for (int i = index + 1; i <= _jobs.Count - 1; i++)
+            {
+                _jobs[i].Sequence++;
+            }
+        }
         if (setAsCurrent) _currentJob = job;
     }
 
