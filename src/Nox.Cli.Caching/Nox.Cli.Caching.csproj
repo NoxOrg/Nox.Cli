@@ -17,7 +17,7 @@
       <PackageReference Include="Nox.Utilities" Version="1.0.7" />
       <PackageReference Include="RestSharp" Version="110.2.0" />
       <PackageReference Include="Spectre.Console" Version="0.47.0" />
-      <PackageReference Include="YamlDotNet" Version="13.3.1" />
+      <PackageReference Include="YamlDotNet" Version="13.4.0" />
     </ItemGroup>
 
 </Project>
