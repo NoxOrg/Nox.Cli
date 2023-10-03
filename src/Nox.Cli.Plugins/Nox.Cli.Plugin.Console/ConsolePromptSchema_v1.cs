@@ -445,7 +445,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     private void PromptInteger(string prompt, string rootKey, string key, string yamlPrefix, bool isRequired)
     {
         var newKey = $"{rootKey}.{key}".TrimStart('.');
-        var spectrePrompt = new TextPrompt<int?>(prompt)
+        var spectrePrompt = new TextPrompt<int>(prompt)
             .PromptStyle(Style.Parse("seagreen1"))
             .DefaultValueStyle(Style.Parse("mediumpurple3_1"));
         
