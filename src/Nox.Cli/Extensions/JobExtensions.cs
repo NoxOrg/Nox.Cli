@@ -7,11 +7,17 @@ public static class JobExtensions
 {
     public static INoxJob Clone(this INoxJob source, string id)
     {
+        var steps = source.Steps;
+        foreach (var step in steps)
+        {
+            
+        }
+        
         var result = new NoxJob
         {
             Id = source.Id + id,
             Name = source.Name,
-            Steps = source.Steps,
+            Steps = steps,
             Display = source.Display
         };
 

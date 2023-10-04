@@ -23,6 +23,8 @@ public class ForEachVariableProvider
         _variables.ResolveForEachVariables(forEachObject);
         foreach (var step in job.Steps)
         {
+            step.Value.Id = ReplaceVariable(step.Value.Id).ToString()!;
+            
             foreach (var (_, input) in step.Value.Inputs)
             {
                 if (input.Default is string inputValueString)
@@ -53,6 +55,11 @@ public class ForEachVariableProvider
                     }
                 }
             }
+            
+            if (!string.IsNullOrWhiteSpace(step.Value.If))
+            {
+                step.Value.If = ReplaceVariable(step.Value.If).ToString()!;
+            }
         }
         
         job.Name = ReplaceVariable(job.Name).ToString()!;
@@ -61,7 +68,7 @@ public class ForEachVariableProvider
             job.Display.Success = ReplaceVariable(job.Display.Success).ToString()!;
         }
     }
-
+    
     private void Initialize(INoxJob job)
     {
         var serializer = new SerializerBuilder()
@@ -96,18 +103,35 @@ public class ForEachVariableProvider
 
             var resolvedValue = LookupValue(variable);
 
-            if (resolvedValue == null || resolvedValue.GetType() == typeof(object))
+            if (resolvedValue?.GetType() == typeof(object))
             {
                 break;
             }
-            else if (resolvedValue.GetType().IsSimpleType())
+
+            if (resolvedValue != null)
             {
-                result = result.ToString()!.Replace(fullPhrase, resolvedValue.ToString());
+                if (resolvedValue.GetType().IsSimpleType())
+                {
+                    result = result.ToString()!.Replace(fullPhrase, resolvedValue.ToString());
+                }
+                else
+                {
+                    if (value == fullPhrase)
+                    {
+                        result = resolvedValue;
+                        break;
+                    }
+
+                    result = result.ToString()!.Replace(fullPhrase, "NOT-NULL");
+                }
             }
             else
             {
-                result = resolvedValue;
-                break;
+                if (value == fullPhrase)
+                {
+                    break;
+                }
+                result = result.ToString()!.Replace(fullPhrase, "NULL");
             }
 
             match = _variableRegex.Match(result.ToString()!);

@@ -138,7 +138,7 @@ public class ClientVariableProvider: IClientVariableProvider
 
         if (!string.IsNullOrWhiteSpace(job.If))
         {
-            job.If = ReplaceVariable(job.If).ToString()!;
+            job.If = ReplaceVariable(job.If, true).ToString()!;
         }
 
         if (job.ForEach != null && !string.IsNullOrWhiteSpace(job.ForEach.ToString()))
@@ -167,7 +167,7 @@ public class ClientVariableProvider: IClientVariableProvider
         }
     }
     
-    private object ReplaceVariable(string value)
+    private object ReplaceVariable(string value, bool isIfCondition = false)
     {
         object result = value;
 
@@ -181,20 +181,37 @@ public class ClientVariableProvider: IClientVariableProvider
 
             var resolvedValue = LookupValue(variable);
 
-            if (resolvedValue == null || resolvedValue.GetType() == typeof(object))
+            if (resolvedValue?.GetType() == typeof(object))
             {
-                break;
-            }
-            else if (resolvedValue.GetType().IsSimpleType())
-            {
-                result = result.ToString()!.Replace(fullPhrase, resolvedValue.ToString());
-            }
-            else
-            {
-                result = resolvedValue;
                 break;
             }
 
+            if (resolvedValue != null)
+            {
+                if (resolvedValue.GetType().IsSimpleType())
+                {
+                    result = result.ToString()!.Replace(fullPhrase, resolvedValue.ToString());
+                }
+                else
+                {
+                    if (value == fullPhrase)
+                    {
+                        result = resolvedValue;
+                        break;
+                    }
+
+                    result = result.ToString()!.Replace(fullPhrase, "NOT-NULL");
+                }
+            }
+            else
+            {
+                if (value == fullPhrase || !isIfCondition)
+                {
+                    break;
+                }
+                result = result.ToString()!.Replace(fullPhrase, "NULL");
+            }
+            
             match = _variableRegex.Match(result.ToString()!);
         }
 
@@ -270,7 +287,7 @@ public class ClientVariableProvider: IClientVariableProvider
 
         if (!string.IsNullOrWhiteSpace(action.If))
         {
-            action.If = ReplaceVariable(action.If).ToString()!;
+            action.If = ReplaceVariable(action.If, true).ToString()!;
         }
     }
 
