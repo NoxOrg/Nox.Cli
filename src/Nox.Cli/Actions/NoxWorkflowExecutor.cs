@@ -354,16 +354,16 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         if (forEach is not IList forEachList) throw new NoxCliException("The value of the for-each in a Nox Job must implement IList.");
         var varProvider = new ForEachVariableProvider(job);
 
-        var index = context.RemoveCurrentJob();
+        var index = context.CurrentJobIndex;
         
         //Add the iterations in reverse
         for (int i = forEachList.Count - 1; i >= 0; i--)
         {
             var jobInstance = job.Clone(Guid.NewGuid().ToString());
             varProvider.ResolveAll(jobInstance, forEachList[i]!);
-            context.InjectJobIteration(index, jobInstance, i == 0);
+            context.InjectJobIteration(index + 1, jobInstance);
         }
-        
+        context.NextJob();
     }
     
 }

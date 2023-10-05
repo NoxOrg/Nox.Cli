@@ -6,7 +6,6 @@ namespace Nox.Cli.Actions;
 public class NoxJob: INoxJob
 {
     public int Sequence { get; set; }
-    public int FirstStepSequence { get; set; } = 0;
     public string Id { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;

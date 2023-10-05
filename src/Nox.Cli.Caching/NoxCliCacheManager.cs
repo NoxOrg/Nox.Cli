@@ -116,18 +116,33 @@ public class NoxCliCacheManager: INoxCliCacheManager
     public void RefreshTemplate(string name)
     {
         var templateInfo = _cache!.TemplateInfo.FirstOrDefault(ti => ti.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
-        if (templateInfo == null) throw new NoxCliException($"Unable to find template {name} in the template cache.");
-        if (!_isServer && IsOnline)
+        if (IsOnline)
         {
             var client = new RestClient(GetRemoteUri($"/templateInfo/{name}"));
             var infoRequest = new RestRequest() { Method = Method.Get };
             infoRequest.AddHeader("Accept", "application/json");
             var fileInfo = JsonConvert.DeserializeObject<RemoteFileInfo>(client.Execute(infoRequest).Content!);
-            if (fileInfo!.Size != templateInfo.Size || fileInfo.ShaChecksum != templateInfo.ShaChecksum)
+            
+            if (fileInfo == null) throw new NoxCliException($"Unable to locate the template in the online cache.");
+            
+            if (templateInfo == null)
             {
                 var fileContent = GetOnlineTemplate(name);
                 File.WriteAllText(Path.Combine(_templateCachePath, name), fileContent);
+                _cache.TemplateInfo.Add(fileInfo!);
             }
+            else
+            {
+                if (fileInfo!.Size != templateInfo.Size || fileInfo.ShaChecksum != templateInfo.ShaChecksum)
+                {
+                    var fileContent = GetOnlineTemplate(name);
+                    File.WriteAllText(Path.Combine(_templateCachePath, name), fileContent);
+                }
+            }
+        }
+        else
+        {
+            throw new NoxCliException($"Unable to communicate with the online cache.");
         }
     }
 
