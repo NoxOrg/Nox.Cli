@@ -25,18 +25,18 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
     private int _currentJobSequence = 0;
     private INoxJob? _currentJob;
-    private INoxJob? _nextJob;
     
     private int _currentActionSequence = 0;
     private INoxAction? _currentAction;
-    private INoxAction? _nextAction;
 
-    private readonly List<JobStep> _jobSteps = new List<JobStep>();
+    private readonly List<JobStep> _jobSteps = new();
 
     private readonly Regex _secretsVariableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+secret[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     
     public INoxJob? CurrentJob => _currentJob;
-    
+
+    public int CurrentJobIndex => _jobs.IndexOf(_currentJob!);
+
     public INoxAction? CurrentAction => _currentAction;
 
     public NoxWorkflowContext(
@@ -63,11 +63,10 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _currentJobSequence++;
         
         _currentJob = _jobs.FirstOrDefault(j => j.Sequence == _currentJobSequence);
-        _nextJob = _jobs.FirstOrDefault(j => j.Sequence == _currentJobSequence + 1);
         
         if (_currentJob != null)
         {
-            _currentActionSequence = _currentJob.FirstStepSequence;
+            _currentActionSequence = 1;
             _steps = _currentJob.Steps;
             NextStep();
         }
@@ -76,7 +75,6 @@ public class NoxWorkflowContext : INoxWorkflowContext
     public void NextStep()
     {
         _currentAction = _steps.Select(kv => kv.Value).FirstOrDefault(a => a.Sequence == _currentActionSequence);
-        _nextAction = _steps.Select(kv => kv.Value).FirstOrDefault(a => a.Sequence == _currentActionSequence + 1);
         _currentActionSequence++;
     }
 
@@ -166,21 +164,11 @@ public class NoxWorkflowContext : INoxWorkflowContext
         return _varProvider.GetUnresolvedInputVariables(action);
     }
 
-    public int RemoveCurrentJob()
-    {
-        var currentIndex = _jobs.IndexOf(_currentJob!);
-        for (int i = currentIndex; i <= _jobs.Count - 1; i++)
-        {
-            _jobs[i].Sequence--;
-        }
-        _jobs.RemoveAt(currentIndex);
-        return currentIndex;
-    }
     
     /// <summary>
     /// Injects a job iteration of a recurring job at the current location
     /// </summary>
-    public void InjectJobIteration(int index, INoxJob job, bool setAsCurrent)
+    public void InjectJobIteration(int index, INoxJob job)
     {
         job.Sequence = index + 1;
         if (_jobs.Count == index)
@@ -196,13 +184,11 @@ public class NoxWorkflowContext : INoxWorkflowContext
                 _jobs[i].Sequence++;
             }
         }
-        if (setAsCurrent) _currentJob = job;
     }
 
     private NoxJobDictionary ParseWorkflow()
     {
         var jobSequence = 1;
-        var stepSequence = 1;
         var jobs = new NoxJobDictionary();
         
         foreach (var jobConfiguration in _workflow.Jobs)
@@ -222,8 +208,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
                 If = jobConfiguration.If,
                 ForEach = jobConfiguration.ForEach,
                 Display = jobConfiguration.Display,
-                FirstStepSequence = stepSequence,
-                Steps = ParseSteps(jobConfiguration, ref stepSequence)
+                Steps = ParseSteps(jobConfiguration)
             };
 
             jobSequence++;
@@ -247,8 +232,9 @@ public class NoxWorkflowContext : INoxWorkflowContext
         return jobs;
     }
     
-    private Dictionary<string, INoxAction> ParseSteps(IJobConfiguration jobConfiguration, ref int sequence)
+    private Dictionary<string, INoxAction> ParseSteps(IJobConfiguration jobConfiguration)
     {
+        var sequence = 1;
         var steps = new Dictionary<string, INoxAction>(StringComparer.OrdinalIgnoreCase);
         
         foreach (var step in jobConfiguration.Steps)

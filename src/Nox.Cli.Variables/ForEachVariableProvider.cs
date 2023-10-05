@@ -24,6 +24,7 @@ public class ForEachVariableProvider
         foreach (var step in job.Steps)
         {
             step.Value.Id = ReplaceVariable(step.Value.Id).ToString()!;
+            step.Value.Name = ReplaceVariable(step.Value.Name).ToString()!;
             
             foreach (var (_, input) in step.Value.Inputs)
             {
@@ -61,8 +62,16 @@ public class ForEachVariableProvider
                 step.Value.If = ReplaceVariable(step.Value.If).ToString()!;
             }
         }
-        
+
+        var newSteps = new Dictionary<string, INoxAction>();
+        foreach (var step in job.Steps)
+        {
+            newSteps[step.Value.Id] = step.Value;
+        }
+
+        job.Steps = newSteps;
         job.Name = ReplaceVariable(job.Name).ToString()!;
+        if (!string.IsNullOrWhiteSpace(job.If)) job.If = ReplaceVariable(job.If).ToString();
         if (!string.IsNullOrWhiteSpace(job.Display?.Success))
         {
             job.Display.Success = ReplaceVariable(job.Display.Success).ToString()!;
@@ -150,6 +159,5 @@ public class ForEachVariableProvider
         }
         return null;
     }
-    
     
 }
