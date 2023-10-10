@@ -9,7 +9,7 @@ namespace Nox.Cli.Variables;
 
 public class ServerVariableProvider: IServerVariableProvider
 {
-    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>\b(vars|project|steps|server|env|runner)\b[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>\b(vars|solution|steps|server|env|runner)\b[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
     private readonly IManifestConfiguration _manifest;
     private readonly List<ServerVariable> _variables;

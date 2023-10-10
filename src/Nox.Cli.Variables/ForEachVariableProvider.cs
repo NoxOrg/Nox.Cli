@@ -21,12 +21,13 @@ public class ForEachVariableProvider
     public void ResolveAll(INoxJob job, object forEachObject)
     {
         _variables.ResolveForEachVariables(forEachObject);
-        foreach (var step in job.Steps)
+        foreach (var stepItem in job.Steps)
         {
-            step.Value.Id = ReplaceVariable(step.Value.Id).ToString()!;
-            step.Value.Name = ReplaceVariable(step.Value.Name).ToString()!;
+            var step = stepItem.Value;
+            step.Id = ReplaceVariable(step.Id).ToString()!;
+            step.Name = ReplaceVariable(step.Name).ToString()!;
             
-            foreach (var (_, input) in step.Value.Inputs)
+            foreach (var (_, input) in step.Inputs)
             {
                 if (input.Default is string inputValueString)
                 {
@@ -57,19 +58,31 @@ public class ForEachVariableProvider
                 }
             }
             
-            if (!string.IsNullOrWhiteSpace(step.Value.If))
+            if (!string.IsNullOrWhiteSpace(step.If))
             {
-                step.Value.If = ReplaceVariable(step.Value.If).ToString()!;
+                step.If = ReplaceVariable(step.If).ToString()!;
+            }
+
+            if (step.Display != null)
+            {
+                var display = step.Display;
+                if (!string.IsNullOrWhiteSpace(display.Success))
+                {
+                    display.Success = ReplaceVariable(display.Success).ToString()!;
+                }
+
+                if (!string.IsNullOrWhiteSpace(display.IfCondition))
+                {
+                    display.IfCondition = ReplaceVariable(display.IfCondition).ToString()!;
+                }
+
+                if (!string.IsNullOrWhiteSpace(display.Error))
+                {
+                    display.Error = ReplaceVariable(display.Error).ToString()!;
+                }
             }
         }
 
-        var newSteps = new Dictionary<string, INoxAction>();
-        foreach (var step in job.Steps)
-        {
-            newSteps[step.Value.Id] = step.Value;
-        }
-
-        job.Steps = newSteps;
         job.Name = ReplaceVariable(job.Name).ToString()!;
         if (!string.IsNullOrWhiteSpace(job.If)) job.If = ReplaceVariable(job.If).ToString();
         if (!string.IsNullOrWhiteSpace(job.Display?.Success))

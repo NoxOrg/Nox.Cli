@@ -27,4 +27,10 @@ public class ServerAction: INoxAction
     {
         throw new NotImplementedException();
     }
+
+
+    public object Clone()
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -60,8 +60,7 @@ public class CoreAppendString_v1 : INoxCliAddin
 
         ctx.SetState(ActionState.Error);
 
-        if (string.IsNullOrEmpty(_source) ||
-            string.IsNullOrWhiteSpace(_stringToAppend))
+        if (string.IsNullOrWhiteSpace(_stringToAppend))
         {
             ctx.SetErrorMessage("The Core append-string action was not initialized");
         }
@@ -69,6 +68,7 @@ public class CoreAppendString_v1 : INoxCliAddin
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(_source)) _source = "";
                 if (!_source.EndsWith(Environment.NewLine)) _source += Environment.NewLine;
                 var result = _source + _stringToAppend;
                 outputs["result"] = result;
