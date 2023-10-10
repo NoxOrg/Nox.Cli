@@ -12,4 +12,6 @@ public interface INoxJob
     IDictionary<string, INoxAction> Steps { get; set; }
     
     public bool EvaluateIf();
+
+
 }

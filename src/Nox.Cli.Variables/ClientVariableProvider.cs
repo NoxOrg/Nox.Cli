@@ -11,7 +11,7 @@ namespace Nox.Cli.Variables;
 
 public class ClientVariableProvider: IClientVariableProvider
 {
-    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>\b(vars|solution|steps|server|env|runner)[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
     private readonly Dictionary<string, object?> _variables;
     private readonly IOrgSecretResolver _orgSecretResolver;
@@ -157,7 +157,7 @@ public class ClientVariableProvider: IClientVariableProvider
 
         var matches = _variableRegex.Matches(workflowString);
 
-        var variablesTemp = matches.Select(m => m.Groups[1].Value)
+        var variablesTemp = matches.Select(m => m.Groups[2].Value)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(e => e);
 

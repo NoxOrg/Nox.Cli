@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
@@ -76,6 +75,20 @@ public class NoxWorkflowContext : INoxWorkflowContext
     {
         _currentAction = _steps.Select(kv => kv.Value).FirstOrDefault(a => a.Sequence == _currentActionSequence);
         _currentActionSequence++;
+    }
+
+    public void SetJob(INoxJob jobInstance)
+    {
+        _currentJob = jobInstance;
+        _currentActionSequence = 1;
+        _steps = _currentJob.Steps;
+        NextStep();
+    }
+
+    public void FirstStep()
+    {
+        _currentActionSequence = 1;
+        NextStep();
     }
 
     public bool IsServer => false;
@@ -163,7 +176,6 @@ public class NoxWorkflowContext : INoxWorkflowContext
     {
         return _varProvider.GetUnresolvedInputVariables(action);
     }
-
     
     /// <summary>
     /// Injects a job iteration of a recurring job at the current location
@@ -231,8 +243,24 @@ public class NoxWorkflowContext : INoxWorkflowContext
 
         return jobs;
     }
+
+    public INoxJob ParseJob(string jobId, int sequence)
+    {
+        var jobConfiguration = _workflow.Jobs.FirstOrDefault(j => j.Id == jobId);
+        var newJob = new NoxJob
+        {
+            Sequence = sequence,
+            Id = new string(jobConfiguration!.Id),
+            Name = new string(jobConfiguration.Name),
+            If = new string(jobConfiguration.If),
+            ForEach = new string(jobConfiguration.ForEach),
+            Display = CloneJobDisplay(jobConfiguration.Display),
+            Steps = ParseSteps(jobConfiguration, true)
+        };
+        return newJob;
+    }
     
-    private Dictionary<string, INoxAction> ParseSteps(IJobConfiguration jobConfiguration)
+    private Dictionary<string, INoxAction> ParseSteps(IJobConfiguration jobConfiguration, bool ignoreDuplicateSteps = false)
     {
         var sequence = 1;
         var steps = new Dictionary<string, INoxAction>(StringComparer.OrdinalIgnoreCase);
@@ -244,7 +272,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
                 throw new NoxCliException($"Step '{step.Id} ({step.Name})' in job: '{jobConfiguration.Name}' exists more than once. Step Ids must be unique in a job configuration");
             }
             
-            if (!string.IsNullOrEmpty(step.If))
+            if (!string.IsNullOrEmpty(step.If) && !ignoreDuplicateSteps)
             {
                 if (_jobSteps.Any(js => js.StepId == step.Id))
                 {
@@ -289,7 +317,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
                 Uses = step.Uses,
                 If = step.If,
                 Validate = step.Validate,
-                Display = step.Display,
+                Display = CloneActionDisplay(step.Display),
                 RunAtServer = step.RunAtServer,
                 ContinueOnError = step.ContinueOnError,
             };
@@ -301,11 +329,19 @@ public class NoxWorkflowContext : INoxWorkflowContext
             {
                 var input = new NoxActionInput
                 {
-                    Id = withKey,
-                    Default = withValue
+                    Id = withKey
                 };
-
-                newAction.Inputs.Add(withKey, input);
+                var withType = withValue.GetType();
+                if (withType == typeof(Dictionary<object, object>))
+                {
+                    input.Default = new Dictionary<object, object>((Dictionary<object, object>)withValue); 
+                }
+                else
+                {
+                    input.Default = withValue;
+                }
+                
+                newAction.Inputs.Add(withKey, input!);
             }
 
             if (newAction.Display != null)
@@ -349,7 +385,43 @@ public class NoxWorkflowContext : INoxWorkflowContext
         }
         return output;
     }
-    
+
+    private NoxActionDisplayMessage? CloneActionDisplay(NoxActionDisplayMessage? source)
+    {
+        if (source == null) return null;
+        var result = new NoxActionDisplayMessage();
+        if (!string.IsNullOrWhiteSpace(source.IfCondition))
+        {
+            result.IfCondition = new string(source.IfCondition);
+        }
+
+        if (!string.IsNullOrWhiteSpace(source.Error))
+        {
+            result.Error = new string(source.Error);
+        }
+
+        if (!string.IsNullOrWhiteSpace(source.Success))
+        {
+            result.Success = new string(source.Success);
+        }
+        return result;
+    }
+
+    private NoxJobDisplayMessage? CloneJobDisplay(NoxJobDisplayMessage? source)
+    {
+        if (source == null) return null;
+        var result = new NoxJobDisplayMessage();
+        if (!string.IsNullOrWhiteSpace(source.IfCondition))
+        {
+            result.IfCondition = new string(source.IfCondition);
+        }
+
+        if (!string.IsNullOrWhiteSpace(source.Success))
+        {
+            result.Success = new string(source.Success);
+        }
+        return result;
+    }
 }
 
 

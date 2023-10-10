@@ -1,5 +1,10 @@
+using System.Reflection;
 using CodingSeb.ExpressionEvaluator;
+using Microsoft.Graph.Models;
+using Microsoft.PowerShell.Commands;
+using Microsoft.TeamFoundation.DistributedTask.Pipelines;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Abstractions.Exceptions;
 
 namespace Nox.Cli.Actions;
 
