@@ -66,10 +66,12 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
             if (workflowCtx.CurrentJob.ForEach != null && !string.IsNullOrWhiteSpace(workflowCtx.CurrentJob.ForEach.ToString()))
             {
-                await AddRecurringJob(workflowCtx);
+                success = await ProcessForEachJob(workflowCtx);
             }
-
-            success = await ProcessSingleJob(workflowCtx);
+            else
+            {
+                success = await ProcessSingleJob(workflowCtx);    
+            }
             
             if (!success) break;
             
@@ -344,28 +346,101 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         return true;
     }
 
-    private async Task AddRecurringJob(NoxWorkflowContext context)
+    private async Task<bool> ProcessForEachJob(NoxWorkflowContext context)
     {
-        var job = context.CurrentJob!;
-        await context.ResolveJobVariables(job);
-
-        var forEach = job.ForEach!;
-
-        if (forEach is not IList forEachList) throw new NoxCliException("The value of the for-each in a Nox Job must implement IList.");
-        var varProvider = new ForEachVariableProvider(job);
-
-        var index = context.CurrentJobIndex;
+        var parentJob = context.CurrentJob!;
+        var jobId = parentJob.Id;
+        await context.ResolveJobVariables(parentJob);
+       
+        if (parentJob.ForEach is not IList forEachList) throw new NoxCliException("The value of the for-each in a Nox Job must implement IList.");
         
-        //Add the iterations in reverse
-        for (int i = forEachList.Count - 1; i >= 0; i--)
+        foreach (var iteration in forEachList)
         {
-            var jobInstance = job.Clone(Guid.NewGuid().ToString());
-            varProvider.ResolveAll(jobInstance, forEachList[i]!);
-            context.InjectJobIteration(index + 1, jobInstance);
+            var jobInstance = context.ParseJob(jobId, parentJob.Sequence);
+            await context.ResolveJobVariables(jobInstance);
+            var varProvider = new ForEachVariableProvider(jobInstance);
+            varProvider.ResolveAll(jobInstance, iteration);
+            context.SetJob(jobInstance);
+            
+            var jobName = jobInstance.Name.EscapeMarkup();
+
+            _console.WriteLine();
+            if (jobInstance.Steps.Any(s => s.Value.RunAtServer == true))
+            {
+                ConsoleRootLine($"[mediumpurple3_1]{jobName}[/] {Emoji.Known.DesktopComputer} [bold yellow]Running at: {_serverIntegration!.Endpoint}[/]");
+            }
+            else
+            {
+                ConsoleRootLine($"[mediumpurple3_1]{jobName}[/]");
+            }
+
+            var jobSkipped = false;
+
+            if (!jobInstance.EvaluateIf())
+            {
+                jobSkipped = true;
+                if (string.IsNullOrWhiteSpace(jobInstance.Display?.IfCondition))
+                {
+                    ConsoleRootLine($"{Emoji.Known.BlueSquare} [deepskyblue1]Skipped because an if condition evaluated true[/]");
+                }
+                else
+                {
+                    ConsoleRootLine($"{Emoji.Known.BlueSquare} [deepskyblue1]{jobInstance.Display.IfCondition.EscapeMarkup()}[/]");
+                }
+            }
+            else
+            {
+                while (context.CurrentAction != null)
+                {
+                    if (context.CancellationToken != null)
+                    {
+                        break;
+                    }
+
+                    var taskDescription = $"{context.CurrentAction.Name}".EscapeMarkup();
+
+                    bool success;
+                    if (context.CurrentAction.RunAtServer == true)
+                    {
+                        success = await _console
+                            .Status()
+                            .Spinner(Spinner.Known.Clock)
+                            .StartAsync(taskDescription, async _ => await ProcessServerTask(context, taskDescription));
+                    }
+                    else
+                    {
+                        var requiresConsole = context.CurrentAction.ActionProvider.Discover().RequiresConsole;
+                        if (requiresConsole)
+                        {
+                            success = await ProcessTask(context, taskDescription);
+                        }
+                        else
+                        {
+
+                            success = await _console
+                                .Status()
+                                .Spinner(Spinner.Known.Clock)
+                                .StartAsync(taskDescription, async _ => await ProcessTask(context, taskDescription));
+                        }
+                    }
+
+                    if (!success) return false;
+
+                    context.NextStep();
+                }
+            }
+
+            if (jobInstance.Display != null &&
+                !string.IsNullOrWhiteSpace(jobInstance.Display.Success) &&
+                !jobSkipped)
+            {
+                ConsoleRootLine($"{Emoji.Known.GreenSquare} [lightgreen]{jobInstance.Display.Success}[/]");
+            }
+            context.FirstStep();
         }
-        context.NextJob();
+        return true;
     }
-    
+
 }
 
 
