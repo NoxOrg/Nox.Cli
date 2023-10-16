@@ -75,9 +75,4 @@
     <ProjectReference Include="..\Nox.Cli.Server.Integration\Nox.Cli.Server.Integration.csproj" />
     <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\..\.nox\design\SampleCurrency.solution.nox.yaml">
-      <Link>design\SampleCurrency.solution.nox.yaml</Link>
-    </Content>
-  </ItemGroup>
 </Project>

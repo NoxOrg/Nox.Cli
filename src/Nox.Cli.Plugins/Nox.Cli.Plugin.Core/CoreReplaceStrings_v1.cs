@@ -102,9 +102,8 @@ public class CoreReplaceStrings_v1: INoxCliAddin
         var regex = new Regex(pattern, RegexOptions.None, TimeSpan.FromSeconds(10));
         var eval = new MatchEvaluator(match =>
         {
-            if (replacements.ContainsKey(match.Value))
+            if (replacements.TryGetValue(match.Value, out var item))
             {
-                var item = replacements[match.Value];
                 return item;    
             }
 
