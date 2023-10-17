@@ -11,4 +11,10 @@
     <PackageReference Include="Nox.Secrets" Version="7.0.49" />
     <PackageReference Include="Nox.Solution" Version="7.0.49" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Spectre.Console.Cli">
+      <HintPath>..\..\..\..\..\.nuget\packages\spectre.console.cli\0.47.0\lib\net7.0\Spectre.Console.Cli.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

@@ -35,7 +35,7 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
         
         var workflow = (WorkflowConfiguration)context.Data!;
 
-        return await _executor.Execute(workflow) ? 0 : 1;
+        return await _executor.Execute(workflow, context.Remaining) ? 0 : 1;
     }
 
 }

@@ -2,7 +2,7 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "test workflow",
+      "commandLineArgs": "sync helm-chart --force-local",
       "workingDirectory": "/home/jan/demo/NoxCliDemoProject",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
