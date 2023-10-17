@@ -238,7 +238,7 @@ public class AzDevOpsMergeFolder_v1 : INoxCliAddin
                 var changeType = VersionControlChangeType.Edit;
                 //If the file was created in the last minute it has to be an Add
                 var fileInfo = new FileInfo(file);
-                if (fileInfo.CreationTime > _refDateTime) changeType = VersionControlChangeType.Add;
+                if (DateTime.Compare(fileInfo.CreationTime, _refDateTime!.Value) > 0) changeType = VersionControlChangeType.Add;
                 result.Add(new GitChange
                 {
                     ChangeType = changeType,
