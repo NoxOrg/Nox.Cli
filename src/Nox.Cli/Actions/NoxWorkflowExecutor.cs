@@ -9,6 +9,7 @@ using Nox.Cli.Variables;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
 using Spectre.Console;
+using Spectre.Console.Cli;
 using ActionState = Nox.Cli.Abstractions.ActionState;
 
 namespace Nox.Cli.Actions;
@@ -42,7 +43,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         _noxSecretsResolver = noxSecretsResolver;
     }
 
-    public async Task<bool> Execute(IWorkflowConfiguration workflow)
+    public async Task<bool> Execute(IWorkflowConfiguration workflow, IRemainingArguments arguments)
     {
         var workflowDescription = $"[seagreen1]Executing workflow: {workflow.Name.EscapeMarkup()}[/]";
         _console.WriteLine();
@@ -51,6 +52,9 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         var watch = System.Diagnostics.Stopwatch.StartNew();
 
         var success = false;
+        
+        //Arguments
+        var forceLocal = arguments.Parsed.Contains("force-local");
 
         var workflowCtx = _console.Status()
             .Spinner(Spinner.Known.Clock)
@@ -66,11 +70,11 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
             if (workflowCtx.CurrentJob.ForEach != null && !string.IsNullOrWhiteSpace(workflowCtx.CurrentJob.ForEach.ToString()))
             {
-                success = await ProcessForEachJob(workflowCtx);
+                success = await ProcessForEachJob(workflowCtx, forceLocal);
             }
             else
             {
-                success = await ProcessSingleJob(workflowCtx);    
+                success = await ProcessSingleJob(workflowCtx, forceLocal);    
             }
             
             if (!success) break;
@@ -263,7 +267,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         _console.MarkupLine($"{padding}{value}");
     }
 
-    private async Task<bool> ProcessSingleJob(NoxWorkflowContext context)
+    private async Task<bool> ProcessSingleJob(NoxWorkflowContext context, bool forceLocal = false)
     {
         var job = context.CurrentJob!;
         await context.ResolveJobVariables(job);
@@ -302,6 +306,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                 {
                     break;
                 }
+
+                context.CurrentAction.RunAtServer = !forceLocal;
 
                 var taskDescription = $"{context.CurrentAction.Name}".EscapeMarkup();
 
@@ -346,7 +352,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         return true;
     }
 
-    private async Task<bool> ProcessForEachJob(NoxWorkflowContext context)
+    private async Task<bool> ProcessForEachJob(NoxWorkflowContext context, bool forceLocal = false)
     {
         var parentJob = context.CurrentJob!;
         var jobId = parentJob.Id;
@@ -396,6 +402,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                     {
                         break;
                     }
+
+                    context.CurrentAction.RunAtServer = !forceLocal;
 
                     var taskDescription = $"{context.CurrentAction.Name}".EscapeMarkup();
 
