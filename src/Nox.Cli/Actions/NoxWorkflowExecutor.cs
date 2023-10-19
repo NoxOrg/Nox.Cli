@@ -403,7 +403,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                         break;
                     }
 
-                    context.CurrentAction.RunAtServer = !forceLocal;
+                    if (context.CurrentAction.RunAtServer == true && forceLocal) context.CurrentAction.RunAtServer = false;
 
                     var taskDescription = $"{context.CurrentAction.Name}".EscapeMarkup();
 
