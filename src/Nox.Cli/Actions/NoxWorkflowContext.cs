@@ -335,6 +335,15 @@ public class NoxWorkflowContext : INoxWorkflowContext
                 if (withType == typeof(Dictionary<object, object>))
                 {
                     input.Default = new Dictionary<object, object>((Dictionary<object, object>)withValue); 
+                } else if (withType == typeof(List<object>))
+                {
+                    var newList = new List<string>();
+                    foreach (var item in (List<object>)withValue)
+                    {
+                        newList.Add(new string(item.ToString()));
+                    }
+
+                    input.Default = newList;
                 }
                 else
                 {

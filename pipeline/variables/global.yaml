@@ -1,0 +1,20 @@
+variables:
+  # SonarCloud related
+  - name: SonarcloudProjectKey
+    value: 'nox-cli'
+  - name: SourceFolder
+    value: ''
+
+  # ACR repo name | Don't rename the variable because it's linked with CD template
+  - name: service_name
+    value: 'nox-cli.api.v1'
+
+  # Docker related - required
+  - name: buildContext
+    value: './src'
+  - name: dockerfilePath
+    value: '$(Build.SourcesDirectory)/src/Dockerfile'
+
+  # Helm Chart name
+  - name: helm_chart_name
+    value: nox-cli

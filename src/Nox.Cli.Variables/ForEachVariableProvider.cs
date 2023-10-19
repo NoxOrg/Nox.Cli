@@ -43,7 +43,16 @@ public class ForEachVariableProvider
                             inputValueList[index] = ReplaceVariable((string)inputValueList[i]);
                         }
                     }
+                } else if (input.Default is List<string> inputStringList)
+                {
+                    for (var i = 0; i < inputStringList.Count; i++)
+                    {
+                        var index = inputStringList.FindIndex(n => n.Equals(inputStringList[i]));
+                        inputStringList[index] = ReplaceVariable(inputStringList[i]).ToString()!;
+                    }
                 } 
+                
+                
                 else if (input.Default is Dictionary<object, object> inputValueDictionary)
                 {
                     for (var i = 0; i < inputValueDictionary.Count; i++)
