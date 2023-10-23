@@ -11,8 +11,8 @@ public static class TypeExtensions
 			type.IsPrimitive ||
 			type.IsEnum ||
 			new Type[] {
-				typeof(String),
-				typeof(Decimal),
+				typeof(string),
+				typeof(decimal),
 				typeof(DateTime),
 				typeof(DateTimeOffset),
 				typeof(TimeSpan),

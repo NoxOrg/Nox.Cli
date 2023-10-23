@@ -63,10 +63,46 @@ public class ClientVariableProvider: IClientVariableProvider
     
     public IDictionary<string, object> GetUnresolvedInputVariables(INoxAction action)
     {
-        var unresolvedVars = action.Inputs
-            .Where(i => _variableRegex.Match(i.Value.Default.ToString()!).Success)
-            .ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
+        var unresolvedVars = new Dictionary<string, object>();
 
+        foreach (var input in action.Inputs)
+        {
+            if (input.Value.Default is string unresolvedString)
+            {
+                if (_variableRegex.Match(unresolvedString).Success)
+                {
+                    unresolvedVars.TryAdd(input.Key, unresolvedString);
+                }
+            } else if (input.Value.Default is Dictionary<object, object> unresolvedObjectDictionary)
+            {
+                foreach (var objDictItem in unresolvedObjectDictionary)
+                {
+                    if (_variableRegex.Match(objDictItem.Value.ToString()!).Success)
+                    {
+                        unresolvedVars.TryAdd(input.Key, objDictItem.Value.ToString()!);
+                    }    
+                }
+            } else if (input.Value.Default is Dictionary<string, string> unresolvedStringDictionary)
+            {
+                foreach (var strDictItem in unresolvedStringDictionary)
+                {
+                    if (_variableRegex.Match(strDictItem.Value).Success)
+                    {
+                        unresolvedVars.TryAdd(input.Key, strDictItem.Value);
+                    }    
+                }
+            } 
+            else if (input.Value.Default is List<string> unresolvedStringList)
+            {
+                foreach (var stringItem in unresolvedStringList)
+                {
+                    if (_variableRegex.Match(stringItem).Success)
+                    {
+                        unresolvedVars.TryAdd(input.Key, stringItem);
+                    }    
+                }
+            }
+        }
         return unresolvedVars;
     }
 
@@ -128,22 +164,22 @@ public class ClientVariableProvider: IClientVariableProvider
     {
         if (!string.IsNullOrWhiteSpace(job.Display?.Success))
         {
-            job.Display.Success = ReplaceVariable(job.Display.Success).ToString()!;
+            job.Display.Success = ReplaceVariable<string>(job.Display.Success);
         }
 
         if (!string.IsNullOrWhiteSpace(job.Display?.IfCondition))
         {
-            job.Display.IfCondition = ReplaceVariable(job.Display.IfCondition).ToString()!;
+            job.Display.IfCondition = ReplaceVariable<string>(job.Display.IfCondition);
         }
 
         if (!string.IsNullOrWhiteSpace(job.If))
         {
-            job.If = ReplaceVariable(job.If, true).ToString()!;
+            job.If = ReplaceVariable<string>(job.If, true);
         }
 
         if (job.ForEach != null && !string.IsNullOrWhiteSpace(job.ForEach.ToString()))
         {
-            job.ForEach = ReplaceVariable(job.ForEach.ToString()!);
+            job.ForEach = ReplaceVariable<object>(job.ForEach.ToString()!);
         }
     }
 
@@ -167,9 +203,9 @@ public class ClientVariableProvider: IClientVariableProvider
         }
     }
     
-    private object ReplaceVariable(string value, bool isIfCondition = false)
+    private T ReplaceVariable<T>(object value, bool isIfCondition = false)
     {
-        object result = value;
+        var result = value;
 
         var match = _variableRegex.Match(result.ToString()!);
 
@@ -194,7 +230,7 @@ public class ClientVariableProvider: IClientVariableProvider
                 }
                 else
                 {
-                    if (value == fullPhrase)
+                    if (value.ToString() == fullPhrase)
                     {
                         result = resolvedValue;
                         break;
@@ -205,7 +241,7 @@ public class ClientVariableProvider: IClientVariableProvider
             }
             else
             {
-                if (value == fullPhrase || !isIfCondition)
+                if (value.ToString() == fullPhrase || !isIfCondition)
                 {
                     break;
                 }
@@ -215,7 +251,7 @@ public class ClientVariableProvider: IClientVariableProvider
             match = _variableRegex.Match(result.ToString()!);
         }
 
-        return result;
+        return (T)result;
     }
     
     private object? LookupValue(string variable)
@@ -235,28 +271,36 @@ public class ClientVariableProvider: IClientVariableProvider
         {
             if (input.Default is string inputValueString)
             {
-                input.Default = ReplaceVariable(inputValueString);
+                input.Default = ReplaceVariable<string>(inputValueString);
             }
-            else if (input.Default is List<object> inputValueList)
+            else if (input.Default is List<object> inputObjectList)
             {
-                for (var i = 0; i < inputValueList.Count; i++)
+                for (var i = 0; i < inputObjectList.Count; i++)
                 {
-                    if (inputValueList[i] is string)
+                    if (inputObjectList[i] is string)
                     {
-                        var index = inputValueList.FindIndex(n => n.Equals(inputValueList[i]));
-                        inputValueList[index] = ReplaceVariable((string)inputValueList[i]);
+                        var index = inputObjectList.FindIndex(n => n.Equals(inputObjectList[i]));
+                        inputObjectList[index] = ReplaceVariable<object>((string)inputObjectList[i]);
                     }
                 }
-            } 
+            }
+            else if (input.Default is List<string> inputStringList)
+            {
+                for (var i = 0; i < inputStringList.Count; i++)
+                {
+                    var index = inputStringList.FindIndex(n => n.Equals(inputStringList[i]));
+                    inputStringList[index] = ReplaceVariable<string>(inputStringList[i]);
+                }
+            }
             else if (input.Default is Dictionary<object, object> inputValueDictionary)
             {
                 for (var i = 0; i < inputValueDictionary.Count; i++)
                 {
                     var item = inputValueDictionary.ElementAt(i);
-                    
+
                     if (item.Value is string itemValueString)
                     {
-                        inputValueDictionary[item.Key] = ReplaceVariable(itemValueString);
+                        inputValueDictionary[item.Key] = ReplaceVariable<object>(itemValueString);
                     }
                 }
             }
@@ -266,28 +310,28 @@ public class ClientVariableProvider: IClientVariableProvider
         {
             foreach(var (key, value) in action.Validate)
             {
-                action.Validate[key] = ReplaceVariable(value).ToString()!;
+                action.Validate[key] = ReplaceVariable<string>(value);
             }
         }
 
         if (!string.IsNullOrWhiteSpace(action.Display?.Success))
         {
-            action.Display.Success = ReplaceVariable(action.Display.Success).ToString()!;
+            action.Display.Success = ReplaceVariable<string>(action.Display.Success);
         }
 
         if (!string.IsNullOrWhiteSpace(action.Display?.Error))
         {
-            action.Display.Error = ReplaceVariable(action.Display.Error).ToString()!;
+            action.Display.Error = ReplaceVariable<string>(action.Display.Error);
         }
 
         if (!string.IsNullOrWhiteSpace(action.Display?.IfCondition))
         {
-            action.Display.IfCondition = ReplaceVariable(action.Display.IfCondition).ToString()!;
+            action.Display.IfCondition = ReplaceVariable<string>(action.Display.IfCondition);
         }
 
         if (!string.IsNullOrWhiteSpace(action.If))
         {
-            action.If = ReplaceVariable(action.If, true).ToString()!;
+            action.If = ReplaceVariable<string>(action.If, true);
         }
     }
 
