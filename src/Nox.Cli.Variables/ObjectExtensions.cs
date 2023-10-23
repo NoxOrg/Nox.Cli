@@ -4,14 +4,29 @@ namespace Nox.Cli.Variables;
 
 public static class ObjectExtensions
 {
+    private static int _level;
+    private static int _maxLevel;
+
     /// <summary>
     /// Walks the properties of an object and performs an action on each property.
     /// </summary>
     /// <param name="obj">The object to walk the properties of.</param>
     /// <param name="propertyAction">The action to perform on each property. The action will be passed the full path of the property and its value as arguments.</param>
     /// <param name="path">The current path of the object being walked. This parameter is for internal use and should not be specified when calling the method.</param>
-    public static void WalkProperties(this object? obj, Action<string, object> propertyAction, string path = "")
+    /// <param name="maxLevel"></param>
+    public static void WalkProperties(this object? obj, Action<string, object> propertyAction, string path = "", int maxLevel = 50)
     {
+        _level = 0;
+        _maxLevel = maxLevel;
+        obj.WalkPropertiesInternal(propertyAction, path);
+    } 
+    
+    
+    private static void WalkPropertiesInternal(this object? obj, Action<string, object> propertyAction, string path = "")
+    {
+        _level++;
+        if (_level > _maxLevel) return;
+        
         if (obj == null)
         {
             propertyAction(path, null!);
@@ -39,7 +54,7 @@ public static class ObjectExtensions
                     }
                     else
                     {
-                        value.WalkProperties(propertyAction, fullPath);
+                        value.WalkPropertiesInternal(propertyAction, fullPath);
                     }
                 }
             }
@@ -54,7 +69,7 @@ public static class ObjectExtensions
                 var index = 0;
                 foreach (var item in enumerable)
                 {
-                    item.WalkProperties(propertyAction, $"{path}[{index}]");
+                    item.WalkPropertiesInternal(propertyAction, $"{path}[{index}]");
                     index++;
                 }
             }
@@ -68,7 +83,7 @@ public static class ObjectExtensions
                 var propertyValue = property.GetValue(obj);
                 var fullPath = string.IsNullOrEmpty(path) ? propertyName : $"{path}.{propertyName}";
 
-                WalkProperties(propertyValue!, propertyAction, $"{fullPath}");
+                WalkPropertiesInternal(propertyValue!, propertyAction, $"{fullPath}");
 
             }
         }
