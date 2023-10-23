@@ -164,22 +164,22 @@ public class ClientVariableProvider: IClientVariableProvider
     {
         if (!string.IsNullOrWhiteSpace(job.Display?.Success))
         {
-            job.Display.Success = ReplaceVariable<string>(job.Display.Success);
+            job.Display.Success = ReplaceVariable(job.Display.Success).ToString()!;
         }
 
         if (!string.IsNullOrWhiteSpace(job.Display?.IfCondition))
         {
-            job.Display.IfCondition = ReplaceVariable<string>(job.Display.IfCondition);
+            job.Display.IfCondition = ReplaceVariable(job.Display.IfCondition).ToString()!;
         }
 
         if (!string.IsNullOrWhiteSpace(job.If))
         {
-            job.If = ReplaceVariable<string>(job.If, true);
+            job.If = ReplaceVariable(job.If, true).ToString()!;
         }
 
         if (job.ForEach != null && !string.IsNullOrWhiteSpace(job.ForEach.ToString()))
         {
-            job.ForEach = ReplaceVariable<object>(job.ForEach.ToString()!);
+            job.ForEach = ReplaceVariable(job.ForEach.ToString()!);
         }
     }
 
@@ -203,7 +203,7 @@ public class ClientVariableProvider: IClientVariableProvider
         }
     }
     
-    private T ReplaceVariable<T>(object value, bool isIfCondition = false)
+    private object ReplaceVariable(object value, bool isIfCondition = false)
     {
         var result = value;
 
@@ -251,7 +251,7 @@ public class ClientVariableProvider: IClientVariableProvider
             match = _variableRegex.Match(result.ToString()!);
         }
 
-        return (T)result;
+        return result;
     }
     
     private object? LookupValue(string variable)
@@ -271,7 +271,7 @@ public class ClientVariableProvider: IClientVariableProvider
         {
             if (input.Default is string inputValueString)
             {
-                input.Default = ReplaceVariable<string>(inputValueString);
+                input.Default = ReplaceVariable(inputValueString);
             }
             else if (input.Default is List<object> inputObjectList)
             {
@@ -280,7 +280,7 @@ public class ClientVariableProvider: IClientVariableProvider
                     if (inputObjectList[i] is string)
                     {
                         var index = inputObjectList.FindIndex(n => n.Equals(inputObjectList[i]));
-                        inputObjectList[index] = ReplaceVariable<object>((string)inputObjectList[i]);
+                        inputObjectList[index] = ReplaceVariable((string)inputObjectList[i]);
                     }
                 }
             }
@@ -289,7 +289,7 @@ public class ClientVariableProvider: IClientVariableProvider
                 for (var i = 0; i < inputStringList.Count; i++)
                 {
                     var index = inputStringList.FindIndex(n => n.Equals(inputStringList[i]));
-                    inputStringList[index] = ReplaceVariable<string>(inputStringList[i]);
+                    inputStringList[index] = ReplaceVariable(inputStringList[i]).ToString()!;
                 }
             }
             else if (input.Default is Dictionary<object, object> inputValueDictionary)
@@ -300,7 +300,7 @@ public class ClientVariableProvider: IClientVariableProvider
 
                     if (item.Value is string itemValueString)
                     {
-                        inputValueDictionary[item.Key] = ReplaceVariable<object>(itemValueString);
+                        inputValueDictionary[item.Key] = ReplaceVariable(itemValueString);
                     }
                 }
             }
@@ -310,28 +310,28 @@ public class ClientVariableProvider: IClientVariableProvider
         {
             foreach(var (key, value) in action.Validate)
             {
-                action.Validate[key] = ReplaceVariable<string>(value);
+                action.Validate[key] = ReplaceVariable(value).ToString()!;
             }
         }
 
         if (!string.IsNullOrWhiteSpace(action.Display?.Success))
         {
-            action.Display.Success = ReplaceVariable<string>(action.Display.Success);
+            action.Display.Success = ReplaceVariable(action.Display.Success).ToString()!;
         }
 
         if (!string.IsNullOrWhiteSpace(action.Display?.Error))
         {
-            action.Display.Error = ReplaceVariable<string>(action.Display.Error);
+            action.Display.Error = ReplaceVariable(action.Display.Error).ToString()!;
         }
 
         if (!string.IsNullOrWhiteSpace(action.Display?.IfCondition))
         {
-            action.Display.IfCondition = ReplaceVariable<string>(action.Display.IfCondition);
+            action.Display.IfCondition = ReplaceVariable(action.Display.IfCondition).ToString()!;
         }
 
         if (!string.IsNullOrWhiteSpace(action.If))
         {
-            action.If = ReplaceVariable<string>(action.If, true);
+            action.If = ReplaceVariable(action.If, true).ToString()!;
         }
     }
 
