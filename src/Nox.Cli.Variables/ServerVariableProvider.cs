@@ -67,10 +67,46 @@ public class ServerVariableProvider: IServerVariableProvider
     
     public IDictionary<string, object?> GetUnresolvedVariables()
     {
-        var unresolvedVars = _variables
-            .Where(i => _variableRegex.Match(i.Value?.ToString()!).Success)
-            .ToDictionary(i => i.FullName, i => i.Value, StringComparer.OrdinalIgnoreCase);
+        var unresolvedVars = new Dictionary<string, object?>();
 
+        foreach (var variable in _variables)
+        {
+            if (variable.Value is string unresolvedString)
+            {
+                if (_variableRegex.Match(unresolvedString).Success)
+                {
+                    unresolvedVars.TryAdd(variable.ShortName, unresolvedString);
+                }
+            } else if (variable.Value is Dictionary<object, object> unresolvedObjectDictionary)
+            {
+                foreach (var objDictItem in unresolvedObjectDictionary)
+                {
+                    if (_variableRegex.Match(objDictItem.Value.ToString()!).Success)
+                    {
+                        unresolvedVars.TryAdd(variable.ShortName, objDictItem.Value.ToString()!);
+                    }    
+                }
+            } else if (variable.Value is Dictionary<string, string> unresolvedStringDictionary)
+            {
+                foreach (var strDictItem in unresolvedStringDictionary)
+                {
+                    if (_variableRegex.Match(strDictItem.Value).Success)
+                    {
+                        unresolvedVars.TryAdd(variable.ShortName, strDictItem.Value);
+                    }    
+                }
+            } 
+            else if (variable.Value is List<string> unresolvedStringList)
+            {
+                foreach (var stringItem in unresolvedStringList)
+                {
+                    if (_variableRegex.Match(stringItem).Success)
+                    {
+                        unresolvedVars.TryAdd(variable.ShortName, stringItem);
+                    }    
+                }
+            }
+        }
         return unresolvedVars;
     }
     
