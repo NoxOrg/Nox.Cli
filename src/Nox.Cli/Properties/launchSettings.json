@@ -2,8 +2,8 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "sync environments",
-      "workingDirectory": "/home/jan/demo/Workplace",
+      "commandLineArgs": "sync solution",
+      "workingDirectory": "/home/jan/demo/NoxCliDemoProject",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
