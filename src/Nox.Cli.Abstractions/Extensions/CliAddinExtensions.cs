@@ -92,7 +92,7 @@ public static class CliAddinExtensions
                 }
                 else if (typeof(T).IsAssignableTo(typeof(string[])))
                 {
-                    var sourceList = (List<object>)value;
+                    var sourceList = (List<string>)value;
                     var stringArray = sourceList.ConvertAll(obj => obj.ToString()).ToArray();
                     result = (T)Convert.ChangeType(stringArray, typeof(T));
                 }
