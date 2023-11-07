@@ -70,9 +70,22 @@ public class PowershellScript_v1 : INoxCliAddin
 
                 var results = _pwsh.Invoke();
 
-                outputs["result"] = results;
+                if (_pwsh.HadErrors)
+                {
+                    var errorMessage = "";
+                    foreach (var error in _pwsh.Streams.Error)
+                    {
+                        errorMessage += error + Environment.NewLine;
+                    }
+                    ctx.SetErrorMessage(errorMessage);
+                    
+                }
+                else
+                {
+                    outputs["result"] = results;
 
-                ctx.SetState(ActionState.Success);
+                    ctx.SetState(ActionState.Success);    
+                }
 
             }
             catch (Exception ex)

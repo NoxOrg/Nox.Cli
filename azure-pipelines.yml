@@ -82,7 +82,7 @@ stages:
     condition: |
       and(
         or(succeeded(), ${{ parameters.skipBuild }}), 
-        or(eq(variables.isMain, 'true'),eq(variables.isFeature, 'true'))
+        or(eq(variables.isMain, 'true'),eq(variables.isRelease, 'true'))
       )
     jobs:
       - deployment: CD_test_WE
