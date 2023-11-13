@@ -114,13 +114,17 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
                 skipMessage += $"{taskDescription}...";
             }
             
-            if (string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.IfCondition))
+            if (!string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.IfCondition))
             {
-                skipMessage += "Skipped because, if condition evaluated true";
+                skipMessage += ctx.CurrentAction.Display.IfCondition.EscapeMarkup();
+                
             }
             else
             {
-                skipMessage += ctx.CurrentAction.Display.IfCondition.EscapeMarkup();
+                if (!string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.Success) || !string.IsNullOrWhiteSpace(ctx.CurrentAction.Display?.Error))
+                {
+                    skipMessage += "Skipped because, if condition evaluated true";    
+                }
             }
             
             ConsoleStatusLine($"{Emoji.Known.BlueCircle} [deepskyblue1]{skipMessage}[/]");
