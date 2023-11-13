@@ -70,15 +70,14 @@ public class PowershellScript_v1 : INoxCliAddin
 
                 var results = _pwsh.Invoke();
 
-                if (_pwsh.HadErrors)
+                if (results.Any(r => (r.ToString() ?? "").Contains("error", StringComparison.OrdinalIgnoreCase)))
                 {
                     var errorMessage = "";
-                    foreach (var error in _pwsh.Streams.Error)
+                    foreach (var result in results)
                     {
-                        errorMessage += error + Environment.NewLine;
+                        errorMessage += result + Environment.NewLine;
                     }
                     ctx.SetErrorMessage(errorMessage);
-                    
                 }
                 else
                 {
