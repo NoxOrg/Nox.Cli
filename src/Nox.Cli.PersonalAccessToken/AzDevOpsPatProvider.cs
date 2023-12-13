@@ -1,8 +1,6 @@
 using Newtonsoft.Json;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Exceptions;
-using Nox.Cli.Caching;
-using Nox.Utilities.Configuration;
 using RestSharp;
 using RestSharp.Authenticators.OAuth2;
 

@@ -1,5 +1,3 @@
-using Nox.Cli.Abstractions;
-
 namespace Nox.Cli.Variables;
 
 public static class ForEachVariableResolver

@@ -1,7 +1,7 @@
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Server.Abstractions;
 
-namespace Nox.Cli.Secrets;
+namespace Nox.Cli.Variables.Secrets;
 
 public interface IServerSecretResolver
 {

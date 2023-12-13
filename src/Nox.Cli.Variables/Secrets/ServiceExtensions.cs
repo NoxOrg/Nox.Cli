@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using Nox.Utilities.Secrets;
 
-namespace Nox.Cli.Secrets;
+namespace Nox.Cli.Variables.Secrets;
 
 public static class ServiceExtensions
 {
@@ -14,6 +13,13 @@ public static class ServiceExtensions
     public static IServiceCollection AddServerSecretResolver(this IServiceCollection services, string tenantId, string clientId, string clientSecret)
     {
         services.AddSingleton<IServerSecretResolver>(sp => new ServerSecretResolver(sp.GetRequiredService<IPersistedSecretStore>(), tenantId, clientId, clientSecret));
+        return services;
+    }
+    
+    public static IServiceCollection AddPersistedSecretStore(this IServiceCollection services)
+    {
+        services.AddDataProtection();
+        services.AddSingleton<IPersistedSecretStore, PersistedSecretStore>();
         return services;
     }
 }

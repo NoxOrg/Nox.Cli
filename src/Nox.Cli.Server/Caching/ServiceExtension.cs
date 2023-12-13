@@ -1,7 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
 using Nox.Cli.Server.Abstractions;
 
-namespace Nox.Cli.Server.Cache;
+namespace Nox.Cli.Server.Caching;
 
 public static class ServiceExtension
 {

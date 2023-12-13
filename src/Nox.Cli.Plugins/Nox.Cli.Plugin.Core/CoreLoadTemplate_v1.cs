@@ -1,6 +1,6 @@
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Utilities.Configuration;
+using Nox.Cli.Configuration;
 
 namespace Nox.Cli.Plugin.Core;
 

@@ -1,4 +1,4 @@
-namespace Nox.Cli.Secrets;
+namespace Nox.Cli.Variables.Secrets;
 
 public static class SecretKeyHelper
 {

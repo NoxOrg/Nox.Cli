@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Nox.Cli.Server.Abstractions;
-using RestSharp;
 
 namespace Nox.Cli.Variables;
 

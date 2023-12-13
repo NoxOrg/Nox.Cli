@@ -8,10 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Nox.Cli.Abstractions\Nox.Cli.Abstractions.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Nox.Utilities" Version="1.0.7" />
+    <ProjectReference Include="..\..\Nox.Cli.Configuration\Nox.Cli.Configuration.csproj" />
   </ItemGroup>
 
 </Project>

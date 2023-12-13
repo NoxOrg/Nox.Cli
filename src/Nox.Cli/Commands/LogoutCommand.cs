@@ -1,4 +1,6 @@
-﻿namespace Nox.Cli.Commands;
+﻿using Nox.Cli.Configuration;
+
+namespace Nox.Cli.Commands;
 
 using Spectre.Console.Cli;
 using Spectre.Console;
@@ -18,8 +20,8 @@ public class LogoutCommand : AsyncCommand<LogoutCommand.Settings>
 
     public override Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
-        var cacheFile = Utilities.Configuration.WellKnownPaths.CacheFile;
-        var cacheFolder = Utilities.Configuration.WellKnownPaths.CachePath;
+        var cacheFile = WellKnownPaths.CacheFile;
+        var cacheFolder = WellKnownPaths.CachePath;
 
         // Rather be safe than sorry.
         // Make sure our Cache file exists before removing the folder ;)

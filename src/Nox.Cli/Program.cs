@@ -13,9 +13,9 @@ using Nox.Cli.Caching;
 using Nox.Cli.Interceptors;
 using Nox.Cli.Services;
 using Nox.Cli.Commands;
+using Nox.Cli.Extensions;
 using Nox.Cli.Helpers;
-using Nox.Cli.Secrets;
-using Nox.Utilities.Secrets;
+using Nox.Cli.Variables.Secrets;
 
 var isLoggingOut = (args.Length > 0 && args[0].ToLower().Equals("logout")); 
 

@@ -1,6 +1,5 @@
 using Nox.Cli.Abstractions.Caching;
-using Nox.Utilities.Credentials;
-using Nox.Utilities.Secrets;
+using Nox.Cli.Caching;
 
 namespace Nox.Cli.Variables;
 

@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Nox.Cli.Authentication\Nox.Cli.Authentication.csproj" />
       <ProjectReference Include="..\Nox.Cli.Caching\Nox.Cli.Caching.csproj" />
     </ItemGroup>
 

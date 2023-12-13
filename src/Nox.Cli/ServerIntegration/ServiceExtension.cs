@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Nox.Cli.Server.Integration;
+namespace Nox.Cli.ServerIntegration;
 
 public static class ServiceExtension
 {

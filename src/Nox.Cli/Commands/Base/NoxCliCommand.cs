@@ -1,11 +1,9 @@
 ﻿using Nox.Cli.Helpers;
 using Nox.Solution;
-
-namespace Nox.Cli.Commands;
-
-using Microsoft.Extensions.Configuration;
 using Spectre.Console;
 using Spectre.Console.Cli;
+
+namespace Nox.Cli.Commands.Base;
 
 public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where TSettings : CommandSettings
 {

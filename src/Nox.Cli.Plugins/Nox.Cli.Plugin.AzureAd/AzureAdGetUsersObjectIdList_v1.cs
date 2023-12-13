@@ -103,7 +103,7 @@ public class AzureAdGetUsersObjectIdList_v1 : INoxCliAddin
                     }
                 }
 
-                outputs["object-ids"] = result;
+                outputs["object-ids"] = result!;
                 
                 ctx.SetState(ActionState.Success);
             }

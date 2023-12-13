@@ -1,11 +1,10 @@
 ﻿using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Nox.Secrets;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
 
-namespace Nox.Cli;
-
-using Microsoft.Extensions.DependencyInjection;
+namespace Nox.Cli.Extensions;
 
 public static class ServiceCollectionExtensions
 {

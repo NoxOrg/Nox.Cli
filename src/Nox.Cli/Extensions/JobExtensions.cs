@@ -1,9 +1,8 @@
-using System.Collections;
 using System.Reflection;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Actions;
 
-namespace Nox.Cli;
+namespace Nox.Cli.Extensions;
 
 public static class JobExtensions
 {

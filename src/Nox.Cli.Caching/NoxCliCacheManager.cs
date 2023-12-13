@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Text.Json;
 using Newtonsoft.Json;
 using Nox.Cli.Abstractions;
@@ -10,8 +9,6 @@ using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Configuration;
 using Nox.Cli.Helpers;
-using Nox.Utilities.Configuration;
-using Nox.Utilities.Credentials;
 using RestSharp;
 using Spectre.Console;
 using YamlDotNet.Serialization;

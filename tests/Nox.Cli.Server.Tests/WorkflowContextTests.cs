@@ -2,7 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Caching;
-using Nox.Cli.Server.Cache;
+using Nox.Cli.Server.Caching;
 using Nox.Cli.Server.Services;
 
 namespace Nox.Cli.Server.Tests;
