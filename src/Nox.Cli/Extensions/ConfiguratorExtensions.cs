@@ -1,17 +1,16 @@
-﻿using Nox.Cli.Commands;
-using Spectre.Console.Cli;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
-using Nox.Cli.Authentication;
 using Nox.Cli.Authentication.Azure;
 using Nox.Cli.Caching;
+using Nox.Cli.Commands;
 using Nox.Cli.Configuration.Validation;
-using Nox.Cli.Server.Integration;
+using Nox.Cli.ServerIntegration;
 using Spectre.Console;
+using Spectre.Console.Cli;
 
-namespace Nox.Cli;
+namespace Nox.Cli.Extensions;
 
 internal static class ConfiguratorExtensions
 {

@@ -2,7 +2,7 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Shared.DTO.Health;
 using Nox.Cli.Shared.DTO.Workflow;
 
-namespace Nox.Cli.Server.Integration;
+namespace Nox.Cli.ServerIntegration;
 
 public interface INoxCliServerIntegration
 {

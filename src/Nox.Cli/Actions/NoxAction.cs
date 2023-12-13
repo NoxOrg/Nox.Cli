@@ -1,6 +1,4 @@
 ﻿using CodingSeb.ExpressionEvaluator;
-using Humanizer;
-using Microsoft.Azure.Pipelines.WebApi;
 using Nox.Cli.Abstractions;
 
 namespace Nox.Cli.Actions;

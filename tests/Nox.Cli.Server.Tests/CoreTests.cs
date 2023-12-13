@@ -3,7 +3,7 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Caching;
 using Nox.Cli.Configuration;
-using Nox.Cli.Server.Cache;
+using Nox.Cli.Server.Caching;
 using Nox.Cli.Server.Services;
 
 namespace Nox.Cli.Server.Tests;

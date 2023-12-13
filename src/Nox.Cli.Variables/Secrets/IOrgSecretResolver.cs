@@ -1,6 +1,6 @@
 using Nox.Cli.Abstractions.Configuration;
 
-namespace Nox.Cli.Secrets;
+namespace Nox.Cli.Variables.Secrets;
 
 public interface IOrgSecretResolver
 {

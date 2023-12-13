@@ -1,12 +1,10 @@
 using System.Text.RegularExpressions;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Extensions.Azure;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Server.Abstractions;
-using Nox.Utilities.Secrets;
 
-namespace Nox.Cli.Secrets;
+namespace Nox.Cli.Variables.Secrets;
 
 public class ServerSecretResolver: IServerSecretResolver
 {

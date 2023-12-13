@@ -94,7 +94,7 @@ public class AzureAdGetGroupMemberIds_v1 : INoxCliAddin
                     }
                 }
 
-                outputs["member-ids"] = ids;
+                outputs["member-ids"] = ids!;
                 
                 ctx.SetState(ActionState.Success);
             }

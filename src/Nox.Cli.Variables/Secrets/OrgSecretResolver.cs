@@ -1,7 +1,6 @@
 using Nox.Cli.Abstractions.Configuration;
-using Nox.Utilities.Secrets;
 
-namespace Nox.Cli.Secrets;
+namespace Nox.Cli.Variables.Secrets;
 
 public class OrgSecretResolver: IOrgSecretResolver
 {

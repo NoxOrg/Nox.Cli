@@ -2,11 +2,10 @@ using Elastic.Apm.NetCoreAll;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
 using Nox.Cli.Caching;
-using Nox.Cli.Secrets;
 using Nox.Cli.Server.Abstractions;
-using Nox.Cli.Server.Cache;
+using Nox.Cli.Server.Caching;
 using Nox.Cli.Server.Services;
-using Nox.Utilities.Secrets;
+using Nox.Cli.Variables.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 

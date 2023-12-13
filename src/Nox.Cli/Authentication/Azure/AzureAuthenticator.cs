@@ -1,11 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using Azure.Identity;
 using Microsoft.Identity.Client;
-using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Exceptions;
-using Nox.Cli.Caching;
 
 namespace Nox.Cli.Authentication.Azure;
 

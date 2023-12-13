@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Nox.Cli.Caching;
 
 namespace Nox.Cli.Authentication.Azure;
 

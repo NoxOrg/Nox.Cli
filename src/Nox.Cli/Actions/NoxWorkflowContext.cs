@@ -2,11 +2,11 @@
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
-using Nox.Cli.Secrets;
 using Nox.Cli.Variables;
 using System.Diagnostics;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Exceptions;
+using Nox.Cli.Variables.Secrets;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
 using Environment = System.Environment;

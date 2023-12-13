@@ -8,7 +8,7 @@ using Nox.Cli.Shared.DTO.Workflow;
 using RestSharp;
 using RestSharp.Authenticators.OAuth2;
 
-namespace Nox.Cli.Server.Integration;
+namespace Nox.Cli.ServerIntegration;
 
 public class NoxCliServerIntegration: INoxCliServerIntegration
 { 

@@ -1,8 +1,8 @@
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
-using Nox.Cli.Secrets;
 using Nox.Cli.Server.Abstractions;
+using Nox.Cli.Variables.Secrets;
 
 namespace Nox.Cli.Server.Services;
 

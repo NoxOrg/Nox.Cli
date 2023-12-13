@@ -2,7 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Server.Abstractions;
 
-namespace Nox.Cli.Server.Cache;
+namespace Nox.Cli.Server.Caching;
 
 public class ServerCache: IServerCache
 {
