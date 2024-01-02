@@ -5,7 +5,7 @@ namespace Nox.Cli.Plugin.Console.JsonSchema;
 public class JsonSchemaOneOfElement
 {
     [JsonPropertyName("type")]
-    public string? TypeName { get; set; }
+    public object? TypeName { get; set; }
 
     public List<string>? Enum { get; set; }
 }

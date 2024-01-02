@@ -22,7 +22,7 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
     public override Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
 
-        if (string.IsNullOrEmpty(_solution.Name))
+        if (string.IsNullOrEmpty(_solution.Name) || _solution.Name.Equals("NotSpecified", StringComparison.OrdinalIgnoreCase))
         {
             return Task.FromResult(0);
         }

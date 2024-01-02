@@ -1,4 +1,5 @@
 using Nox.Cli.Abstractions;
+using Nox.Solution;
 
 namespace Nox.Cli.Variables;
 
@@ -9,7 +10,7 @@ public interface IClientVariableProvider
     IDictionary<string, object> GetInputVariables(INoxAction action);
     IDictionary<string, object> GetUnresolvedInputVariables(INoxAction action);
     void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs);
-    void SetProjectConfiguration(Solution.Solution projectConfig);
+    void SetProjectConfiguration(NoxSolution projectConfig);
 
     Task ResolveAll();
     Task ResolveForServer();

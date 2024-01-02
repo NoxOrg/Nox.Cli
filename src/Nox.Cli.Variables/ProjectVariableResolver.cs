@@ -1,8 +1,10 @@
+using Nox.Solution;
+
 namespace Nox.Cli.Variables;
 
 public static class ProjectVariableResolver
 {
-    public static Task ResolveProjectVariables(this IDictionary<string, object?> variables, Solution.Solution config)
+    public static Task ResolveProjectVariables(this IDictionary<string, object?> variables, NoxSolution config)
     {
         var solutionKeys = variables
             //.Where(pk => pk.Value == null)

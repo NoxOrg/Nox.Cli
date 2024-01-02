@@ -19,14 +19,14 @@ public static class ServiceCollectionExtensions
     {
         return new NoxSolutionBuilder()
             .AllowMissingSolutionYaml()
-            .OnResolveSecrets((_, args) =>
-            {
-                var secretsConfig = args.SecretsConfig;
-                var secretKeys =  args.Variables;
-                var resolver = serviceProvider.GetRequiredService<INoxSecretsResolver>();
-                resolver.Configure(secretsConfig!, Assembly.GetEntryAssembly());
-                args.Secrets = resolver.Resolve(secretKeys!);
-            })
+            // .OnResolveSecrets((_, args) =>
+            // {
+            //     var secretsConfig = args.SecretsConfig;
+            //     var secretKeys =  args.Variables;
+            //     var resolver = serviceProvider.GetRequiredService<INoxSecretsResolver>();
+            //     resolver.Configure(secretsConfig!, Assembly.GetEntryAssembly());
+            //     args.Secrets = resolver.Resolve(secretKeys!);
+            // })
             .Build();
     }
 }
