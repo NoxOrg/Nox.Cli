@@ -3,7 +3,7 @@ name: Publish
 on:
   workflow_dispatch:
   release:
-    types: [released]
+    types: [created]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -81,11 +81,20 @@ jobs:
         id: publish_server
         run: dotnet publish ./src/Nox.Cli.Server --configuration Release --output ./artifacts/server
 
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ steps.gitversion.outputs.semVer }}"
+          release_name: Release v${{ steps.gitversion.outputs.semVer }}"
+          draft: false
+          prerelease: false
+
       - name: Upload Server Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ steps.publish_server.outputs.upload_url }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: .artifacts/server
           asset_name: server.zip
           asset_content_type: application/zip
