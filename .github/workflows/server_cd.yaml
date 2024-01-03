@@ -27,4 +27,4 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Publish
-        run: dotnet publish ./src/Nox.Server --configuration Release --output ./artifacts/server
+        run: dotnet publish ./src/Nox.Cli.Server --configuration Release --output ./artifacts/server
