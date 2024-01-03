@@ -76,3 +76,6 @@ jobs:
 
       - name: Publish
         run: dotnet nuget push ./artifacts/Nox.Cli.*.nupkg --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+
+      - name: Publish Server
+        run: dotnet publish ./src/Nox.Cli.Server --configuration Release --output ./artifacts/server
