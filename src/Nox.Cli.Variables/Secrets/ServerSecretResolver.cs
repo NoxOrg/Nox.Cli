@@ -69,6 +69,7 @@ public class ServerSecretResolver: IServerSecretResolver
                 {
                     case "azure-keyvault":
                         var clientCredentials = new ClientSecretCredential(_tenantId, _clientId, _clientSecret);
+                        
                         var secretClient = new SecretClient(new Uri(vault.Url), clientCredentials);
                         var azureSecrets = new Dictionary<string, string>();
                         foreach (var key in unresolvedSecrets.Select(k => k.Key))
@@ -76,9 +77,7 @@ public class ServerSecretResolver: IServerSecretResolver
                             var secret = await secretClient.GetSecretAsync(key.ToAzureSecretKey());
                             azureSecrets.Add(key, secret.Value.Value);
                         }
-                            
-                        //var azureVault = new AzureSecretProvider(vault.Url);
-                        //var azureSecrets = azureVault.GetSecretsAsync(unresolvedSecrets.Select(k => k.Key).ToArray()).Result;
+
                         if (azureSecrets.Count > 0)
                         {
                             resolvedSecrets.AddRange(azureSecrets);
