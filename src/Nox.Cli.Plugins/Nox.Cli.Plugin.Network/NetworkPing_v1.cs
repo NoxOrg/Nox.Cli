@@ -95,9 +95,8 @@ public class NetworkPing_v1 : INoxCliAddin
     }
 
     public Task EndAsync()
-
     {
+        _client?.Dispose();
         return Task.FromResult(true);
     }
 }
-
