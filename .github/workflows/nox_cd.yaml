@@ -89,6 +89,7 @@ jobs:
           release_name: Release v${{ steps.gitversion.outputs.semVer }}"
           draft: false
           prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Server Asset
         id: upload-release-asset
