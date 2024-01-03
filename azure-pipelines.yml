@@ -1,0 +1,134 @@
+parameters:
+  - name: skipBuild
+    displayName: Skip build?
+    type: boolean
+    default: false
+  - name: imageTag
+    displayName: 'Enter existing image tag you want to deploy e.g. `branchFolder-buildNumber` format (i.e. feature-20221109.7)'
+    type: string
+    default: 'latest'
+
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: 'IWG.DevOps/devops-build-templates'
+    - repository: scripts
+      type: git
+      name: IWG.DevOps/devops-scripts
+    - repository: heimdallTemplates
+      type: git
+      name: 'Heimdall.Core/Templates.Pipeline'
+  pipelines:
+    - pipeline: helmChart
+      source: Nox.Cli.HelmChart
+      trigger:
+        branches:
+          include:
+            - main
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+      - release/*
+      - hotfix/*
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - template: common/branch-names.yaml@templates
+  - template: variables/global.yml@heimdallTemplates
+  - template: pipeline/variables/global.yaml
+
+stages:
+  - stage: CI_Build
+    displayName: 'Build'
+    condition: and(succeeded(), eq(${{ parameters.skipBuild }}, false))
+    jobs:
+      - job: CI_Build
+        displayName: 'Build'
+        steps:
+          - template: build-template.yml@heimdallTemplates
+            parameters:
+              SonarcloudProjectKey: $(SonarcloudProjectKey)
+              SourceFolder: $(SourceFolder)
+              runSonarCloud: false
+              ignoreSonarGate: true
+              skipComponentTests: true
+      - job: CI_Build_Docker
+        displayName: 'Docker Build/Push'
+        dependsOn: 'CI_Build'
+        condition: succeeded()
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: build-docker.yml@heimdallTemplates
+            parameters:
+              dockerfile: $(dockerfilePath)
+              buildContext: $(buildContext)
+              repository: $(service_name)
+              pushImage: ${{ not(contains(variables['Build.Reason'], 'PullRequest')) }}
+              pushInPlatformN: true
+              pushInPlatformP: false
+
+
+  - stage: CD_test_WE
+    displayName: 'test Deployment WE'
+    lockBehavior: sequential
+    dependsOn: CI_Build
+    condition: |
+      and(
+        or(succeeded(), ${{ parameters.skipBuild }}), 
+        or(eq(variables.isMain, 'true'),eq(variables.isRelease, 'true'))
+      )
+    jobs:
+      - deployment: CD_test_WE
+        displayName: 'test Deployment WE'
+        pool:
+          name: $(poolName)
+        environment: nox-cli-test-we
+        variables:
+          - template: pipeline/variables/preprod-we-test.yaml
+          - template: variables/APPS_EU_PLATFORM_N_WE.yml@heimdallTemplates
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: deployment.yml@heimdallTemplates
+                  parameters:
+                    runMigration: false
+                    envKeyVaultName: $(ENV_KEYVAULT_NAME)
+                    imageTag: ${{ parameters.imageTag }}
+                    skipBuild: ${{ parameters.skipBuild }}
+  - stage: CD_uat_WE
+    displayName: 'uat WE Deployment'
+    lockBehavior: sequential
+    dependsOn: CD_test_WE
+    condition: |
+      and(
+        succeeded('CD_test_WE'),
+        eq(variables.isRelease, 'true')
+      )
+    variables:
+      - template: pipeline/variables/prod-we-uat.yaml
+      - template: variables/APPS_EU_PLATFORM_P_WE.yml@heimdallTemplates
+    jobs:
+      - deployment: CD_uat_WE
+        displayName: 'uat Deployment WE'
+        pool:
+          name: $(poolName)
+        environment: nox-cli-uat-we
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: deployment.yml@heimdallTemplates
+                  parameters:
+                    serviceConnection: $(serviceConnectionPlatformP)
+                    runMigration: true
+                    envKeyVaultName: $(ENV_KEYVAULT_NAME)
+                    imageTag: ${{ parameters.imageTag }}
+                    skipBuild: ${{ parameters.skipBuild }}
