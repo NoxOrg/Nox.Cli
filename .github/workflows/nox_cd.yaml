@@ -79,3 +79,12 @@ jobs:
 
       - name: Publish Server
         run: dotnet publish ./src/Nox.Cli.Server --configuration Release --output ./artifacts/server
+
+      - name: Add Server Puablish as Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./artifacts/server
+          asset_name: server.zip
+          asset_content_type: application/zip
+          token: ${{ secrets.GITHUB_TOKEN }}
