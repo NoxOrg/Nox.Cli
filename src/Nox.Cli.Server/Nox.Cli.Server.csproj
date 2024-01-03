@@ -3,8 +3,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>aspnet-Nox.Cli.Server-EDB29744-0909-49A3-8A3D-4A9E3529BF5A</UserSecretsId>
-    <AssemblyVersion>7.0.7.0</AssemblyVersion>
+    <UserSecretsId>aspnet-Nox.Cli.Server-EDB29744-0909-49A3-8A3D-4A9E3529BF5A</UserSecretsId>    
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
   <ItemGroup>
