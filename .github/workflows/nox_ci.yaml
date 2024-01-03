@@ -28,6 +28,17 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Restore
-        run: dotnet restore ./src/Nox.Cli
+        run: dotnet restore ./src/Nox.Cli.sln
       - name: Build
-        run: dotnet build ./src/Nox.Cli --warnaserror --configuration Release --no-restore      
+        run: dotnet build ./src/Nox.Cli.sln --warnaserror --configuration Release --no-restore    
+      - name: Test
+        run: dotnet test ./src/Nox.Cli.sln --configuration Release --no-restore --verbosity minimal --logger "trx;LogFileName=test-results.trx"
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: ${{ always() }}
+        with:
+          name: Tests Results
+          path: "**/test-results.trx"    
+          reporter: dotnet-trx
+          fail-on-error: true
