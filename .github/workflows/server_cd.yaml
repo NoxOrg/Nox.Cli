@@ -1,8 +1,19 @@
 name: Publish Server
 
 on:
-  release:
-    types: [released]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - src/**
+      - tests/**
+      - .github/workflows/server_cd.yaml
+  push:
+    branches: [ main ]
+    paths:
+      - src/**
+      - tests/**
+      - .github/workflows/server_cd.yaml
+
 jobs:
   build:
     runs-on: ubuntu-latest
