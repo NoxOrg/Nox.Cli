@@ -27,12 +27,12 @@ public class JsonSchemaProcessor
 
         if (sourceNode.OneOf != null)
         {
-            var firstType = sourceNode.OneOf.FirstOrDefault(oo => oo.TypeName != "null");
+            var firstType = sourceNode.OneOf.FirstOrDefault(oo => oo.TypeName!.ToString() != "null");
             if (firstType != null)
             {
                 result.SchemaType = new JsonSchemaType()
                 {
-                    DataType = firstType.TypeName.ToSchemaType(),
+                    DataType = firstType.TypeName!.ToString().ToSchemaType(),
                     Enum = firstType.Enum
                 };
             }

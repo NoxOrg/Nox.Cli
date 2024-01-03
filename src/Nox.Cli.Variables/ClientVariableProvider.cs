@@ -4,6 +4,7 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Variables.Secrets;
+using Nox.Solution;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -15,7 +16,7 @@ public class ClientVariableProvider: IClientVariableProvider
 
     private readonly Dictionary<string, object?> _variables;
     private readonly IOrgSecretResolver _orgSecretResolver;
-    private Solution.Solution? _projectConfig;
+    private NoxSolution? _projectConfig;
     private readonly INoxCliCache? _cache;
     private readonly ILocalTaskExecutorConfiguration? _lteConfig;
     
@@ -23,7 +24,7 @@ public class ClientVariableProvider: IClientVariableProvider
     public ClientVariableProvider(
         IWorkflowConfiguration workflow, 
         IOrgSecretResolver orgSecretResolver,
-        Solution.Solution? projectConfig = null,
+        NoxSolution? projectConfig = null,
         ILocalTaskExecutorConfiguration? lteConfig = null,
         INoxCliCache? cache = null)
     {
@@ -128,7 +129,7 @@ public class ClientVariableProvider: IClientVariableProvider
         ResolveAllVariables(action);
     }
 
-    public void SetProjectConfiguration(Solution.Solution projectConfig)
+    public void SetProjectConfiguration(NoxSolution projectConfig)
     {
         _projectConfig = projectConfig;
     }

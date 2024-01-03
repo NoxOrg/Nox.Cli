@@ -8,8 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-    <PackageReference Include="Spectre.Console.Cli" Version="0.47.0" />
-    <PackageReference Include="Nox.Secrets" Version="7.0.85" />
-    <PackageReference Include="Nox.Solution" Version="7.0.87" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.48.0" />
+    <PackageReference Include="Nox.Secrets" Version="7.0.153" />
+    <PackageReference Include="Nox.Solution" Version="7.0.153" />
   </ItemGroup>
 </Project>

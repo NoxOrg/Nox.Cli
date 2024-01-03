@@ -17,10 +17,12 @@ var cacheManager = new NoxCliCacheBuilder(builder.Configuration["NoxScriptsUrl"]
     .ForServer()
     .Build();
 
-builder.Services.AddWorkflowCache()
+builder.Services
+    .AddWorkflowCache()
     .AddNoxCliCacheManager(cacheManager)
     .AddPersistedSecretStore()
     .AddServerSecretResolver(builder.Configuration["ServerSecretResolver:TenantId"]!, builder.Configuration["ServerSecretResolver:ClientId"]!, builder.Configuration["ServerSecretResolver:ClientSecret"]!);
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

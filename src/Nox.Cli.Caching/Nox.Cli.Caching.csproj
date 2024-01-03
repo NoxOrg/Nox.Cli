@@ -15,7 +15,7 @@
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
       <PackageReference Include="RestSharp" Version="110.2.0" />
-      <PackageReference Include="Spectre.Console" Version="0.47.0" />
+      <PackageReference Include="Spectre.Console" Version="0.48.0" />
       <PackageReference Include="YamlDotNet" Version="13.7.1" />
     </ItemGroup>
 
