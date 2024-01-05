@@ -17,8 +17,8 @@ public class MsSqlConnect_v1 : INoxCliAddin
 
             Inputs =
             {
-                ["server"] = new NoxActionInput { 
-                    Id = "server", 
+                ["server"] = new NoxActionInput {
+                    Id = "server",
                     Description = "The database hostname or IP",
                     Default = "localhost",
                     IsRequired = false
@@ -77,8 +77,8 @@ public class MsSqlConnect_v1 : INoxCliAddin
     private string? _password;
     private string? _database;
     private SqlConnection? _connection;
-    
-    public Task BeginAsync(IDictionary<string,object> inputs)
+
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _server = inputs.ValueOrDefault<string>("server", this);
         _port = inputs.ValueOrDefault<int>("port", this);
@@ -86,7 +86,7 @@ public class MsSqlConnect_v1 : INoxCliAddin
         _password = inputs.Value<string>("password");
         _options = inputs.ValueOrDefault<string>("options", this);
         _database = inputs.Value<string>("database");
-        
+
         return Task.FromResult(true);
     }
 
@@ -111,31 +111,25 @@ public class MsSqlConnect_v1 : INoxCliAddin
             UserID = _userId,
             Password = _password,
             InitialCatalog = _database,
-            
+
         };
 
         _connection = new SqlConnection(csb.ToString());
-        
-        if (_connection == null)
-        {
-            ctx.SetErrorMessage("The mssql connect action was not initialized");
-        }
-        else
-        {
-            if (_connection.State == ConnectionState.Closed || _connection.State == ConnectionState.Broken)
-            {
-                try
-                {
-                    await _connection.OpenAsync();
- 
-                    outputs["connection"] = _connection;
 
-                    ctx.SetState(ActionState.Success);
-                }
-                catch (Exception ex)
-                {
-                    ctx.SetErrorMessage(ex.Message);
-                }
+
+        if (_connection.State == ConnectionState.Closed || _connection.State == ConnectionState.Broken)
+        {
+            try
+            {
+                await _connection.OpenAsync();
+
+                outputs["connection"] = _connection;
+
+                ctx.SetState(ActionState.Success);
+            }
+            catch (Exception ex)
+            {
+                ctx.SetErrorMessage(ex.Message);
             }
         }
 
@@ -144,7 +138,7 @@ public class MsSqlConnect_v1 : INoxCliAddin
 
     public async Task EndAsync()
     {
-        if (!_isServerContext) 
+        if (!_isServerContext)
         {
             await _connection!.CloseAsync();
             await _connection.DisposeAsync();

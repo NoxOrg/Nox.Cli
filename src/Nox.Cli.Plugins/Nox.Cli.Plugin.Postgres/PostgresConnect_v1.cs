@@ -17,8 +17,8 @@ public class PostgresConnect_v1 : INoxCliAddin
 
             Inputs =
             {
-                ["server"] = new NoxActionInput { 
-                    Id = "server", 
+                ["server"] = new NoxActionInput {
+                    Id = "server",
                     Description = "The database hostname or IP",
                     Default = "localhost",
                     IsRequired = false
@@ -77,9 +77,9 @@ public class PostgresConnect_v1 : INoxCliAddin
     private string? _password;
     private string? _database;
     private NpgsqlConnection? _connection;
-    
 
-    public Task BeginAsync(IDictionary<string,object> inputs)
+
+    public Task BeginAsync(IDictionary<string, object> inputs)
     {
         _server = inputs.ValueOrDefault<string>("server", this);
         _port = inputs.ValueOrDefault<int>("port", this);
@@ -87,7 +87,7 @@ public class PostgresConnect_v1 : INoxCliAddin
         _password = inputs.Value<string>("password");
         _options = inputs.ValueOrDefault<string>("options", this);
         _database = inputs.Value<string>("database");
-        
+
         return Task.FromResult(true);
     }
 
@@ -97,7 +97,7 @@ public class PostgresConnect_v1 : INoxCliAddin
         var outputs = new Dictionary<string, object>();
 
         ctx.SetState(ActionState.Error);
-        
+
         var csb = new NpgsqlConnectionStringBuilder(_options)
         {
             Host = _server,
@@ -110,26 +110,20 @@ public class PostgresConnect_v1 : INoxCliAddin
         _connection = new NpgsqlConnection(csb.ToString());
 
 
-        if (_connection == null)
-        {
-            ctx.SetErrorMessage("The Postgres connect action was not initialized");
-        }
-        else
-        {
-            if (_connection.State == ConnectionState.Closed || _connection.State == ConnectionState.Broken)
-            {
-                try
-                {
-                    await _connection.OpenAsync();
- 
-                    outputs["connection"] = _connection;
 
-                    ctx.SetState(ActionState.Success);
-                }
-                catch (Exception ex)
-                {
-                    ctx.SetErrorMessage(ex.Message);
-                }
+        if (_connection.State == ConnectionState.Closed || _connection.State == ConnectionState.Broken)
+        {
+            try
+            {
+                await _connection.OpenAsync();
+
+                outputs["connection"] = _connection;
+
+                ctx.SetState(ActionState.Success);
+            }
+            catch (Exception ex)
+            {
+                ctx.SetErrorMessage(ex.Message);
             }
         }
 
