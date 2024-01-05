@@ -84,16 +84,16 @@ jobs:
       # Zip the published files
       - run: zip -r "server.zip" "./artifacts/server"
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.gitversion.outputs.semVer }}
-          release_name: Release v${{ steps.gitversion.outputs.semVer }}
-          draft: false
-          prerelease: false
+#      - name: Create Release
+#        id: create_release
+#        uses: actions/create-release@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          tag_name: v${{ steps.gitversion.outputs.semVer }}
+#          release_name: Release v${{ steps.gitversion.outputs.semVer }}
+#          draft: false
+#          prerelease: false
           
       - name: Upload Server Asset
         id: upload-release-asset
