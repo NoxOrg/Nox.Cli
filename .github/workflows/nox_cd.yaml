@@ -84,24 +84,17 @@ jobs:
       # Zip the published files
       - run: zip -r "server.zip" "./artifacts/server"
 
-#      - name: Create Release
-#        id: create_release
-#        uses: actions/create-release@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          tag_name: v${{ steps.gitversion.outputs.semVer }}
-#          release_name: Release v${{ steps.gitversion.outputs.semVer }}
-#          draft: false
-#          prerelease: false
-          
+      - name: Fetch Latest Release
+        id: get_latest_release
+        uses: gregziegan/fetch-latest-release@v2.0.0
+                  
       - name: Upload Server Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ steps.get_latest_release.outputs.upload_url }}
           asset_path: server.zip
           asset_name: server.zip
           asset_content_type: application/zip
