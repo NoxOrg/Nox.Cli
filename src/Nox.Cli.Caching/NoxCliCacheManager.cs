@@ -330,7 +330,9 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
                     if (yaml == null) throw new NoxCliException($"Couldn't download workflow {file.Name}");
 
-                    File.WriteAllText(Path.Combine(_workflowCachePath, file.Name), yaml);
+                    var scriptFullPath = Path.Combine(_workflowCachePath, file.Name);
+                    Directory.CreateDirectory(Path.GetDirectoryName(scriptFullPath)!);
+                    File.WriteAllText(scriptFullPath, yaml);
                     hasRefreshed = true;
                 }
                 else
