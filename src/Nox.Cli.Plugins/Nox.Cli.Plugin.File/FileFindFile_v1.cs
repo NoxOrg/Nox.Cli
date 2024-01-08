@@ -28,6 +28,12 @@ public class FileFindFile_v1 : INoxCliAddin
                     Description = "The name of the file to find, must include the file extension.",
                     Default = string.Empty,
                     IsRequired = true
+                },
+                ["include-sub-folders"] = new NoxActionInput {
+                    Id = "include-sub-folders",
+                    Description = "Set to include any sub folders in the path.",
+                    Default = false,
+                    IsRequired = false
                 }
             },
 
@@ -44,11 +50,13 @@ public class FileFindFile_v1 : INoxCliAddin
 
     private string? _path;
     private string? _filename;
+    private bool? _includeSubFolders;
     
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _path = inputs.Value<string>("path");
         _filename = inputs.Value<string>("file-name");
+        _includeSubFolders = inputs.ValueOrDefault<bool>("include-sub-folders", this);
         return Task.CompletedTask;
     }
 
@@ -66,37 +74,29 @@ public class FileFindFile_v1 : INoxCliAddin
         else
         {
             try
-            {
-                var fullPath = Path.GetFullPath(_path);
+            { var fullPath = Path.GetFullPath(_path);
                 if (!Directory.Exists(fullPath))
                 {
                     outputs["is-found"] = false;
                 }
                 else
                 {
-                    if (_filename.Contains('*'))
+                    string[] files;
+                    if (_includeSubFolders == true)
                     {
-                        var files = Directory.GetFiles(fullPath, _filename);
-                        if (files.Length == 1)
-                        {
-                            outputs["is-found"] = true;
-                        }
-                        else
-                        {
-                            outputs["is-found"] = false;
-                        }
+                        files = Directory.GetFiles(fullPath, _filename, SearchOption.AllDirectories);
                     }
                     else
                     {
-                        var fullFilename = Path.Combine(fullPath, _filename);
-                        if (System.IO.File.Exists(fullFilename))
-                        {
-                            outputs["is-found"] = true;
-                        }
-                        else
-                        {
-                            outputs["is-found"] = false;
-                        }    
+                        files = Directory.GetFiles(fullPath, _filename, SearchOption.TopDirectoryOnly);
+                    }
+                    if (files.Length > 0)
+                    {
+                        outputs["is-found"] = true;
+                    }
+                    else
+                    {
+                        outputs["is-found"] = false;
                     }
                 }
                 ctx.SetState(ActionState.Success);
