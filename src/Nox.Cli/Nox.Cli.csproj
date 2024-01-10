@@ -37,15 +37,15 @@
     <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.40" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Graph" Version="5.37.0" />
+    <PackageReference Include="Microsoft.Graph" Version="5.38.0" />
     <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.205.1" />
     <PackageReference Include="Nox.Secrets" Version="7.0.153" />
-    <PackageReference Include="Nox.Solution" Version="7.0.153" />
+    <PackageReference Include="Nox.Solution" Version="7.0.161" />
     <PackageReference Include="RestSharp" Version="110.2.0" />
     <PackageReference Include="Spectre.Console" Version="0.48.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.48.0" />
     <PackageReference Include="System.IO.Abstractions" Version="20.0.4" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.1.2" />
     <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.2.2" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="7.0.14" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
