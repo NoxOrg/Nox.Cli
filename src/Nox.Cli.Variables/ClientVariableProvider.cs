@@ -74,14 +74,17 @@ public class ClientVariableProvider: IClientVariableProvider
                 {
                     unresolvedVars.TryAdd(input.Key, unresolvedString);
                 }
-            } else if (input.Value.Default is Dictionary<object, object> unresolvedObjectDictionary)
+            } else if (input.Value.Default is Dictionary<object, object?> unresolvedObjectDictionary)
             {
                 foreach (var objDictItem in unresolvedObjectDictionary)
                 {
-                    if (_variableRegex.Match(objDictItem.Value.ToString()!).Success)
+                    if (objDictItem.Value != null)
                     {
-                        unresolvedVars.TryAdd(input.Key, objDictItem.Value.ToString()!);
-                    }    
+                        if (_variableRegex.Match(objDictItem.Value!.ToString()!).Success)
+                        {
+                            unresolvedVars.TryAdd(input.Key, objDictItem.Value.ToString()!);
+                        }
+                    }
                 }
             } else if (input.Value.Default is Dictionary<string, string> unresolvedStringDictionary)
             {

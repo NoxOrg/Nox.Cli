@@ -81,7 +81,7 @@ if (app.Environment.IsDevelopment())
         });    
     }
 }
-app.UseAllElasticApm(builder.Configuration);
+//app.UseAllElasticApm(builder.Configuration);
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
