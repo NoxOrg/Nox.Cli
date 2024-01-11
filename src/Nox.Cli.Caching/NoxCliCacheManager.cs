@@ -190,8 +190,8 @@ public class NoxCliCacheManager: INoxCliCacheManager
             else
             {
                 RaiseBuildEvent($"{Emoji.Known.ExclamationQuestionMark} [bold yellow]Unable to connect to remote workflow cache server at: {_remoteUri}.\nReverting to local cache.[/]");
+                GetLocalWorkflowsAndManifest(yamlFiles);
             }
-            GetLocalWorkflowsAndManifest(yamlFiles);
         }
 
         BuildDeserializer();
