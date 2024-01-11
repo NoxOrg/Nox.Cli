@@ -9,12 +9,16 @@ public static class PingHelper
         using var tcpClient = new TcpClient();
         try
         {
-            tcpClient.Connect(host, 80);
-            return true;
+            if (tcpClient.ConnectAsync(host, 80).Wait(2000))
+            {
+                return true;
+            }
         }
         catch
         {
             return false;
         }
+
+        return false;
     }
 }

@@ -186,18 +186,17 @@ public class NoxCliCacheManager: INoxCliCacheManager
             {
                 GetOnlineWorkflowsAndManifest(yamlFiles);
                 GetOnlineTemplates();
-                GetLocalWorkflowsAndManifest(yamlFiles);
             }
             else
             {
-                RaiseBuildEvent($"{Emoji.Known.ExclamationQuestionMark} [bold yellow]Unable to connect to remote workflow cache server at: {_remoteUri}. Reverting to local cache.[/]");
+                RaiseBuildEvent($"{Emoji.Known.ExclamationQuestionMark} [bold yellow]Unable to connect to remote workflow cache server at: {_remoteUri}.\nReverting to local cache.[/]");
             }
+            GetLocalWorkflowsAndManifest(yamlFiles);
         }
 
         BuildDeserializer();
         ResolveManifest(yamlFiles);
         ResolveWorkflows(yamlFiles);
-        
         Save();
         return this;
     }
@@ -370,7 +369,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     
     private void GetLocalWorkflowsAndManifest(Dictionary<string, string> yamlFiles)
     {
-        var files = FindWorkflowsAndManifest(_localWorkflowPath);
+        var files = FindWorkflowsAndManifest(_workflowCachePath);
 
         var overriddenFiles = new List<string>(files.Length);
 
