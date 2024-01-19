@@ -46,7 +46,7 @@ public class AzDevopsAddProjectAdmins_v1 : INoxCliAddin
     private Guid? _projectId;
     private string? _admins;
     private bool _isServerContext = false;
-
+    
     public async Task BeginAsync(IDictionary<string, object> inputs)
     {
         var connection = inputs.Value<VssConnection>("connection");
@@ -129,10 +129,10 @@ public class AzDevopsAddProjectAdmins_v1 : INoxCliAddin
             ctx.SetErrorMessage($"Unable to find group '\\Project Administrators' that should automatically have been created with the project");
             return false;
         }
- 
-        var usersInGraph = _graphClient.ListUsersAsync(new string[] {"aad"}).Result;
 
-        while (usersInGraph.ContinuationToken is not null)
+        var usersInGraph = await _graphClient.ListUsersAsync(new string[] {"aad"});
+        
+        while (usersInGraph.GraphUsers != null)
         {
             foreach (var user in usersInGraph.GraphUsers.OrderBy(u => u.DisplayName))
             {
@@ -147,9 +147,11 @@ public class AzDevopsAddProjectAdmins_v1 : INoxCliAddin
                     }
                 }
             }
+
+            if (usersInGraph.ContinuationToken == null) break;
             usersInGraph = await _graphClient.ListUsersAsync(new string[] {"aad"}, continuationToken: usersInGraph.ContinuationToken.FirstOrDefault());
         }
-
+        
         return true;
 
     }
