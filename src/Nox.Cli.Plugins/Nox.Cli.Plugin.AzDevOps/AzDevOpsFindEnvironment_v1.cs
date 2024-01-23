@@ -60,7 +60,6 @@ public class AzDevOpsFindEnvironment_v1 : INoxCliAddin
         _projectId = inputs.Value<Guid>("project-id");
         _envName = inputs.Value<string>("environment-name");
         _agentClient = await connection!.GetClientAsync<TaskAgentHttpClient>();
-        
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -81,6 +80,7 @@ public class AzDevOpsFindEnvironment_v1 : INoxCliAddin
         {
             try
             {
+                outputs["is-found"] = true;
                 var environments = await _agentClient.GetEnvironmentsAsync(_projectId.Value);
                 if (environments.Any(env => env.Name.Equals(_envName, StringComparison.OrdinalIgnoreCase)))
                 {
