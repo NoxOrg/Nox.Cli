@@ -100,6 +100,10 @@ public class AzDevOpsAddProjectAgentPool_v1: INoxCliAddin
                         });
                         outputs["agent-pool-queue-id"] = agentQueue.Id;
                     }
+                    else
+                    {
+                        outputs["agent-pool-queue-id"] = agentQueues[0].Id;
+                    }
                     ctx.SetState(ActionState.Success);
                 }
             }
