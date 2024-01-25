@@ -1,5 +1,5 @@
+using Microsoft.Azure.Pipelines.WebApi;
 using Microsoft.TeamFoundation.DistributedTask.WebApi;
-using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
@@ -12,9 +12,9 @@ public class AzDevOpsAddProjectAgentPool_v1: INoxCliAddin
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/add-project-agent-pool@v1",
+            Name = "azdevops/add-project-agent-pool-queue@v1",
             Author = "Jan Schutte",
-            Description = "Add an agent pool to an Azure DevOps project",
+            Description = "Add an agent pool queue to an Azure DevOps agent pool",
 
             Inputs =
             {
@@ -38,6 +38,14 @@ public class AzDevOpsAddProjectAgentPool_v1: INoxCliAddin
                     Default = string.Empty,
                     IsRequired = true
                 },
+            },
+            
+            Outputs =
+            {
+                ["agent-pool-queue-id"] = new NoxActionOutput {
+                    Id = "agent-pool-queue-id",
+                    Description = "The agent pool queue id of the added agent pool",
+                },
             }
         };
     }
@@ -57,6 +65,7 @@ public class AzDevOpsAddProjectAgentPool_v1: INoxCliAddin
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
+        
         _isServerContext = ctx.IsServer;
         var outputs = new Dictionary<string, object>();
 
@@ -80,8 +89,6 @@ public class AzDevOpsAddProjectAgentPool_v1: INoxCliAddin
                 }
                 else
                 {
-                    
-                    
                     var agentQueues = await _agentClient.GetAgentQueuesAsync(_projectId.Value, _poolName);
                     if (agentQueues == null || agentQueues.Count == 0)
                     {
@@ -89,14 +96,12 @@ public class AzDevOpsAddProjectAgentPool_v1: INoxCliAddin
                         {
                             Name = _poolName,
                             Pool = pools[0],
-                            ProjectId = _projectId.Value
+                            ProjectId = _projectId.Value,
                         });
-                        
+                        outputs["agent-pool-queue-id"] = agentQueue.Id;
                     }
                     ctx.SetState(ActionState.Success);
                 }
-                
-                
             }
             catch (Exception ex)
             {

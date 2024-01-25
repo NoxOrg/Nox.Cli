@@ -1,4 +1,5 @@
 using Microsoft.TeamFoundation.Build.WebApi;
+using Microsoft.TeamFoundation.DistributedTask.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
@@ -52,7 +53,6 @@ public class AzDevopsAuthorizeBuildDefinition_v1 : INoxCliAddin
         _projectId = inputs.Value<Guid>("project-id");
         _buildId = inputs.Value<int>("build-definition-id");
         _buildClient = await connection!.GetClientAsync<BuildHttpClient>();
-        
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -92,8 +92,7 @@ public class AzDevopsAuthorizeBuildDefinition_v1 : INoxCliAddin
                         await _buildClient.AuthorizeDefinitionResourcesAsync(unAuths, _projectId.Value, _buildId.Value);
                     }
 
-                    
-                    
+                                        
                     ctx.SetState(ActionState.Success);
                 }
             }
