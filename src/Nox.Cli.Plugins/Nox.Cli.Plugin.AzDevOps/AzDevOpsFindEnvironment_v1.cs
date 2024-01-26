@@ -80,7 +80,7 @@ public class AzDevOpsFindEnvironment_v1 : INoxCliAddin
         {
             try
             {
-                outputs["is-found"] = true;
+                outputs["is-found"] = false;
                 var environments = await _agentClient.GetEnvironmentsAsync(_projectId.Value);
                 if (environments.Any(env => env.Name.Equals(_envName, StringComparison.OrdinalIgnoreCase)))
                 {
