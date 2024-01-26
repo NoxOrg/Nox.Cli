@@ -1,25 +1,21 @@
-using System.Net.Http.Headers;
 using System.Text.Json;
-using Microsoft.TeamFoundation.Build.WebApi;
-using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
 using Nox.Cli.Plugin.AzDevOps.DTO;
 using RestSharp;
-using RestSharp.Authenticators;
 
 namespace Nox.Cli.Plugin.AzDevOps;
 
-public class AzDevOpsAuthorizeAgentPool_v1 : INoxCliAddin
+public class AzDevOpsAuthorizeServiceEndpoint_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/authorize-agent-pool@v1",
+            Name = "azdevops/authorize-service-endpoint@v1",
             Author = "Jan Schutte",
-            Description = "Authorize all pipelines in a project to use an agent pool",
+            Description = "Authorize a DevOps pipeline to use a service endpoint",
 
             Inputs =
             {
@@ -44,12 +40,19 @@ public class AzDevOpsAuthorizeAgentPool_v1 : INoxCliAddin
                     IsRequired = true
                 },
                 
-                ["agent-pool-queue-id"] = new NoxActionInput { 
-                    Id = "agent-pool-queue-id", 
-                    Description = "The Id (int) of the Agent Pool Queue",
+                ["service-endpoint-id"] = new NoxActionInput { 
+                    Id = "service-endpoint-id", 
+                    Description = "The Id of the Service Endpoint to authorize",
+                    Default = Guid.Empty,
+                    IsRequired = true
+                },
+                ["pipeline-id"] = new NoxActionInput { 
+                    Id = "pipeline-id", 
+                    Description = "The Id (int) of the DevOps pipeline",
                     Default = 0,
                     IsRequired = true
                 }
+                
             }
         };
     }
@@ -57,7 +60,8 @@ public class AzDevOpsAuthorizeAgentPool_v1 : INoxCliAddin
     private string? _server;
     private string? _pat;
     private Guid? _projectId;
-    private int? _queueId;
+    private Guid? _endpointId;
+    private int? _pipelineId;
     private bool _isServerContext = false;
 
     public Task BeginAsync(IDictionary<string,object> inputs)
@@ -65,7 +69,8 @@ public class AzDevOpsAuthorizeAgentPool_v1 : INoxCliAddin
         _server = inputs.Value<string>("server");
         _pat = inputs.Value<string>("personal-access-token");
         _projectId = inputs.Value<Guid>("project-id");
-        _queueId = inputs.Value<int>("agent-pool-queue-id");
+        _endpointId = inputs.Value<Guid>("service-endpoint-id");
+        _pipelineId = inputs.Value<int>("pipeline-id");
         return Task.CompletedTask;
     }
 
@@ -80,10 +85,12 @@ public class AzDevOpsAuthorizeAgentPool_v1 : INoxCliAddin
             string.IsNullOrWhiteSpace(_pat) ||
             _projectId == null ||
             _projectId == Guid.Empty ||
-            _queueId == 0 ||
+            _endpointId == null ||
+            _endpointId == Guid.Empty ||
+            _pipelineId == 0 ||
             string.IsNullOrWhiteSpace(_pat))
         {
-            ctx.SetErrorMessage("The DevOps authorize-agent-pool action was not initialized");
+            ctx.SetErrorMessage("The DevOps authorize-service-endpoint action was not initialized");
         }
         else
         {
@@ -91,7 +98,7 @@ public class AzDevOpsAuthorizeAgentPool_v1 : INoxCliAddin
             {
                 var client = new RestClient(_server);
                 
-                var request = new RestRequest($"/{_projectId}/_apis/pipelines/pipelinePermissions/queue/{_queueId}")
+                var request = new RestRequest($"/{_projectId}/_apis/pipelines/pipelinePermissions/endpoint/{_endpointId}")
                 {
                     Method = Method.Patch
                 };
@@ -102,14 +109,13 @@ public class AzDevOpsAuthorizeAgentPool_v1 : INoxCliAddin
                 request.AddHeader("Accept", "application/json;api-version=5.1-preview.1");
                 var payload = new AuthorizeRequest()
                 {
-                    Resource = new Resource
+                    Pipelines = new List<PipelineAuthorize>
                     {
-                        Type = "queue",
-                        Id = _queueId.ToString()
-                    },
-                    AllPipelines = new PipelineAuthorizeAll
-                    {
-                        Authorized = true
+                        new PipelineAuthorize
+                        {
+                            Id = _pipelineId!.Value,
+                            Authorized = true
+                        }
                     }
                 };
                 request.AddJsonBody(JsonSerializer.Serialize(payload, new JsonSerializerOptions{PropertyNamingPolicy = JsonNamingPolicy.CamelCase}));
