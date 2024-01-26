@@ -1,6 +1,6 @@
 namespace Nox.Cli.Plugin.AzDevOps.DTO;
 
-public class AuthorizeAgentPoolQueueAuthorizedBy
+public class PipelineAuthorizeBy
 {
     public string? DisplayName { get; set; }
     public string? Id { get; set; }
