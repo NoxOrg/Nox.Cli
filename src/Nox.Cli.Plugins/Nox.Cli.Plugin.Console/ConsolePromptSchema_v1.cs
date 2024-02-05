@@ -8,6 +8,7 @@ using Spectre.Console;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Nox.Cli.Abstractions.Helpers;
 
 namespace Nox.Cli.Plugin.Console;
 
@@ -96,7 +97,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
     private string? _schema = null!;
 
-    private IDictionary<string, string?>? _schemaCache;
+    private Dictionary<string, string?>? _schemaCache;
 
     private string[]? _includedPrompts;
 
@@ -181,13 +182,8 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
                 if (json != null)
                 {
-                    var serializeOptions = new JsonSerializerOptions
-                    {
-                        WriteIndented = false,
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                    };
-
-                    var jsonSchemaRaw = JsonSerializer.Deserialize<JsonSchema.JsonSchemaRaw>(json, serializeOptions);
+                    
+                    var jsonSchemaRaw = JsonSerializer.Deserialize<JsonSchema.JsonSchemaRaw>(json, JsonOptions.Instance);
 
                     if (jsonSchemaRaw != null)
                     {

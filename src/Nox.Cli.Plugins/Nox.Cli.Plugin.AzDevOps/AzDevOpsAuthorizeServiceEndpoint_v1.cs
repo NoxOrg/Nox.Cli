@@ -2,6 +2,7 @@ using System.Text.Json;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Plugin.AzDevOps.DTO;
 using RestSharp;
 
@@ -118,7 +119,7 @@ public class AzDevOpsAuthorizeServiceEndpoint_v1 : INoxCliAddin
                         }
                     }
                 };
-                request.AddJsonBody(JsonSerializer.Serialize(payload, new JsonSerializerOptions{PropertyNamingPolicy = JsonNamingPolicy.CamelCase}));
+                request.AddJsonBody(JsonSerializer.Serialize(payload, JsonOptions.Instance));
                 var response = await client.ExecuteAsync<AuthorizeResponse>(request);
                 if (response.IsSuccessStatusCode)
                 {

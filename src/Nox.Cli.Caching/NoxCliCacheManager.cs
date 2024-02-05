@@ -299,10 +299,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
                 throw new Exception($"GetOnlineWorkflowsAndManifest:-> {onlineFilesJson.ErrorException?.Message}");
             }
 
-            var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content,  JsonOptions.Instance);
 
             // Read and cache the entries
 
@@ -519,10 +516,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
             if (onlineFilesJson.StatusCode != HttpStatusCode.OK) return;
 
-            var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            var onlineFiles = JsonSerializer.Deserialize<List<RemoteFileInfo>>(onlineFilesJson.Content,  JsonOptions.Instance);
 
             // Read and cache the entries
 
