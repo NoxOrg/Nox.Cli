@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-Nox.Cli.Server-EDB29744-0909-49A3-8A3D-4A9E3529BF5A</UserSecretsId>    
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.25.3" />

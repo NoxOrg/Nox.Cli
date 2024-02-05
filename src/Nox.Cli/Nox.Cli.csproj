@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Nox.Cli</RootNamespace>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
   <PropertyGroup>
     <!-- https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets -->
