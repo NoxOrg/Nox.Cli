@@ -1,0 +1,22 @@
+﻿version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/src"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+    groups:
+      deps:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.Data.SqlClient" #crashes dependabot
+      - dependency-name: "Microsoft.PowerShell.Commands.Diagnostics" #until upgrade to .Net 8
+      - dependency-name: "Microsoft.PowerShell.Commands.Management" #until upgrade to .Net 8
+      - dependency-name: "Microsoft.PowerShell.Commands.Utility" #until upgrade to .Net 8
+      - dependency-name: "Microsoft.PowerShell.ConsoleHost" #until upgrade to .Net 8
+      - dependency-name: "Microsoft.PowerShell.SDK" #until upgrade to .Net 8
+      - dependency-name: "Microsoft.WSMan.Management" #until upgrade to .Net 8
+      - dependency-name: "System.Management.Automation" #until upgrade to .Net 8
