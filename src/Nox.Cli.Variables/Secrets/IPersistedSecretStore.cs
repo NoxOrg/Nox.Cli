@@ -6,7 +6,7 @@ public interface IPersistedSecretStore
 
     string? Load(string key, TimeSpan? validFor = null);
     
-#if NET7_0    
+#if NET8_0    
     Task SaveAsync(string key, string secret);
     Task<string?> LoadAsync(string key, TimeSpan? validFor = null);
 #endif

@@ -46,7 +46,7 @@ public class AzureSecretProvider: ISecretProvider
         }
         catch (Exception ex)
         {
-#if NET7_0            
+#if NET8_0            
             string InterpolateError()
             {
                 var interpolatedStringHandler = new DefaultInterpolatedStringHandler(42, 2);
