@@ -20,7 +20,7 @@ namespace Nox.Cli.Caching;
 
 public class NoxCliCacheManager: INoxCliCacheManager
 {
-    private INoxCliCache? _cache;
+    private NoxCliCache? _cache;
     private string _cachePath;
     private string _cacheFile;
     private string _workflowCachePath;
@@ -451,7 +451,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
         // current or supplied folder
         var files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.TopDirectoryOnly);
 
-        while (!files.Any())
+        while (files.Length == 0)
         {
             // root
             if (path == null || path.Parent == null)
@@ -461,7 +461,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
             }
 
             // Find special NOX folder
-            if (Directory.GetDirectories(path.FullName, @".nox").Any())
+            if (Directory.GetDirectories(path.FullName, @".nox").Length != 0)
             {
                 path = new DirectoryInfo(Path.Combine(path.FullName,".nox"));
                 files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.AllDirectories);
@@ -469,7 +469,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
             }
 
             // Stop in project root, after checking all sub-directories
-            if (Directory.GetDirectories(path.FullName, @".git").Any())
+            if (Directory.GetDirectories(path.FullName, @".git").Length != 0)
             {
                 files = GetFilesWithSearchPatterns(path, searchPatterns, SearchOption.AllDirectories); ;
                 break;
