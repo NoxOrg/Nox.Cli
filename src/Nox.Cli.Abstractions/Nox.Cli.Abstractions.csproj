@@ -4,13 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Nox.Secrets.Abstractions" Version="7.0.185" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.48.0" />
-    <PackageReference Include="Nox.Secrets" Version="7.0.153" />
-    <PackageReference Include="Nox.Solution" Version="7.0.161" />
+    <PackageReference Include="Nox.Solution" Version="7.0.185" />
   </ItemGroup>
 </Project>

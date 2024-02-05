@@ -4,7 +4,6 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <UseRidGraph>true</UseRidGraph>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,9 +14,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="7.0.14" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="8.0.1" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Nox.Types" Version="7.0.185" />
         <PackageReference Include="RestSharp" Version="110.2.0" />
         <PackageReference Include="YamlDotNet" Version="13.7.1" />
         <PackageReference Include="Azure.Identity" Version="1.10.4" />

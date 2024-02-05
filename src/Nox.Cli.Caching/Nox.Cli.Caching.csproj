@@ -4,7 +4,6 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <UseRidGraph>true</UseRidGraph>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,6 +14,7 @@
 
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+      <PackageReference Include="Nox.Secrets.Azure" Version="7.0.185" />
       <PackageReference Include="RestSharp" Version="110.2.0" />
       <PackageReference Include="Spectre.Console" Version="0.48.0" />
       <PackageReference Include="YamlDotNet" Version="13.7.1" />
