@@ -2,7 +2,7 @@
 
 namespace Nox.Cli.Configuration;
 
-public class CliConfiguration: ICliConfiguration
+public class CliConfiguration
 {
     public string Branch { get; set; } = string.Empty;
     public string Command { get; set; } = string.Empty;

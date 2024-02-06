@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
@@ -6,7 +6,7 @@ EXPOSE 443
 RUN apt-get -y update
 RUN apt-get install -y libsecret-1-0
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 COPY ["./Nox.Cli.Server/Nox.Cli.Server.csproj", "Nox.Cli.Server/"]

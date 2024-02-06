@@ -3,6 +3,7 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Exceptions;
+using Nox.Cli.Configuration;
 using Nox.Cli.ServerIntegration;
 using Nox.Cli.Variables;
 using Nox.Cli.Variables.Secrets;
@@ -43,7 +44,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         _noxSecretsResolver = noxSecretsResolver;
     }
 
-    public async Task<bool> Execute(IWorkflowConfiguration workflow, IRemainingArguments arguments)
+    public async Task<bool> Execute(WorkflowConfiguration workflow, IRemainingArguments arguments)
     {
         var workflowDescription = $"[seagreen1]Executing workflow: {workflow.Name.EscapeMarkup()}[/]";
         _console.WriteLine();

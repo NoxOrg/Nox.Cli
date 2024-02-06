@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Configuration;
+using Nox.Cli.Configuration;
 using Nox.Cli.Variables.Secrets;
 using Nox.Solution;
 using YamlDotNet.Serialization;
@@ -22,7 +23,7 @@ public class ClientVariableProvider: IClientVariableProvider
     
     
     public ClientVariableProvider(
-        IWorkflowConfiguration workflow, 
+        WorkflowConfiguration workflow, 
         IOrgSecretResolver orgSecretResolver,
         NoxSolution? projectConfig = null,
         ILocalTaskExecutorConfiguration? lteConfig = null,
@@ -187,7 +188,7 @@ public class ClientVariableProvider: IClientVariableProvider
         }
     }
 
-    private void Initialize(IWorkflowConfiguration workflow)
+    private void Initialize(WorkflowConfiguration workflow)
     {
         var serializer = new SerializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)

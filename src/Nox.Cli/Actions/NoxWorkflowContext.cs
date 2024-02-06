@@ -6,6 +6,7 @@ using Nox.Cli.Variables;
 using System.Diagnostics;
 using Nox.Cli.Abstractions.Caching;
 using Nox.Cli.Abstractions.Exceptions;
+using Nox.Cli.Configuration;
 using Nox.Cli.Variables.Secrets;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
@@ -15,7 +16,7 @@ namespace Nox.Cli.Actions;
 
 public class NoxWorkflowContext : INoxWorkflowContext
 {
-    private readonly IWorkflowConfiguration _workflow;
+    private readonly WorkflowConfiguration _workflow;
     private readonly NoxJobDictionary _jobs;
     private IDictionary<string, INoxAction> _steps;
     private readonly IClientVariableProvider _varProvider;
@@ -39,7 +40,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
     public INoxAction? CurrentAction => _currentAction;
 
     public NoxWorkflowContext(
-        IWorkflowConfiguration workflow, 
+        WorkflowConfiguration workflow, 
         NoxSolution projectConfig,
         IOrgSecretResolver orgSecretResolver,
         INoxCliCacheManager cacheManager,
@@ -260,7 +261,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
         return newJob;
     }
     
-    private Dictionary<string, INoxAction> ParseSteps(IJobConfiguration jobConfiguration, bool ignoreDuplicateSteps = false)
+    private Dictionary<string, INoxAction> ParseSteps(JobConfiguration jobConfiguration, bool ignoreDuplicateSteps = false)
     {
         var sequence = 1;
         var steps = new Dictionary<string, INoxAction>(StringComparer.OrdinalIgnoreCase);

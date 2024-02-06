@@ -3,7 +3,7 @@ using Nox.Cli.Abstractions.Configuration;
 
 namespace Nox.Cli.Configuration;
 
-public class JobConfiguration: IJobConfiguration
+public class JobConfiguration
 {
     public string Id { get; set; } = string.Empty;
     
@@ -13,5 +13,5 @@ public class JobConfiguration: IJobConfiguration
     public string? ForEach { get; set; }
 
     public NoxJobDisplayMessage? Display { get; set; }
-    public List<IActionConfiguration> Steps { get; set; } = new();
+    public List<ActionConfiguration> Steps { get; set; } = new();
 }
