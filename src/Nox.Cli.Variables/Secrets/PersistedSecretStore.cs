@@ -55,7 +55,7 @@ public class PersistedSecretStore: IPersistedSecretStore
         return _protector.Unprotect(content);
     }
 
-#if NET7_0    
+#if NET8_0    
     public Task SaveAsync(string key, string secret)
     {
         var path = WellKnownPaths.SecretsCachePath;
