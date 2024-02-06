@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
+using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Authentication;
 using Nox.Cli.Shared.DTO.Health;
 using Nox.Cli.Shared.DTO.Workflow;
@@ -14,16 +15,11 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
 { 
     private readonly IAuthenticator _authenticator;
     private readonly IRemoteTaskExecutorConfiguration _remoteTaskExecutorConfiguration;
-    private readonly JsonSerializerOptions _serializerOptions;
-    
+   
     public NoxCliServerIntegration(IAuthenticator authenticator, IRemoteTaskExecutorConfiguration remoteTaskExecutorConfiguration)
     {
         _authenticator = authenticator;
         _remoteTaskExecutorConfiguration = remoteTaskExecutorConfiguration;
-        _serializerOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
     }
 
     public string Endpoint => _remoteTaskExecutorConfiguration.Url;
@@ -40,7 +36,7 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
         // Get list of files on server
         var result = await client.ExecuteAsync(request);
         if (result.StatusCode != HttpStatusCode.OK) return null;
-        return JsonSerializer.Deserialize<EchoHealthResponse>(result.Content!, _serializerOptions)!;
+        return JsonSerializer.Deserialize<EchoHealthResponse>(result.Content!, JsonOptions.Instance)!;
     }
 
     public async Task<ExecuteTaskResult> ExecuteTask(Guid workflowId, INoxAction? action)
@@ -80,7 +76,7 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
             throw result.ErrorException!;
         }
 
-        return JsonSerializer.Deserialize<ExecuteTaskResult>(result.Content!, _serializerOptions) ?? null!;
+        return JsonSerializer.Deserialize<ExecuteTaskResult>(result.Content!,  JsonOptions.Instance) ?? null!;
     }
 
     public async Task<TaskStateResponse> GetTaskState(Guid taskExecutorId)
@@ -104,6 +100,6 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
         {
             throw result.ErrorException!;
         }
-        return JsonSerializer.Deserialize<TaskStateResponse>(result.Content!, _serializerOptions)!;
+        return JsonSerializer.Deserialize<TaskStateResponse>(result.Content!,  JsonOptions.Instance)!;
     }
 }

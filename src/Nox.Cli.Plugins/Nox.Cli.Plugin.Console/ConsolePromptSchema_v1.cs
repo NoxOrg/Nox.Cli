@@ -1,14 +1,14 @@
-﻿using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
-using Nox.Cli.Abstractions;
+﻿using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
 using Nox.Cli.Helpers;
 using Nox.Cli.Plugin.Console.JsonSchema;
 using RestSharp;
 using Spectre.Console;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using Nox.Cli.Abstractions.Helpers;
 
 namespace Nox.Cli.Plugin.Console;
 
@@ -97,7 +97,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
     private string? _schema = null!;
 
-    private IDictionary<string, string?>? _schemaCache;
+    private Dictionary<string, string?>? _schemaCache;
 
     private string[]? _includedPrompts;
 
@@ -182,13 +182,8 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
                 if (json != null)
                 {
-                    var serializeOptions = new JsonSerializerOptions
-                    {
-                        WriteIndented = false,
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                    };
-
-                    var jsonSchemaRaw = JsonSerializer.Deserialize<JsonSchema.JsonSchemaRaw>(json, serializeOptions);
+                    
+                    var jsonSchemaRaw = JsonSerializer.Deserialize<JsonSchema.JsonSchemaRaw>(json, JsonOptions.Instance);
 
                     if (jsonSchemaRaw != null)
                     {
@@ -455,19 +450,19 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
         _yaml.AppendLine($"{yamlPrefix}{key}: {response.ToString().ToLower()}");
         _responses[newKey] = response;
     }
-    
+
     private void PromptInteger(string prompt, string rootKey, string key, string yamlPrefix, bool isRequired)
     {
         var newKey = $"{rootKey}.{key}".TrimStart('.');
         var spectrePrompt = new TextPrompt<int>(prompt)
             .PromptStyle(Style.Parse("seagreen1"))
             .DefaultValueStyle(Style.Parse("mediumpurple3_1"));
-        
+
         if (!isRequired)
         {
             spectrePrompt.AllowEmpty();
         }
-        
+
 
         var defaultValue = GetDefault<int>(newKey);
 
@@ -514,14 +509,14 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
             .Title(prompt)
             .HighlightStyle(Style.Parse("mediumpurple3_1"))
             .AddChoices(enumList.ToArray());
-        
+
         var response = AnsiConsole.Prompt(spectrePrompt);
-                                    
+
         _responses[newKey] = response;
         _yaml.AppendLine($"{yamlPrefix}{key}: {response}");
         AnsiConsole.MarkupLine($"{prompt} [seagreen1]{_responses[newKey]}[/]");
     }
-    
+
     private void PromptMultipleEnum(string prompt, string rootKey, string key, string yamlPrefix, List<string> enumList)
     {
         var newKey = $"{rootKey}.{key}".TrimStart('.');
@@ -530,11 +525,11 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
                 .Title(prompt)
                 .HighlightStyle(Style.Parse("mediumpurple3_1"))
                 .AddChoices(enumList.ToArray())
-                
+
         );
 
         var responseValue = String.Join(',', response);
-        _responses[newKey] = responseValue; 
+        _responses[newKey] = responseValue;
         _yaml.AppendLine($"{yamlPrefix}{key}: [{responseValue}]");
         AnsiConsole.MarkupLine($"{prompt} [seagreen1]{_responses[newKey]}[/]");
     }
@@ -543,11 +538,11 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     {
         if (!string.IsNullOrWhiteSpace(key))
         {
-            _yaml.AppendLine($"{yamlSpacing}{key}:");    
+            _yaml.AppendLine($"{yamlSpacing}{key}:");
         }
     }
-    
-    
+
+
     private T? GetDefault<T>(string key)
     {
         if (_defaults?.ContainsKey(key) ?? false)
@@ -561,7 +556,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     private void ProcessDefaults(string key, string yamlSpacing, string yamlSpacingPostfix)
     {
         Regex defaultArrayRegex = new(@"\[(.*?)\]\.(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
-    
+
         _yaml.AppendLine($"{yamlSpacing}{key}:");
         var arrayIndex = -1;
         foreach (var defaultItem in _defaults!.Where(d => d.Key.StartsWith(key, StringComparison.CurrentCultureIgnoreCase)))
