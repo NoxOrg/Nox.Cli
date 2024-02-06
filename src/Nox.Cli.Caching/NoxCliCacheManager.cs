@@ -9,6 +9,7 @@ using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Configuration;
 using Nox.Cli.Helpers;
+using Nox.Yaml;
 using RestSharp;
 using Spectre.Console;
 using YamlDotNet.Serialization;
@@ -31,7 +32,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     private Uri? _workflowUri;
     private List<string> _buildLog;
     private IManifestConfiguration? _manifest;
-    private List<IWorkflowConfiguration>? _workflows;
+    private List<WorkflowConfiguration>? _workflows;
     private IPersistedTokenCache? _tokenCache;
     private IDeserializer _deserializer;
     private string? _tenantId;
@@ -96,7 +97,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
         get => _manifest;
     }
 
-    public List<IWorkflowConfiguration>? Workflows
+    public List<WorkflowConfiguration>? Workflows
     {
         get => _workflows;
     }
@@ -349,10 +350,13 @@ public class NoxCliCacheManager: INoxCliCacheManager
                 File.Delete(Path.Combine(_workflowCachePath, orphanEntry));
             }
             
-            foreach (var entry in yamlFiles)
-            {
-                yamlFiles[entry.Key] = YamlHelper.ResolveYamlReferences(Path.Combine(_workflowCachePath, entry.Key));
-            }
+            
+            
+            
+            // foreach (var entry in yamlFiles)
+            // {
+            //     yamlFiles[entry.Key] = YamlHelper.ResolveYamlReferences(Path.Combine(_workflowCachePath, entry.Key));
+            // }
 
             _cache!.WorkflowInfo = onlineFiles;
             if (hasRefreshed) RaiseBuildEvent($"[bold yellow]Workflow cache successfully updated from remote.[/]");
@@ -403,9 +407,9 @@ public class NoxCliCacheManager: INoxCliCacheManager
         return new DeserializerBuilder()
             .WithNamingConvention(HyphenatedNamingConvention.Instance)
             .IgnoreUnmatchedProperties()
-            .WithTypeMapping<IActionConfiguration, ActionConfiguration>()
-            .WithTypeMapping<ICliConfiguration, CliConfiguration>()
-            .WithTypeMapping<IJobConfiguration, JobConfiguration>()
+            //.WithTypeMapping<IActionConfiguration, ActionConfiguration>()
+            //.WithTypeMapping<ICliConfiguration, CliConfiguration>()
+            //.WithTypeMapping<IJobConfiguration, JobConfiguration>()
             .WithTypeMapping<ICliCommandConfiguration, CliCommandConfiguration>()
             .WithTypeMapping<ILocalTaskExecutorConfiguration, LocalTaskExecutorConfiguration>()
             .WithTypeMapping<ISecretsConfiguration, SecretsConfiguration>()
@@ -426,16 +430,20 @@ public class NoxCliCacheManager: INoxCliCacheManager
     
     internal void ResolveWorkflows(Dictionary<string, string> yamlFiles)
     {
-        _workflows = new List<IWorkflowConfiguration>();
-        foreach (var yaml in yamlFiles.Where(kv => kv.Key.EndsWith(FileExtension.WorkflowDefinition.TrimStart('*'))))
+        _workflows = new List<WorkflowConfiguration>();
+        var workflowFiles = yamlFiles.Where(f => f.Key.EndsWith("workflow.nox.yaml", StringComparison.OrdinalIgnoreCase));
+        foreach (var workflowFile in workflowFiles)
         {
+            var reader = new YamlConfigurationReader<WorkflowConfiguration>()
+                .WithFile(Path.Combine(_workflowCachePath, workflowFile.Key));
             try
             {
-                _workflows.Add(_deserializer.Deserialize<WorkflowConfiguration>(yaml.Value));
+                var workflow = reader.Read();
+                _workflows.Add(workflow);
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                throw new NoxCliException($"Unable to deserialize workflow {yaml.Key}. {ex.Message}");
+                throw new NoxCliException($"Unable to parse workflow file {workflowFile.Key}", ex);
             }
         }
     }

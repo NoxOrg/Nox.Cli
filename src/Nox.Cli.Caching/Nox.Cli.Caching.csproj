@@ -14,10 +14,10 @@
 
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-      <PackageReference Include="Nox.Secrets.Azure" Version="7.0.185" />
+      <PackageReference Include="Nox.Secrets.Azure" Version="7.0.187" />
+      <PackageReference Include="Nox.Yaml" Version="7.0.187" />
       <PackageReference Include="RestSharp" Version="110.2.0" />
       <PackageReference Include="Spectre.Console" Version="0.48.0" />
-      <PackageReference Include="YamlDotNet" Version="15.1.1" />
     </ItemGroup>
 
 </Project>

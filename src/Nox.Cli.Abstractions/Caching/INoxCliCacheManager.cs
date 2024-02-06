@@ -1,4 +1,5 @@
 using Nox.Cli.Abstractions.Configuration;
+using Nox.Cli.Configuration;
 
 namespace Nox.Cli.Abstractions.Caching;
 
@@ -11,7 +12,7 @@ public interface INoxCliCacheManager
     
     IManifestConfiguration? Manifest { get; }
 
-    List<IWorkflowConfiguration>? Workflows { get; }
+    List<WorkflowConfiguration>? Workflows { get; }
     
     List<string> BuildLog { get; }
     

@@ -2,7 +2,7 @@
 
 namespace Nox.Cli.Configuration;
 
-public class ActionConfiguration: IActionConfiguration
+public class ActionConfiguration
 {
     public string Id { get; set; } = string.Empty;
     public string? If { get; set; } = null;

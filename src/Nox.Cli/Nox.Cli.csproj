@@ -39,7 +39,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Graph" Version="5.41.0" />
     <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.205.1" />
-	  <PackageReference Include="Nox.Secrets" Version="7.0.185" />
+	  <PackageReference Include="Nox.Secrets" Version="7.0.187" />
     <PackageReference Include="RestSharp" Version="110.2.0" />
     <PackageReference Include="Spectre.Console" Version="0.48.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.48.0" />
