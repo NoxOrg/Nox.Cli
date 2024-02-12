@@ -67,7 +67,7 @@ public class AzDevopsAddProjectAadGroup_v1 : INoxCliAddin
         _server = inputs.Value<string>("server");
         _pat = inputs.Value<string>("personal-access-token");
         _projectId = inputs.Value<Guid>("project-id");
-        _aadGroupName = inputs.Value<string>("project-group-name");
+        _projectGroupName = inputs.Value<string>("project-group-name");
         _aadGroupName = inputs.Value<string>("aad-group-name");
         return Task.CompletedTask;
     }
