@@ -1,14 +1,10 @@
-using System.Net.Http.Headers;
 using System.Text.Json;
-using Microsoft.TeamFoundation.Build.WebApi;
-using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Plugin.AzDevOps.DTO;
 using RestSharp;
-using RestSharp.Authenticators;
 
 namespace Nox.Cli.Plugin.AzDevOps;
 
