@@ -10,6 +10,7 @@
       <PackageReference Include="Microsoft.TeamFoundation.DistributedTask.WebApi" Version="16.205.1" />
       <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.205.1" />
       <PackageReference Include="Microsoft.VisualStudio.Services.ExtensionManagement.WebApi" Version="16.205.1" />
+      <PackageReference Include="Microsoft.VisualStudio.Services.MemberEntitlementManagement.WebApi" Version="16.205.1" />
       <PackageReference Include="Microsoft.VisualStudio.Services.ServiceEndpoints.WebApi" Version="16.205.1" />
       <PackageReference Include="RestSharp" Version="110.2.0" />
     </ItemGroup>

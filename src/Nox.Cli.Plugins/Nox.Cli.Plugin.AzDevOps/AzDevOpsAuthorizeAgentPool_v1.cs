@@ -1,14 +1,11 @@
-using System.Net.Http.Headers;
 using System.Text.Json;
-using Microsoft.TeamFoundation.Build.WebApi;
-using Microsoft.VisualStudio.Services.WebApi;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
 using Nox.Cli.Abstractions.Helpers;
+using Nox.Cli.Plugin.AzDevOps.Clients;
 using Nox.Cli.Plugin.AzDevOps.DTO;
 using RestSharp;
-using RestSharp.Authenticators;
 
 namespace Nox.Cli.Plugin.AzDevOps;
 
@@ -90,38 +87,8 @@ public class AzDevOpsAuthorizeAgentPool_v1 : INoxCliAddin
         {
             try
             {
-                var client = new RestClient(_server);
-                
-                var request = new RestRequest($"/{_projectId}/_apis/pipelines/pipelinePermissions/queue/{_queueId}")
-                {
-                    Method = Method.Patch
-                };
-                var base64Token = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($":{_pat}"));
-
-                request.AddHeader("Authorization", $"Basic {base64Token}");
-                request.AddHeader("Content-Type", "application/json");
-                request.AddHeader("Accept", "application/json;api-version=5.1-preview.1");
-                var payload = new AuthorizeRequest()
-                {
-                    Resource = new Resource
-                    {
-                        Type = "queue",
-                        Id = _queueId.ToString()
-                    },
-                    AllPipelines = new PipelineAuthorizeAll
-                    {
-                        Authorized = true
-                    }
-                };
-                request.AddJsonBody(JsonSerializer.Serialize(payload,  JsonOptions.Instance));
-                var response = await client.ExecuteAsync<AuthorizeResponse>(request);
-                if (response.IsSuccessStatusCode)
-                {
-                    ctx.SetState(ActionState.Success);
-                    return outputs;
-                }
-
-                throw new NoxCliException(response.Content!);
+                var client = new PipelineClient(_server, _pat);
+                await client.AuthorizeAgentQueuePipelines(_projectId.Value, _queueId!.Value);
             }
             catch (Exception ex)
             {
