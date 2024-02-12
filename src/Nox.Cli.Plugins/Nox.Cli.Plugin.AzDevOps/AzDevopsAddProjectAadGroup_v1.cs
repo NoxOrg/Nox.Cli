@@ -1,23 +1,19 @@
-using System.Text.Json;
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Plugin.AzDevOps.Clients;
-using Nox.Cli.Plugin.AzDevOps.DTO;
 using Nox.Cli.Plugin.AzDevOps.Enums;
-using Nox.Cli.Plugin.AzDevOps.Helpers;
-using RestSharp;
+
 namespace Nox.Cli.Plugin.AzDevOps;
 
-public class AzDevopsAddProjectAdminAadGroup_v1 : INoxCliAddin
+public class AzDevopsAddProjectAadGroup_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/add-project-admin-aad-group@v1",
+            Name = "azdevops/add-project-aad-group@v1",
             Author = "Jan Schutte",
-            Description = "Add an AAD group as administrators on a DevOps project",
+            Description = "Add an AAD group to a DevOps project group",
 
             Inputs =
             {
@@ -41,6 +37,13 @@ public class AzDevopsAddProjectAdminAadGroup_v1 : INoxCliAddin
                     Default = Guid.Empty,
                     IsRequired = true
                 },
+                ["project-group-name"] = new NoxActionInput
+                {
+                    Id = "project-group-name",
+                    Description = "The DevOps project group to add the AAD group to",
+                    Default = string.Empty,
+                    IsRequired = true
+                },
                 ["aad-group-name"] = new NoxActionInput
                 {
                     Id = "aad-group-name",
@@ -55,7 +58,8 @@ public class AzDevopsAddProjectAdminAadGroup_v1 : INoxCliAddin
     private string? _server;
     private string? _pat;
     private Guid? _projectId;
-    private string? _groupName;
+    private string? _projectGroupName;
+    private string? _aadGroupName;
     private bool _isServerContext = false;
     
     public Task BeginAsync(IDictionary<string, object> inputs)
@@ -63,7 +67,8 @@ public class AzDevopsAddProjectAdminAadGroup_v1 : INoxCliAddin
         _server = inputs.Value<string>("server");
         _pat = inputs.Value<string>("personal-access-token");
         _projectId = inputs.Value<Guid>("project-id");
-        _groupName = inputs.Value<string>("aad-group-name");
+        _aadGroupName = inputs.Value<string>("project-group-name");
+        _aadGroupName = inputs.Value<string>("aad-group-name");
         return Task.CompletedTask;
     }
 
@@ -78,9 +83,10 @@ public class AzDevopsAddProjectAdminAadGroup_v1 : INoxCliAddin
             string.IsNullOrWhiteSpace(_pat) ||
             _projectId == null ||
             _projectId == Guid.Empty ||
-            string.IsNullOrEmpty(_groupName))
+            string.IsNullOrEmpty(_projectGroupName) ||
+            string.IsNullOrEmpty(_aadGroupName))
         {
-            ctx.SetErrorMessage("The devops add-project-admin-aad-group action was not initialized");
+            ctx.SetErrorMessage("The devops add-project-aad-group action was not initialized");
         }
         else
         {
@@ -111,10 +117,10 @@ public class AzDevopsAddProjectAdminAadGroup_v1 : INoxCliAddin
         var identityPickerClient = new IdentityPickerClient(_server!, _pat!);
         var graphClient = new GraphClient(_server!, _pat!);
 
-        var aadGroups = await identityPickerClient.FindIdentity(_groupName!, IdentityType.Group);
+        var aadGroups = await identityPickerClient.FindIdentity(_aadGroupName!, IdentityType.Group);
         if (aadGroups == null)
         {
-            ctx.SetErrorMessage($"Unable to locate the AAD group: {_groupName}");
+            ctx.SetErrorMessage($"Unable to locate the AAD group: {_aadGroupName}");
             return false;
         }
 
@@ -122,7 +128,8 @@ public class AzDevopsAddProjectAdminAadGroup_v1 : INoxCliAddin
         
 
         var projectDescriptor = await graphClient.GetDescriptor(_projectId.ToString()!);
-        var projectGroup = await graphClient.FindProjectGroup(projectDescriptor!, "\\Project Administrators");
+        if (!_projectGroupName!.StartsWith('\\')) _projectGroupName = '\\' + _projectGroupName;
+        var projectGroup = await graphClient.FindProjectGroup(projectDescriptor!, _projectGroupName);
         if (projectGroup == null)
         {
             ctx.SetErrorMessage($"Unable to locate the project administrator group for this DevOps project");
