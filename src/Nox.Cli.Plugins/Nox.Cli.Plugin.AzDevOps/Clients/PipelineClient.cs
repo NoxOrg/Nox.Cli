@@ -42,7 +42,7 @@ public class PipelineClient
         var response = await _client.ExecuteAsync<AuthorizeResponse>(request);
         if (!response.IsSuccessStatusCode)
         {
-            throw new DevOpsClientException($"An error occurred while trying to authorize the pipelines on a project ({response.ErrorMessage})");
+            throw new DevOpsClientException($"An error occurred while trying to authorize the pipelines on a project ({response.Content})");
         }
     }
 
