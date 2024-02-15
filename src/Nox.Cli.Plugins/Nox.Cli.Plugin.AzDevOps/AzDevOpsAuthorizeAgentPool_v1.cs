@@ -89,6 +89,7 @@ public class AzDevOpsAuthorizeAgentPool_v1 : INoxCliAddin
             {
                 var client = new PipelineClient(_server, _pat);
                 await client.AuthorizeAgentQueuePipelines(_projectId.Value, _queueId!.Value);
+                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {
