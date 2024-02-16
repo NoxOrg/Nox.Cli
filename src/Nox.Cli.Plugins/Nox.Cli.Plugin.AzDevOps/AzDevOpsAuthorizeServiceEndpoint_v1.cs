@@ -100,6 +100,7 @@ public class AzDevOpsAuthorizeServiceEndpoint_v1 : INoxCliAddin
             {
                 var client = new PipelineClient(_server, _pat);
                 await client.AuthorizeEndpointPipeline(_projectId.Value, _endpointId.Value, _pipelineId!.Value);
+                ctx.SetState(ActionState.Success);
             }
             catch (Exception ex)
             {
