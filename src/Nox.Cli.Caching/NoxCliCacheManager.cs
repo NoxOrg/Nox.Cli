@@ -599,6 +599,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
     internal string GetOnlineTemplate(string name)
     {
+        Thread.Sleep(200);
         var client = new RestClient(GetRemoteUri($"/templates/{name}"));
         var fileRequest = new RestRequest() { Method = Method.Get };
         fileRequest.AddHeader("Accept", "application/json");
