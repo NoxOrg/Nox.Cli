@@ -159,7 +159,7 @@ public class NoxWorkflowContext : INoxWorkflowContext
         {
             await _varProvider.ResolveAll();
         }    
-        return _varProvider.GetInputVariables(action);        
+        return _varProvider.GetInputVariables(action, isServer);        
     }
 
     public async Task ResolveJobVariables(INoxJob job)
@@ -168,9 +168,9 @@ public class NoxWorkflowContext : INoxWorkflowContext
         _varProvider.ResolveJobVariables(job);
     }
 
-    public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
+    public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs, bool isServer = false)
     {
-        _varProvider.StoreOutputVariables(action, outputs);
+        _varProvider.StoreOutputVariables(action, outputs, isServer);
     }
 
     public IDictionary<string, object> GetUnresolvedInputVariables(INoxAction action)
