@@ -223,7 +223,8 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         ctx.SetState(executeResponse.State);
         var outputs = executeResponse.Outputs;
 
-        if (outputs != null) ctx.StoreOutputVariables(ctx.CurrentAction, outputs);
+        if (outputs != null) ctx.StoreOutputVariables(ctx.CurrentAction, outputs, true);
+        
         
         ctx.CurrentAction.EvaluateValidate();
 

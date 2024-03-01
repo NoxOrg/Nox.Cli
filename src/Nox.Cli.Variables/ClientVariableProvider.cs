@@ -20,7 +20,7 @@ public class ClientVariableProvider: IClientVariableProvider
     private NoxSolution? _projectConfig;
     private readonly INoxCliCache? _cache;
     private readonly ILocalTaskExecutorConfiguration? _lteConfig;
-    
+    private readonly List<string> _serverVariables;
     
     public ClientVariableProvider(
         WorkflowConfiguration workflow, 
@@ -30,6 +30,7 @@ public class ClientVariableProvider: IClientVariableProvider
         INoxCliCache? cache = null)
     {
         _variables = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        _serverVariables = new List<string>();
         _orgSecretResolver = orgSecretResolver;
         _projectConfig = projectConfig;
         _lteConfig = lteConfig;
@@ -56,9 +57,9 @@ public class ClientVariableProvider: IClientVariableProvider
         ResolveAllVariables(action);
     }
 
-    public IDictionary<string, object> GetInputVariables(INoxAction action)
+    public IDictionary<string, object> GetInputVariables(INoxAction action, bool isServer = false)
     {
-        ResolveAllVariables(action);
+        ResolveAllVariables(action, isServer);
 
         return action.Inputs.ToDictionary(i => i.Key, i => i.Value.Default, StringComparer.OrdinalIgnoreCase);
     }
@@ -111,7 +112,7 @@ public class ClientVariableProvider: IClientVariableProvider
         return unresolvedVars;
     }
 
-    public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs)
+    public void StoreOutputVariables(INoxAction action, IDictionary<string, object> outputs, bool isServer = false)
     {
         foreach (var output in outputs)
         {
@@ -126,7 +127,11 @@ public class ClientVariableProvider: IClientVariableProvider
                 {
                     _variables[varKey] = output.Value;    
                 }
-                
+            }
+
+            if (isServer && !_serverVariables.Contains(varKey))
+            {
+                _serverVariables.Add(varKey);
             }
         }
 
@@ -208,7 +213,7 @@ public class ClientVariableProvider: IClientVariableProvider
         }
     }
     
-    private object ReplaceVariable(object value, bool isIfCondition = false)
+    private object ReplaceVariable(object value, bool isIfCondition = false, bool isServer = false)
     {
         var result = value;
 
@@ -220,6 +225,8 @@ public class ClientVariableProvider: IClientVariableProvider
 
             var variable = match.Groups["variable"].Value;
 
+            if (isServer && _serverVariables.Contains(variable)) return result;
+            
             var resolvedValue = LookupValue(variable);
 
             if (resolvedValue?.GetType() == typeof(object))
@@ -270,13 +277,13 @@ public class ClientVariableProvider: IClientVariableProvider
         return null;
     }
     
-    private void ResolveAllVariables(INoxAction action)
+    private void ResolveAllVariables(INoxAction action, bool isServer = false)
     {
         foreach (var (_, input) in action.Inputs)
         {
             if (input.Default is string inputValueString)
             {
-                input.Default = ReplaceVariable(inputValueString);
+                input.Default = ReplaceVariable(inputValueString, isServer: isServer);
             }
             else if (input.Default is List<object> inputObjectList)
             {
@@ -285,7 +292,7 @@ public class ClientVariableProvider: IClientVariableProvider
                     if (inputObjectList[i] is string)
                     {
                         var index = inputObjectList.FindIndex(n => n.Equals(inputObjectList[i]));
-                        inputObjectList[index] = ReplaceVariable((string)inputObjectList[i]);
+                        inputObjectList[index] = ReplaceVariable((string)inputObjectList[i], isServer: isServer);
                     }
                 }
             }
@@ -294,7 +301,7 @@ public class ClientVariableProvider: IClientVariableProvider
                 for (var i = 0; i < inputStringList.Count; i++)
                 {
                     var index = inputStringList.FindIndex(n => n.Equals(inputStringList[i]));
-                    inputStringList[index] = ReplaceVariable(inputStringList[i]).ToString()!;
+                    inputStringList[index] = ReplaceVariable(inputStringList[i], isServer: isServer).ToString()!;
                 }
             }
             else if (input.Default is Dictionary<object, object> inputValueDictionary)
@@ -305,7 +312,7 @@ public class ClientVariableProvider: IClientVariableProvider
 
                     if (item.Value is string itemValueString)
                     {
-                        inputValueDictionary[item.Key] = ReplaceVariable(itemValueString);
+                        inputValueDictionary[item.Key] = ReplaceVariable(itemValueString, isServer: isServer);
                     }
                 }
             }

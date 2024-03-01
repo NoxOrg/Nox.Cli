@@ -2,8 +2,8 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "sync vc",
-      "workingDirectory": "/home/jan/demo/CliDemo",
+      "commandLineArgs": "sync tf",
+      "workingDirectory": "/home/jan/Projects/IWG/Fno.MultiInstance",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
