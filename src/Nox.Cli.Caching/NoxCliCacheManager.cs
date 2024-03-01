@@ -552,7 +552,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
                         Directory.CreateDirectory(Path.GetDirectoryName(templateFullPath)!);
                         File.WriteAllText(templateFullPath, fileContent);
                     }
-                    catch (Exception ex)
+                    catch
                     {
                         //ignore here so that cli client/server can at least start
                     }
