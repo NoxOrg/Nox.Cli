@@ -545,11 +545,18 @@ public class NoxCliCacheManager: INoxCliCacheManager
                     || !_cache.TemplateInfo.Any(i => i.Name == file.Name)
                     || !_cache.TemplateInfo.Any(i => i.Name == file.Name && i.ShaChecksum == file.ShaChecksum))
                 {
-
-                    var fileContent = GetOnlineTemplate(file.Name);
-                    var templateFullPath = Path.Combine(_templateCachePath, file.Name);
-                    Directory.CreateDirectory(Path.GetDirectoryName(templateFullPath)!);
-                    File.WriteAllText(templateFullPath, fileContent);
+                    try
+                    {
+                        var fileContent = GetOnlineTemplate(file.Name);
+                        var templateFullPath = Path.Combine(_templateCachePath, file.Name);
+                        Directory.CreateDirectory(Path.GetDirectoryName(templateFullPath)!);
+                        File.WriteAllText(templateFullPath, fileContent);
+                    }
+                    catch (Exception ex)
+                    {
+                        //ignore here so that cli client/server can at least start
+                    }
+                    
                     hasRefreshed = true;
                 }
 
@@ -599,12 +606,10 @@ public class NoxCliCacheManager: INoxCliCacheManager
 
     internal string GetOnlineTemplate(string name)
     {
-        Thread.Sleep(200);
-        var client = new RestClient(GetRemoteUri($"/templates/{name}"));
+        using var client = new RestClient(GetRemoteUri($"/templates/{name}"));
         var fileRequest = new RestRequest() { Method = Method.Get };
         fileRequest.AddHeader("Accept", "application/json");
         var fileContent = client.Execute(fileRequest).Content;
-
         if (fileContent == null) throw new Exception($"Couldn't download template {name}");
         return fileContent;
     }
