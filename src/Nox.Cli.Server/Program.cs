@@ -12,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration, subscribeToJwtBearerMiddlewareDiagnosticsEvents: true);
 
-var cacheManager = new NoxCliCacheBuilder(builder.Configuration["NoxScriptsUrl"]!)
+var cacheManager = new NoxCliCacheBuilder(builder.Configuration["NoxScriptsUrl"]!, false)
     .WithTenantId(builder.Configuration["AzureAd:TenantId"]!)
     .ForServer()
     .Build();

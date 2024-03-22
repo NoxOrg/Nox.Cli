@@ -7,9 +7,9 @@ public class NoxCliCacheBuilder
 {
     private readonly NoxCliCacheManager _manager;
 
-    public NoxCliCacheBuilder(string remoteUrl, IPersistedTokenCache? tokenCache = null)
+    public NoxCliCacheBuilder(string remoteUrl, bool forceOffline, IPersistedTokenCache? tokenCache = null)
     {
-        _manager = new NoxCliCacheManager(remoteUrl, tokenCache);
+        _manager = new NoxCliCacheManager(remoteUrl, forceOffline, tokenCache);
     }
 
     public NoxCliCacheBuilder ForServer()

@@ -53,15 +53,6 @@ public class CoreLoadNoxConfiguration_v1: INoxCliAddin
             {
                 var fullPath = Path.GetFullPath(_path);
                 var solution = new NoxSolutionBuilder()
-                    // .OnResolveSecrets((_, args) =>
-                    // {
-                    //     var secretsConfig = args.SecretsConfig;
-                    //     var secretKeys =  args.Variables;
-                    //     var resolver = ctx.NoxSecretsResolver;
-                    //     if (resolver == null) throw new NoxCliException("Cannot load Nox solution definition, Secrets resolved has not been initialized.");
-                    //     resolver.Configure(secretsConfig!, Assembly.GetEntryAssembly());
-                    //     args.Secrets = resolver.Resolve(secretKeys!);
-                    // })
                     .Build();
                 ctx.SetProjectConfiguration(solution);
                     

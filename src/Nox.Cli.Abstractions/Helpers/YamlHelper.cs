@@ -5,7 +5,7 @@ namespace Nox.Cli.Abstractions.Helpers;
 
 public static class YamlHelper
 {
-    private static readonly Regex _referenceRegex = new(@"\$ref\S*:\s*(?<variable>[\w:\.\/\\]+\b[\w\-\.\/]+)\s*", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(5));
+    private static readonly Regex _referenceRegex = new(@"(?<!\x22)(\$ref\S*:\s*(?<variable>[\w:\.\/\\]+\b[\w\-\.\/]+)\s*)", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(5));
 
     /// <summary>
     /// Resolve $ref &lt;path&gt; tags in a yaml source yaml file. <br/>
@@ -22,7 +22,7 @@ public static class YamlHelper
         var sourcePath = Path.GetDirectoryName(sourceFullPath);
         
         var sourceLines = File.ReadAllLines(path);
-        var outputLines = ResolveYamlReferences(sourceLines.ToList(), sourcePath!).Result;
+        var outputLines = ResolveYamlReferences(sourceLines.ToList(), sourcePath!, Path.GetFileName(path)).Result;
 
         return string.Join('\n', outputLines.ToArray());
     }
@@ -42,12 +42,12 @@ public static class YamlHelper
         var sourcePath = Path.GetDirectoryName(sourceFullPath);
         
         var sourceLines = await File.ReadAllLinesAsync(path);
-        var outputLines = await ResolveYamlReferences(sourceLines.ToList(), sourcePath!);
+        var outputLines = await ResolveYamlReferences(sourceLines.ToList(), sourcePath!, Path.GetFileName(path));
 
         return string.Join('\n', outputLines.ToArray());
     }
 
-    private static async Task<List<string>> ResolveYamlReferences(List<string> sourceLines, string path)
+    private static async Task<List<string>> ResolveYamlReferences(List<string> sourceLines, string path, string parentFile)
     {
         var outputLines = new List<string>();
         foreach (var sourceLine in sourceLines)
@@ -58,9 +58,9 @@ public static class YamlHelper
                 if (match.Success)
                 {
                     var padding = new string(' ', match.Index);
-                    var childPath = match.Groups[1].Value;
+                    var childPath = match.Groups[^1].Value;
                     if (!Path.IsPathRooted(childPath)) childPath = Path.Combine(path!, childPath);
-                    if (!File.Exists(childPath)) throw new NoxCliException($"Referenced yaml file does not exist for reference: {match.Groups[1].Value}");
+                    if (!File.Exists(childPath)) throw new NoxCliException($"Referenced yaml file does not exist for reference: {match.Groups[1].Value} in file: {parentFile}");
                     var childLines = await File.ReadAllLinesAsync(childPath);
                     foreach (var childLine in childLines)
                     {
@@ -78,9 +78,9 @@ public static class YamlHelper
             }
         }
 
-        if (outputLines.Any(ol => ol.Contains("$ref:") && !ol.TrimStart().StartsWith('#')))
+        if (outputLines.Any(ol => ol.Contains("$ref:") && !ol.Contains("\"$ref:")  && !ol.TrimStart().StartsWith('#')))
         {
-            outputLines = await ResolveYamlReferences(outputLines, path);    
+            outputLines = await ResolveYamlReferences(outputLines, path, parentFile);    
         }
         
         return outputLines;
