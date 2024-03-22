@@ -1,3 +1,4 @@
+using System.CodeDom.Compiler;
 using System.Text;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -13,11 +14,10 @@ public static class YamlCleaner
         yaml.Load(input);
         var root = (YamlMappingNode)yaml.Documents[0].RootNode;
         RemoveEmptyChildren(root);
-        var yamlDoc = new YamlDocument(root);
-        var yamlStream = new YamlStream(yamlDoc);
         var sb = new StringBuilder();
         var writer = new StringWriter(sb);
-        yamlStream.Save(writer, false);
+        var textWriter = new IndentedTextWriter(writer, "  ");
+        yaml.Save(textWriter, false);
         writer.Flush();
         writer.Close();
         return sb;

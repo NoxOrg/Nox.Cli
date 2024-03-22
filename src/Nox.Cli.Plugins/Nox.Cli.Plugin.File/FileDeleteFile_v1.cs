@@ -48,7 +48,7 @@ public class FileDeleteFile_v1 : INoxCliAddin
             try
             {
                 var fullPath = Path.GetFullPath(_path);
-                if (Directory.Exists(fullPath))
+                if (Path.Exists(fullPath))
                 {
                     System.IO.File.Delete(fullPath);
                 }

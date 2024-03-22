@@ -27,6 +27,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     private string _workflowCachePath;
     private string _templateCachePath;
     private string _localWorkflowPath;
+    private bool _forceOffline;
     private bool _isServer;
     private readonly Uri _remoteUri;
     private Uri? _workflowUri;
@@ -36,6 +37,29 @@ public class NoxCliCacheManager: INoxCliCacheManager
     private IPersistedTokenCache? _tokenCache;
     private IDeserializer _deserializer;
     private string? _tenantId;
+
+    public NoxCliCacheManager(string? remoteUrl, bool forceOffline, IPersistedTokenCache? tokenCache = null)
+    {
+        _buildLog = new List<string>();
+        if (string.IsNullOrEmpty(remoteUrl))
+        {
+            _remoteUri = new Uri("https://noxorg.dev");
+        }
+        else
+        {
+            _remoteUri = new Uri(remoteUrl);
+        }
+
+        _forceOffline = forceOffline;
+        _cachePath = WellKnownPaths.CachePath;
+        _workflowCachePath = WellKnownPaths.WorkflowsCachePath;
+        _templateCachePath = WellKnownPaths.TemplatesCachePath;
+        Directory.CreateDirectory(_cachePath);
+        _cacheFile = WellKnownPaths.CacheFile;
+        _localWorkflowPath = ".";
+        _tokenCache = tokenCache;
+        _deserializer = BuildDeserializer();
+    }
 
     internal void ForServer()
     {
@@ -73,6 +97,7 @@ public class NoxCliCacheManager: INoxCliCacheManager
     public bool IsOnline {
         get
         {
+            if (_forceOffline) return false;
             if (_remoteUri.Host == "localhost") return true;
             return PingHelper.ServicePing(_remoteUri.Host);
         }
@@ -138,32 +163,6 @@ public class NoxCliCacheManager: INoxCliCacheManager
                 }
             }
         }
-        else
-        {
-            throw new NoxCliException($"Unable to communicate with the online cache.");
-        }
-    }
-
-    public NoxCliCacheManager(string? remoteUrl, IPersistedTokenCache? tokenCache = null)
-    {
-        _buildLog = new List<string>();
-        if (string.IsNullOrEmpty(remoteUrl))
-        {
-            _remoteUri = new Uri("https://noxorg.dev");
-        }
-        else
-        {
-            _remoteUri = new Uri(remoteUrl);
-        }
-        
-        _cachePath = WellKnownPaths.CachePath;
-        _workflowCachePath = WellKnownPaths.WorkflowsCachePath;
-        _templateCachePath = WellKnownPaths.TemplatesCachePath;
-        Directory.CreateDirectory(_cachePath);
-        _cacheFile = WellKnownPaths.CacheFile;
-        _localWorkflowPath = ".";
-        _tokenCache = tokenCache;
-        _deserializer = BuildDeserializer();
     }
 
     internal INoxCliCacheManager Build()
@@ -494,9 +493,12 @@ public class NoxCliCacheManager: INoxCliCacheManager
     private FileInfo[] GetFilesWithSearchPatterns(DirectoryInfo path, string[] searchPatterns, SearchOption searchOption)
     {
         var files = new List<FileInfo>();
-        foreach (var pattern in searchPatterns) 
+        if (path.Exists)
         {
-            files.AddRange( path.GetFiles(pattern, searchOption) );
+            foreach (var pattern in searchPatterns) 
+            {
+                files.AddRange( path.GetFiles(pattern, searchOption) );
+            }    
         }
         return files.ToArray();
     }

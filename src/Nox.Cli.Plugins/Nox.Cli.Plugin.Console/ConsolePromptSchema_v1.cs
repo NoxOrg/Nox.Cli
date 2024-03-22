@@ -114,6 +114,8 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     private readonly RestClient _client = new();
 
     private readonly Regex _resolveRefs = new("\"\\$ref\\\"\\s*:\\s*\\\"(?<url>[\\w:/\\.]+)\\\"", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    
+    private readonly Regex _yamlVariableRegex = new(@"\$\{\{\s*(yaml)\.(?<variable>\b[\w\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
     private readonly Dictionary<string, object> _responses = new();
 
@@ -199,7 +201,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
                         if (_fileOptions != null && _fileOptions.ContainsKey("filename"))
                         {
-                            _yaml = YamlCleaner.RemoveEmptyNodes(_yaml);
+                            //_yaml = YamlCleaner.RemoveEmptyNodes(_yaml);
 
                             _yaml.Insert(0, Environment.NewLine);
 
@@ -297,6 +299,7 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     {
         var newKey = $"{rootKey}.{key}".TrimStart('.');
 
+        
         var prefix = $"[grey]{newKey.PadRight(40, '.').EscapeMarkup()}[/] ";
         var yamlSpacing = new string(' ', newKey.Count(d => d == '.') * 2);
 
@@ -547,7 +550,17 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     {
         if (_defaults?.ContainsKey(key) ?? false)
         {
-            return (T)Convert.ChangeType(_defaults[key], typeof(T));
+            var defaultValue = _defaults[key];
+            var match = _yamlVariableRegex.Match(defaultValue.ToString()!); 
+            if (match.Success)
+            {
+                var variableValue = _responses[match.Groups["variable"].ToString()].ToString();
+                return (T)Convert.ChangeType(defaultValue.ToString()!.Replace(match.Groups[0].ToString(), variableValue), typeof(T));
+            }
+            else
+            {
+                return (T)Convert.ChangeType(defaultValue, typeof(T));    
+            }
         }
 
         return default;
@@ -555,34 +568,62 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
 
     private void ProcessDefaults(string key, string yamlSpacing, string yamlSpacingPostfix)
     {
-        Regex defaultArrayRegex = new(@"\[(.*?)\]\.(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
-
-        _yaml.AppendLine($"{yamlSpacing}{key}:");
-        var arrayIndex = -1;
-        foreach (var defaultItem in _defaults!.Where(d => d.Key.StartsWith(key, StringComparison.CurrentCultureIgnoreCase)))
+        var processor = new DefaultsProcessor();
+        foreach (var defaultEntry in _defaults!.Where(d => d.Key.StartsWith(key, StringComparison.CurrentCultureIgnoreCase)))
         {
-            //check if this item is an array
-            var itemKey = defaultItem.Key;
-            var defaultSpacing = new string(' ', itemKey.Count(d => d == '.') * 2);
-            var match = defaultArrayRegex.Match(itemKey);
-            if (match.Success) //array
+            processor.Process(defaultEntry);
+        }
+
+        AppendYaml(processor.Result!, yamlSpacing);
+    }
+
+    private void AppendYaml(DefaultNode node, string yamlSpacing, string spacingPostFix = "")
+    {
+        var value = "";
+        if (!string.IsNullOrWhiteSpace(node.Value)) value = node.Value;
+        var key = node.Key;
+        if (key.StartsWith('['))
+        {
+            if (node.Children is { Count: > 0 } || node.Value!.StartsWith("$ref"))
             {
-                if (int.TryParse(match.Groups[1].ToString(), out var itemIndex))
-                {
-                    var defaultPrefix = "  ";
-                    if (itemIndex != arrayIndex)
-                    {
-                        defaultPrefix = "- ";
-                        arrayIndex = itemIndex;
-                    }
-                    _yaml.AppendLine($"{defaultSpacing}{defaultPrefix}{match.Groups[2]}: {defaultItem.Value}");
-                }
+                spacingPostFix = "- ";
             }
             else
             {
-                _yaml.AppendLine($"{yamlSpacing}{yamlSpacingPostfix}{key}: {_defaults![key]}");
+                _yaml.AppendLine($"{yamlSpacing}{value}");
             }
         }
+        else
+        {
+            key += ": ";
+            yamlSpacing = AddPostFix(yamlSpacing, spacingPostFix);
+            _yaml.AppendLine($"{yamlSpacing}{key}{value}");
+        }
+
+        if (node.Children.Count != 0)
+        {
+            yamlSpacing += "  ";
+            foreach (var childNode in node.Children)
+            {
+                AppendYaml(childNode, yamlSpacing, spacingPostFix);
+                spacingPostFix = "";
+            }
+        }
+        else if (node.Value!.StartsWith("$ref"))
+        {
+            yamlSpacing += "  ";
+            yamlSpacing = AddPostFix(yamlSpacing, spacingPostFix);
+            _yaml.AppendLine($"{yamlSpacing}{value}");
+        }
+
+    }
+
+    private string AddPostFix(string source, string postFix)
+    {
+        if (string.IsNullOrEmpty(postFix)) return source;
+        var result = source.Substring(0, source.Length - postFix.Length);
+        result += postFix;
+        return result;
     }
 }
 

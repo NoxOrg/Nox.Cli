@@ -21,12 +21,11 @@ var isLoggingOut = (args.Length > 0 && args[0].ToLower().Equals("logout"));
 
 var isGettingVersion = (args.Length > 0 && args[0].ToLower().Equals("version"));
 
-var remoteUrl = string.Empty;
-
-var remoteUrlArg = args.FirstOrDefault(arg => arg.StartsWith("--remoteUrl="));
-if (remoteUrlArg != null)
+var forceOffline = false;
+var offlineArg = args.FirstOrDefault(arg => arg.StartsWith("--offline"));
+if (offlineArg != null)
 {
-    remoteUrl = remoteUrlArg.Replace("--remoteUrl=", "");
+    forceOffline = true;
 }
 
 if (!isGettingVersion || args.Length == 0)
@@ -39,7 +38,6 @@ if (!isGettingVersion || args.Length == 0)
     AnsiConsole.MarkupLine(@$"");
 }
 
-var isOnline = InternetChecker.CheckForInternet();
 var services = new ServiceCollection();
 
 services.AddSingleton<IFileSystem, FileSystem>();
@@ -67,7 +65,7 @@ app.Configure(config =>
 
     if(!isGettingVersion && !isLoggingOut)
     {
-        config.AddNoxCommands(services, isOnline, remoteUrl);
+        config.AddNoxCommands(services, forceOffline);
     }
 
     config.AddCommand<LogoutCommand>("logout")

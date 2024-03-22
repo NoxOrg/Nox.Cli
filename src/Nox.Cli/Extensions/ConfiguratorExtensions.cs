@@ -14,12 +14,11 @@ namespace Nox.Cli.Extensions;
 
 internal static class ConfiguratorExtensions
 {
-    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool isOnline, string? remoteUrl = null)
+    public static IConfigurator AddNoxCommands(this IConfigurator cliConfig, IServiceCollection services, bool forceOffline)
     {
         var onlineCacheUrl = "https://noxorg.dev";
-        if (!string.IsNullOrWhiteSpace(remoteUrl)) onlineCacheUrl = remoteUrl;
         var persistedTokenCache = services.BuildServiceProvider().GetRequiredService<IPersistedTokenCache>();
-        var cacheBuilder = new NoxCliCacheBuilder(onlineCacheUrl, persistedTokenCache)
+        var cacheBuilder = new NoxCliCacheBuilder(onlineCacheUrl, forceOffline, persistedTokenCache)
             .WithBuildEventHandler((sender, args) =>
             {
                 AnsiConsole.MarkupLine(args.SpectreMessage);
