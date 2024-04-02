@@ -1,7 +1,6 @@
 ﻿using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Exceptions;
 using Nox.Cli.Abstractions.Extensions;
-using Nox.Cli.Helpers;
 using Nox.Cli.Plugin.Console.JsonSchema;
 using RestSharp;
 using Spectre.Console;
@@ -550,17 +549,16 @@ public class ConsolePromptSchema_v1 : INoxCliAddin
     {
         if (_defaults?.ContainsKey(key) ?? false)
         {
-            var defaultValue = _defaults[key];
-            var match = _yamlVariableRegex.Match(defaultValue.ToString()!); 
-            if (match.Success)
+            var defaultValue = _defaults[key].ToString() ?? "";
+            var match = _yamlVariableRegex.Match(defaultValue); 
+            while (match.Success)
             {
                 var variableValue = _responses[match.Groups["variable"].ToString()].ToString();
-                return (T)Convert.ChangeType(defaultValue.ToString()!.Replace(match.Groups[0].ToString(), variableValue), typeof(T));
+                defaultValue = defaultValue.Replace(match.Groups[0].ToString(), variableValue);
+                match = _yamlVariableRegex.Match(defaultValue); 
             }
-            else
-            {
-                return (T)Convert.ChangeType(defaultValue, typeof(T));    
-            }
+            return (T)Convert.ChangeType(defaultValue, typeof(T))!;
+
         }
 
         return default;
