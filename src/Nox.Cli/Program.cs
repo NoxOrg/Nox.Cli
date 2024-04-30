@@ -1,7 +1,7 @@
 ﻿using System.IO.Abstractions;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using AutoMapper.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -47,7 +47,7 @@ services.AddNoxCliServices(args);
 services.AddPersistedSecretStore();
 services.AddOrgSecretResolver();
 services.AddTransient<INoxWorkflowExecutor, NoxWorkflowExecutor>();
-services.AddAutoMapper(Assembly.GetExecutingAssembly());
+services.AddAutoMapper(config => config.Internal().MethodMappingEnabled = false, typeof(Program).Assembly);
 
 var registrar = new TypeRegistrar(services);
 var app = new CommandApp(registrar);
