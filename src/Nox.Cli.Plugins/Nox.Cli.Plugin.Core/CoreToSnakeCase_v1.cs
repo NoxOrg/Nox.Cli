@@ -62,21 +62,8 @@ public class CoreToSnakeCase_v1: INoxCliAddin
                 }
                 else
                 {
-                    var sb = new StringBuilder();
-                    sb.Append(char.ToLowerInvariant(_source[0]));
-                    for(int i = 1; i < _source.Length; ++i) {
-                        char c = _source[i];
-                        if (c != '.')
-                        {
-                            if(char.IsUpper(c)) {
-                                sb.Append('_');
-                                sb.Append(char.ToLowerInvariant(c));
-                            } else {
-                                sb.Append(c);
-                            }    
-                        }
-                    }
-                    outputs["result"] = sb.ToString();    
+                    var result = _source.Replace('.', '_').ToLower();
+                    outputs["result"] = result;
                 }
                 
                 ctx.SetState(ActionState.Success);    
