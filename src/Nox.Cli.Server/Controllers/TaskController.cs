@@ -1,6 +1,8 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nox.Cli.Abstractions;
+using Nox.Cli.Helpers;
 using Nox.Cli.Server.Abstractions;
 using Nox.Cli.Shared.DTO.Workflow;
 
@@ -44,7 +46,9 @@ public class TaskController : Controller
             context = _contextFactory.NewInstance(request.WorkflowId);
         }
 
-        var result = await context.ExecuteTask(request.ActionConfiguration!);
+        var action = JsonSerializer.Deserialize<ServerAction>(request.ActionConfiguration!.FromBase64());
+        
+        var result = await context.ExecuteTask(action!);
         return Ok(result);
     }
 }

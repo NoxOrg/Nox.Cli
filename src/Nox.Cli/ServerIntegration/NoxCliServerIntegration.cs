@@ -4,6 +4,7 @@ using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Abstractions.Helpers;
 using Nox.Cli.Authentication;
+using Nox.Cli.Helpers;
 using Nox.Cli.Shared.DTO.Health;
 using Nox.Cli.Shared.DTO.Workflow;
 using RestSharp;
@@ -52,21 +53,24 @@ public class NoxCliServerIntegration: INoxCliServerIntegration
         });
 
         var request = new RestRequest() { Method = Method.Post };
-        request.AddBody(JsonSerializer.Serialize(new ExecuteTaskRequest
+        var serverAction = JsonSerializer.Serialize(new ServerAction
+        {
+            Id = action!.Id,
+            Display = action!.Display,
+            ContinueOnError = action!.ContinueOnError,
+            If = action!.If,
+            Validate = action!.Validate,
+            Name = action!.Name,
+            Uses = action!.Uses,
+            Inputs = action.Inputs
+        });
+        var body = JsonSerializer.Serialize(new ExecuteTaskRequest
         {
             WorkflowId = workflowId,
-            ActionConfiguration = new ServerAction
-            {
-                Id = action!.Id,
-                Display = action!.Display,
-                ContinueOnError = action!.ContinueOnError,
-                If = action!.If,
-                Validate = action!.Validate,
-                Name = action!.Name,
-                Uses = action!.Uses,
-                Inputs = action.Inputs
-            },
-        }));
+            ActionConfiguration = serverAction.ToBase64(),
+        });
+        
+        request.AddBody(body);
 
         request.AddHeader("Accept", "application/json");
         
