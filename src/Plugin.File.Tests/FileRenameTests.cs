@@ -21,7 +21,7 @@ public class FileRenameTests
         System.IO.File.Delete(Path.Combine(path, "Sample-After.txt"));
         System.IO.File.Copy(Path.Combine(path, "Sample.txt"), Path.Combine(path, "Sample-Before.txt"));
         
-        var plugin = new FileRename_v1();
+        var plugin = new FileRenameFile_v1();
         var inputs = new Dictionary<string, object>
         {
             {"source-path", "./files/rename/Sample-Before.txt"},

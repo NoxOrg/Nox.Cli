@@ -3,7 +3,7 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugin.File;
 
-public class FileRename_v1 : INoxCliAddin
+public class FileRenameFile_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
