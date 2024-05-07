@@ -217,15 +217,18 @@ public class ClientVariableProvider: IClientVariableProvider
     {
         var result = value;
 
-        var match = _variableRegex.Match(result.ToString()!);
+        var matches = _variableRegex.Matches(result.ToString()!);
 
-        while (match.Success)
+        foreach (var match in matches.ToList())
         {
             var fullPhrase = match.Groups[0].Value;
 
             var variable = match.Groups["variable"].Value;
 
-            if (isServer && _serverVariables.Contains(variable)) return result;
+            if (isServer && _serverVariables.Contains(variable))
+            {
+                continue;
+            }
             
             var resolvedValue = LookupValue(variable);
 
@@ -259,8 +262,6 @@ public class ClientVariableProvider: IClientVariableProvider
                 }
                 result = result.ToString()!.Replace(fullPhrase, "NULL");
             }
-            
-            match = _variableRegex.Match(result.ToString()!);
         }
 
         return result;
