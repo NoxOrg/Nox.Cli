@@ -36,7 +36,7 @@
     <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.40" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Graph" Version="5.50.0" />
+    <PackageReference Include="Microsoft.Graph" Version="5.51.0" />
     <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="19.225.1" />
     <PackageReference Include="Nox.Secrets" Version="7.0.232" />
     <PackageReference Include="RestSharp" Version="110.2.0" />
