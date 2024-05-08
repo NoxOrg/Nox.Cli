@@ -129,10 +129,16 @@ public class FileCopyFolder_v1 : INoxCliAddin
                         
         foreach (var file in di.GetFiles())
         {
-            var targetFilePath = Path.Combine(targetFolder, file.Name); 
-            if (System.IO.File.Exists(targetFilePath)) System.IO.File.Delete(targetFilePath);
+            var targetFilePath = Path.Combine(targetFolder, file.Name);
+            var createDate = DateTime.Now;
+            if (System.IO.File.Exists(targetFilePath))
+            {
+                createDate = System.IO.File.GetCreationTime(targetFilePath);
+                System.IO.File.Delete(targetFilePath);
+            }
             Directory.CreateDirectory(targetFolder);
             file.CopyTo(targetFilePath);
+            System.IO.File.SetCreationTime(targetFilePath, createDate);
         }
 
         if (_isRecursive == true)

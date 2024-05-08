@@ -33,7 +33,7 @@ public class FileCopyFile_v1: INoxCliAddin
                     Description = "Indicate whether the copy must overwrite the target file, if it exists.",
                     Default = false,
                     IsRequired = false
-                } 
+                }
             }
         };
     }
@@ -53,7 +53,6 @@ public class FileCopyFile_v1: INoxCliAddin
     public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string, object>();
-        var isValid = true;
 
         ctx.SetState(ActionState.Error);
 
@@ -71,16 +70,18 @@ public class FileCopyFile_v1: INoxCliAddin
                 if (!System.IO.File.Exists(fullSourcePath))
                 {
                     ctx.SetErrorMessage($"Source file: {fullSourcePath} does not exist!");
-                    isValid = false;
                 }
                 else
                 {
+                    var isValid = true;
                     var fullTargetPath = Path.Combine(Path.GetFullPath(_targetPath), filename);
-                    Directory.CreateDirectory(Path.GetDirectoryName(fullTargetPath)!);
+                    Directory.CreateDirectory(Path.GetDirectoryName(Path.GetDirectoryName(fullTargetPath))!);
+                    var createDate = DateTime.Now;
                     if (System.IO.File.Exists(fullTargetPath))
                     {
                         if (_isOverwrite!.Value)
                         {
+                            createDate = System.IO.File.GetCreationTime(fullTargetPath);
                             System.IO.File.Delete(fullTargetPath);    
                         }
                         else
@@ -93,6 +94,7 @@ public class FileCopyFile_v1: INoxCliAddin
                     if (isValid)
                     {
                         System.IO.File.Copy(fullSourcePath, fullTargetPath);
+                        System.IO.File.SetCreationTime(fullTargetPath, createDate);
                         ctx.SetState(ActionState.Success);  
                     }
                 }
