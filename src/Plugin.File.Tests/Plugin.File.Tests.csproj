@@ -27,12 +27,22 @@
       <None Update="files\rename\Sample\Sample.txt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <None Update="files\copy-file\source\Sample.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="files\copy-file\source\child\Sample.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.File\Nox.Cli.Plugin.File.csproj" />
       <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
       <ProjectReference Include="..\Nox.Cli\Nox.Cli.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="files\copy-file\target\" />
     </ItemGroup>
     
 </Project>

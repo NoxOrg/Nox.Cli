@@ -154,7 +154,17 @@ public class ServerVariableProvider: IServerVariableProvider
                 {
                     //Find the variable value
                     var lookupValue = LookupValue(match.Groups[2].Value);
-                    if (lookupValue != null) item.Value = lookupValue;
+                    if (lookupValue != null)
+                    {
+                        if (lookupValue is string)
+                        {
+                            item.Value = item.Value.ToString()!.Replace(match.Value, lookupValue.ToString());
+                        }
+                        else
+                        {
+                            item.Value = lookupValue;
+                        }
+                    }
                 }
             }
         }
