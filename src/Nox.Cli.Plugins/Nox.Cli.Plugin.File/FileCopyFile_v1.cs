@@ -75,7 +75,7 @@ public class FileCopyFile_v1: INoxCliAddin
                 {
                     var isValid = true;
                     var fullTargetPath = Path.Combine(Path.GetFullPath(_targetPath), filename);
-                    Directory.CreateDirectory(Path.GetDirectoryName(Path.GetDirectoryName(fullTargetPath))!);
+                    Directory.CreateDirectory(Path.GetDirectoryName(fullTargetPath)!);
                     var createDate = DateTime.Now;
                     if (System.IO.File.Exists(fullTargetPath))
                     {

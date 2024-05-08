@@ -25,7 +25,7 @@ public class FolderRenameTests
 
         if (Directory.Exists(Path.Combine(path, "Sample-After")))
         {
-            Directory.Delete(Path.Combine(path, "Sample-After"));    
+            Helpers.PurgeFolderRecursive(Path.Combine(path, "Sample-After"), true);
         }
         
         CopyRecursively(Path.Combine(path, "Sample"), Path.Combine(path, "Sample-Before"));
