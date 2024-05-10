@@ -20,7 +20,7 @@
         <PackageReference Include="Nox.Types" Version="7.0.232" />
         <PackageReference Include="RestSharp" Version="110.2.0" />
         <PackageReference Include="YamlDotNet" Version="15.1.2" />
-        <PackageReference Include="Azure.Identity" Version="1.11.2" />
+        <PackageReference Include="Azure.Identity" Version="1.11.3" />
         <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.6.0" />
         <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.2.3" />
     </ItemGroup>
