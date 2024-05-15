@@ -62,6 +62,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddSingleton<IWorkflowContextFactory, WorkflowContextFactory>();
+builder.Services.AddAllElasticApm();
 
 var app = builder.Build();
 
@@ -81,7 +82,6 @@ if (app.Environment.IsDevelopment())
         });    
     }
 }
-app.UseAllElasticApm(builder.Configuration);
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
