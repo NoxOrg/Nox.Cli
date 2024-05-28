@@ -17,8 +17,8 @@
       <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="8.0.5" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-      <PackageReference Include="Nox.Secrets.Azure" Version="7.0.234" />
-      <PackageReference Include="Nox.Yaml" Version="7.0.234" />
+      <PackageReference Include="Nox.Secrets.Azure" Version="7.0.236" />
+      <PackageReference Include="Nox.Yaml" Version="7.0.236" />
       <PackageReference Include="RestSharp" Version="110.2.0" />
       <PackageReference Include="Spectre.Console" Version="0.49.1" />
     </ItemGroup>
