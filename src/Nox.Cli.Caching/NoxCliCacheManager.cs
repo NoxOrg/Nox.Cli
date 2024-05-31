@@ -172,11 +172,17 @@ public class NoxCliCacheManager: INoxCliCacheManager
         Dictionary<string,string> yamlFiles = new(StringComparer.OrdinalIgnoreCase);
         if (_isServer)
         {
-            if (string.IsNullOrEmpty(_cache!.TenantId)) throw new NoxCliException("Tenant has not been configured!");            
+            if (string.IsNullOrEmpty(_cache!.TenantId)) throw new NoxCliException("Tenant has not been configured!");
 
-            GetOnlineWorkflowsAndManifest(yamlFiles);
-            
-            GetOnlineTemplates();
+            if (_forceOffline)
+            {
+                GetLocalWorkflowsAndManifest(yamlFiles);
+            }
+            else
+            {
+                GetOnlineWorkflowsAndManifest(yamlFiles);
+                GetOnlineTemplates();    
+            }
         }
         else
         {

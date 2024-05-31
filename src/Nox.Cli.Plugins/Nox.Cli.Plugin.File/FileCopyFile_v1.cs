@@ -1,5 +1,6 @@
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Plugin.File.Helpers;
 
 namespace Nox.Cli.Plugin.File;
 
@@ -73,29 +74,16 @@ public class FileCopyFile_v1: INoxCliAddin
                 }
                 else
                 {
-                    var isValid = true;
                     var fullTargetPath = Path.Combine(Path.GetFullPath(_targetPath), filename);
                     Directory.CreateDirectory(Path.GetDirectoryName(fullTargetPath)!);
-                    var createDate = DateTime.Now;
-                    if (System.IO.File.Exists(fullTargetPath))
+                    var result = CopyHelper.CopyFile(fullSourcePath, fullTargetPath, _isOverwrite!.Value);
+                    if (!result)
                     {
-                        if (_isOverwrite!.Value)
-                        {
-                            createDate = System.IO.File.GetCreationTime(fullTargetPath);
-                            System.IO.File.Delete(fullTargetPath);    
-                        }
-                        else
-                        {
-                            ctx.SetErrorMessage($"File: {fullTargetPath} already exists, and is-overwrite was not specified.");
-                            isValid = false;
-                        }
-                        
+                        ctx.SetErrorMessage($"File: {fullTargetPath} already exists, and is-overwrite was not specified.");
                     }
-                    if (isValid)
+                    else
                     {
-                        System.IO.File.Copy(fullSourcePath, fullTargetPath);
-                        System.IO.File.SetCreationTime(fullTargetPath, createDate);
-                        ctx.SetState(ActionState.Success);  
+                        ctx.SetState(ActionState.Success);
                     }
                 }
                 
