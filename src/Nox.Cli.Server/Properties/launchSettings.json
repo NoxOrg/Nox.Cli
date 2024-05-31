@@ -5,6 +5,7 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
+      "commandLineArgs": "--offline",
       "launchUrl": "swagger",
       "applicationUrl": "http://localhost:8000",
       "environmentVariables": {

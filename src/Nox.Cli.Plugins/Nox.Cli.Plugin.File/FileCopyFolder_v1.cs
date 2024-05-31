@@ -1,5 +1,6 @@
 using Nox.Cli.Abstractions;
 using Nox.Cli.Abstractions.Extensions;
+using Nox.Cli.Plugin.File.Helpers;
 
 namespace Nox.Cli.Plugin.File;
 
@@ -62,8 +63,6 @@ public class FileCopyFolder_v1 : INoxCliAddin
     public Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
     {
         var outputs = new Dictionary<string, object>();
-        var isValid = true;
-
         ctx.SetState(ActionState.Error);
 
         if (string.IsNullOrEmpty(_sourcePath) ||
@@ -79,7 +78,6 @@ public class FileCopyFolder_v1 : INoxCliAddin
                 if (!Directory.Exists(fullSourcePath))
                 {
                     ctx.SetErrorMessage($"Folder {fullSourcePath} does not exist!");
-                    isValid = false;
                 }
                 else
                 {
@@ -87,27 +85,22 @@ public class FileCopyFolder_v1 : INoxCliAddin
                     if (!Directory.Exists(fullTargetPath))
                     {
                         Directory.CreateDirectory(fullTargetPath);
+                        CopyFiles(fullSourcePath, fullTargetPath);
+                        ctx.SetState(ActionState.Success);
                     }
                     else
                     {
                         if (_isOverwrite!.Value)
                         {
-                            PurgeFolder(fullTargetPath);
+                            CopyFiles(fullSourcePath, fullTargetPath);
+                            ctx.SetState(ActionState.Success);
                         }
                         else
                         {
                             ctx.SetErrorMessage($"Folder {fullTargetPath} already exists, and is-overwrite was not specified.");
-                            isValid = false;
                         }
                     }
-
-                    if (isValid)
-                    {
-                        CopyFiles(fullSourcePath, fullTargetPath);
-                        ctx.SetState(ActionState.Success);    
-                    }
                 }
-                
             }
             catch (Exception ex)
             {
@@ -130,15 +123,7 @@ public class FileCopyFolder_v1 : INoxCliAddin
         foreach (var file in di.GetFiles())
         {
             var targetFilePath = Path.Combine(targetFolder, file.Name);
-            var createDate = DateTime.Now;
-            if (System.IO.File.Exists(targetFilePath))
-            {
-                createDate = System.IO.File.GetCreationTime(targetFilePath);
-                System.IO.File.Delete(targetFilePath);
-            }
-            Directory.CreateDirectory(targetFolder);
-            file.CopyTo(targetFilePath);
-            System.IO.File.SetCreationTime(targetFilePath, createDate);
+            CopyHelper.CopyFile(file.FullName, targetFilePath, true);
         }
 
         if (_isRecursive == true)
@@ -147,20 +132,6 @@ public class FileCopyFolder_v1 : INoxCliAddin
             {
                 CopyFiles(subFolder.FullName, Path.Combine(targetFolder, subFolder.Name));
             }
-        }
-    }
-
-    private void PurgeFolder(string path)
-    {
-        var di = new DirectoryInfo(path);
-        foreach (var file in di.GetFiles())
-        {
-            file.Delete();
-        }
-
-        foreach (var dir in di.GetDirectories())
-        {
-            dir.Delete(true);
         }
     }
 }

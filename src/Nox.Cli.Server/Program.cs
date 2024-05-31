@@ -9,10 +9,17 @@ using Nox.Cli.Variables.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var forceOffline = false;
+var offlineArg = args.FirstOrDefault(arg => arg.StartsWith("--offline"));
+if (offlineArg != null)
+{
+    forceOffline = true;
+}
+
 // Add services to the container.
 builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration, subscribeToJwtBearerMiddlewareDiagnosticsEvents: true);
 
-var cacheManager = new NoxCliCacheBuilder(builder.Configuration["NoxScriptsUrl"]!, false)
+var cacheManager = new NoxCliCacheBuilder(builder.Configuration["NoxScriptsUrl"]!, forceOffline)
     .WithTenantId(builder.Configuration["AzureAd:TenantId"]!)
     .ForServer()
     .Build();
@@ -62,7 +69,12 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddSingleton<IWorkflowContextFactory, WorkflowContextFactory>();
-builder.Services.AddAllElasticApm();
+
+if (!forceOffline)
+{
+    builder.Services.AddAllElasticApm();    
+}
+
 
 var app = builder.Build();
 
