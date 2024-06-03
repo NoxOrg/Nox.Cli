@@ -70,7 +70,15 @@ public class PowershellScript_v1 : INoxCliAddin
 
                 var results = _pwsh.Invoke();
 
-                if (results.Any(r => (r.ToString() ?? "").Contains("error", StringComparison.OrdinalIgnoreCase)))
+                if (_pwsh.HadErrors)
+                {
+                    var errorMessage = "";
+                    foreach (var err in _pwsh.Streams.Error)
+                    {
+                        errorMessage += err.ErrorDetails.Message + Environment.NewLine;
+                    }
+                    ctx.SetErrorMessage(errorMessage);
+                } else if (results.Any(r => (r.ToString() ?? "").Contains("error", StringComparison.OrdinalIgnoreCase)))
                 {
                     var errorMessage = "";
                     foreach (var result in results)
@@ -83,7 +91,7 @@ public class PowershellScript_v1 : INoxCliAddin
                 {
                     outputs["result"] = results;
 
-                    ctx.SetState(ActionState.Success);    
+                    ctx.SetState(ActionState.Success);
                 }
 
             }
