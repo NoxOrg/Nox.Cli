@@ -75,7 +75,7 @@ public class PowershellScript_v1 : INoxCliAddin
                     var errorMessage = "";
                     foreach (var err in _pwsh.Streams.Error)
                     {
-                        errorMessage += err.ErrorDetails.Message + Environment.NewLine;
+                        errorMessage += err + Environment.NewLine;
                     }
                     ctx.SetErrorMessage(errorMessage);
                 } else if (results.Any(r => (r.ToString() ?? "").Contains("error", StringComparison.OrdinalIgnoreCase)))
