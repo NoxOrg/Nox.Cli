@@ -2,8 +2,8 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "sync chart --offline",
-      "workingDirectory": "/home/jan/Projects/IWG/Fno.MultiDeploy/src/Ingena.Fno.MultiDeploy.Api",
+      "commandLineArgs": "sync vc --offline",
+      "workingDirectory": "/home/jan/Projects/IWG/Fno.MultiDeploy",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
