@@ -31,6 +31,16 @@ public class CoreToSnakeCase_v1: INoxCliAddin
                     Id = "result",
                     Description = "The resulting snake case string."
                 },
+                ["result-lower"] = new NoxActionOutput
+                {
+                    Id = "result-lower",
+                    Description = "The resulting snake case string, converted to lower case."
+                },
+                ["result-upper"] = new NoxActionOutput
+                {
+                    Id = "result-upper",
+                    Description = "The resulting snake case string, converted to upper case."
+                },
             }
         };
     }
@@ -62,8 +72,10 @@ public class CoreToSnakeCase_v1: INoxCliAddin
                 }
                 else
                 {
-                    var result = _source.Replace('.', '_').ToLower();
+                    var result = _source.Replace('.', '_');
                     outputs["result"] = result;
+                    outputs["result-lower"] = result.ToLower();
+                    outputs["result-upper"] = result.ToUpper();
                 }
                 
                 ctx.SetState(ActionState.Success);    
