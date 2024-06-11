@@ -2,8 +2,8 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "sync vc --offline",
-      "workingDirectory": "/home/jan/Projects/IWG/Fno.MultiDeploy",
+      "commandLineArgs": "new solution --offline",
+      "workingDirectory": "/home/jan/demo/CliDemo",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

@@ -69,6 +69,7 @@
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Console\Nox.Cli.Plugin.Console.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Project\Nox.Cli.Plugin.Project.csproj" />
     <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Teams\Nox.Cli.Plugin.Teams.csproj" />
+    <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.Git\Nox.Cli.Plugin.Git.csproj" />
     <ProjectReference Include="..\Nox.Cli.Shared.DTO\Nox.Cli.Shared.DTO.csproj" />
     <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
   </ItemGroup>
