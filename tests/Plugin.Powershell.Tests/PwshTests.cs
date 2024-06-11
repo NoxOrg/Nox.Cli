@@ -6,6 +6,7 @@ using Nox.Cli.Plugins.Powershell;
 using Nox.Cli.Variables.Secrets;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
+using TestHelpers;
 
 namespace Plugin.Powershell.Tests;
 

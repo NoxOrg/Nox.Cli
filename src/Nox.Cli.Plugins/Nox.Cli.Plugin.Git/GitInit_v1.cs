@@ -21,11 +21,16 @@ public class GitInit_v1 : INoxCliAddin
                     Default = string.Empty,
                     IsRequired = true
                 },
-                
                 ["branch-name"] = new NoxActionInput {
                     Id = "branch-name",
                     Description = "The name of the default branch to create. Defaults to main",
                     Default = "main",
+                    IsRequired = false
+                },
+                ["suppress-warnings"] = new NoxActionInput {
+                    Id = "suppress-warnings",
+                    Description = "Indicate whether the plugin should ignore warnings.",
+                    Default = false,
                     IsRequired = false
                 }
             },
@@ -43,11 +48,13 @@ public class GitInit_v1 : INoxCliAddin
 
     private string? _path;
     private string? _branchName;
+    private bool? _suppressWarnings;
     
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _path = inputs.Value<string>("path");
         _branchName = inputs.ValueOrDefault<string>("branch-name", this);
+        _suppressWarnings = inputs.ValueOrDefault<bool>("suppress-warnings", this);
         return Task.CompletedTask;
     }
 
@@ -58,7 +65,8 @@ public class GitInit_v1 : INoxCliAddin
         ctx.SetState(ActionState.Error);
 
         if (string.IsNullOrEmpty(_path) ||
-            string.IsNullOrEmpty(_branchName))
+            string.IsNullOrEmpty(_branchName) ||
+            _suppressWarnings == null)
         {
             ctx.SetErrorMessage("The Git init action was not initialized");
         }
@@ -74,7 +82,7 @@ public class GitInit_v1 : INoxCliAddin
                 else
                 {
                     var client = new GitClient(fullPath);
-                    var response = await client.Init(_branchName);
+                    var response = await client.Init(_branchName, _suppressWarnings.Value);
                     if (response.Status == GitCommandStatus.Error)
                     {
                         ctx.SetState(ActionState.Error);

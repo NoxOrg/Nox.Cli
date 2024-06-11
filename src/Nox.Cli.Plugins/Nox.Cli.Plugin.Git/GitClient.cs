@@ -13,7 +13,7 @@ public class GitClient: IGitClient
         //Verify that git is installed
         try
         {
-            var response = ExecuteAsync("--version").Result;
+            var response = ExecuteAsync("--version", false).Result;
             if (response.Status == GitCommandStatus.Error)
             {
                 throw new Exception("Git executable not found!");
@@ -26,12 +26,12 @@ public class GitClient: IGitClient
         
     }
     
-    public async Task<GitResponse> Init(string branchName = "main")
+    public async Task<GitResponse> Init(string branchName = "main", bool suppressWarnings = false)
     {
         var response = new GitResponse();
         try
         {
-            return await ExecuteAsync($"init -b {branchName}");
+            return await ExecuteAsync($"init -b {branchName}", suppressWarnings);
         }
         catch (Exception ex)
         {
@@ -41,12 +41,12 @@ public class GitClient: IGitClient
         return response;
     }
 
-    public async Task<GitResponse> Add(string filePattern)
+    public async Task<GitResponse> Add(string filePattern, bool suppressWarnings = false)
     {
         var response = new GitResponse();
         try
         {
-            return await ExecuteAsync($"add --all {filePattern}");
+            return await ExecuteAsync($"add --all {filePattern}", suppressWarnings);
         }
         catch (Exception ex)
         {
@@ -56,12 +56,12 @@ public class GitClient: IGitClient
         return response;
     }
 
-    public async Task<GitResponse> Commit(string message)
+    public async Task<GitResponse> Commit(string message, bool suppressWarnings = false)
     {
         var response = new GitResponse();
         try
         {
-            return await ExecuteAsync($"commit -m \"{message}\"");
+            return await ExecuteAsync($"commit -m \"{message}\"", suppressWarnings);
         }
         catch (Exception ex)
         {
@@ -71,7 +71,7 @@ public class GitClient: IGitClient
         return response;
     }
 
-    private async Task<GitResponse> ExecuteAsync(string arguments)
+    private async Task<GitResponse> ExecuteAsync(string arguments, bool suppressWarnings)
     {
         var response = new GitResponse();
         var processInfo = GetProcessStartInfo(arguments);
@@ -79,7 +79,30 @@ public class GitClient: IGitClient
         process.StartInfo = processInfo;
         process.Start();
         var output = await process.StandardOutput.ReadToEndAsync();
-        var error = await process.StandardError.ReadToEndAsync();
+        var errors = new List<string>();
+        var errorLine = await process.StandardError.ReadLineAsync();
+        while (!string.IsNullOrWhiteSpace(errorLine))
+        {
+            if (errorLine.StartsWith("warning", StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (!suppressWarnings) errors.Add(errorLine);                
+            }
+            else
+            {
+                errors.Add(errorLine);
+            }
+
+            errorLine = await process.StandardError.ReadLineAsync();
+        }
+
+        var error = "";
+        if (errors.Count != 0)
+        {
+            foreach (var item in errors)
+            {
+                error += item + Environment.NewLine;
+            }
+        }
         await process.WaitForExitAsync();
         if (!string.IsNullOrWhiteSpace(error))
         {

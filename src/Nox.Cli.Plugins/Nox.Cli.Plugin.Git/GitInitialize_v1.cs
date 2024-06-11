@@ -38,6 +38,12 @@ public class GitInitialize_v1: INoxCliAddin
                     Description = "The message to associate with the commit.",
                     Default = "Initial Commit",
                     IsRequired = false
+                },
+                ["suppress-warnings"] = new NoxActionInput {
+                    Id = "suppress-warnings",
+                    Description = "Indicate whether the plugin should ignore warnings.",
+                    Default = false,
+                    IsRequired = false
                 }
             },
 
@@ -56,6 +62,7 @@ public class GitInitialize_v1: INoxCliAddin
     private string? _branchName;
     private string? _filePattern;
     private string? _message;
+    private bool? _suppressWarnings;
     
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
@@ -63,6 +70,7 @@ public class GitInitialize_v1: INoxCliAddin
         _branchName = inputs.ValueOrDefault<string>("branch-name", this);
         _filePattern = inputs.ValueOrDefault<string>("file-pattern", this);
         _message = inputs.ValueOrDefault<string>("commit-message", this);
+        _suppressWarnings = inputs.ValueOrDefault<bool>("suppress-warnings", this);
         return Task.CompletedTask;
     }
 
@@ -75,7 +83,8 @@ public class GitInitialize_v1: INoxCliAddin
         if (string.IsNullOrEmpty(_path) ||
             string.IsNullOrEmpty(_branchName) ||
             string.IsNullOrEmpty(_filePattern) ||
-            string.IsNullOrEmpty(_message))
+            string.IsNullOrEmpty(_message) ||
+            _suppressWarnings == null)
         {
             ctx.SetErrorMessage("The Git initialize action was not initialized");
         }
@@ -91,7 +100,7 @@ public class GitInitialize_v1: INoxCliAddin
                 else
                 {
                     var client = new GitClient(fullPath);
-                    var response = await client.Init(_branchName);
+                    var response = await client.Init(_branchName, _suppressWarnings.Value);
                     if (response.Status == GitCommandStatus.Error)
                     {
                         ctx.SetState(ActionState.Error);
@@ -99,7 +108,7 @@ public class GitInitialize_v1: INoxCliAddin
                     }
                     else
                     {
-                        response = await client.Add(_filePattern);
+                        response = await client.Add(_filePattern, _suppressWarnings.Value);
                         if (response.Status == GitCommandStatus.Error)
                         {
                             ctx.SetState(ActionState.Error);
@@ -107,7 +116,7 @@ public class GitInitialize_v1: INoxCliAddin
                         }
                         else
                         {
-                            response = await client.Commit(_message);
+                            response = await client.Commit(_message, _suppressWarnings.Value);
                             if (response.Status == GitCommandStatus.Error)
                             {
                                 ctx.SetState(ActionState.Error);

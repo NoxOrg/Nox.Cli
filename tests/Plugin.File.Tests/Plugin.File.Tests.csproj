@@ -45,6 +45,7 @@
       <ProjectReference Include="..\..\src\Nox.Cli.Plugins\Nox.Cli.Plugin.File\Nox.Cli.Plugin.File.csproj" />
       <ProjectReference Include="..\..\src\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
       <ProjectReference Include="..\..\src\Nox.Cli\Nox.Cli.csproj" />
+      <ProjectReference Include="..\..\src\TestHelpers\TestHelpers.csproj" />
     </ItemGroup>
 
     <ItemGroup>

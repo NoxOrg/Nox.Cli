@@ -27,6 +27,12 @@ public class GitAdd_v1: INoxCliAddin
                     Description = "The name of the file to add, or a patten of files to add",
                     Default = "*",
                     IsRequired = false
+                },
+                ["suppress-warnings"] = new NoxActionInput {
+                    Id = "suppress-warnings",
+                    Description = "Indicate whether the plugin should ignore warnings.",
+                    Default = false,
+                    IsRequired = false
                 }
             },
 
@@ -43,11 +49,13 @@ public class GitAdd_v1: INoxCliAddin
 
     private string? _path;
     private string? _filePattern;
+    private bool? _suppressWarnings;
     
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
         _path = inputs.Value<string>("path");
         _filePattern = inputs.ValueOrDefault<string>("file-pattern", this);
+        _suppressWarnings = inputs.ValueOrDefault<bool>("suppress-warnings", this);
         return Task.CompletedTask;
     }
 
@@ -58,7 +66,8 @@ public class GitAdd_v1: INoxCliAddin
         ctx.SetState(ActionState.Error);
 
         if (string.IsNullOrEmpty(_path) ||
-            string.IsNullOrEmpty(_filePattern))
+            string.IsNullOrEmpty(_filePattern) ||
+            _suppressWarnings == null)
         {
             ctx.SetErrorMessage("The Git add action was not initialized");
         }
@@ -74,7 +83,7 @@ public class GitAdd_v1: INoxCliAddin
                 else
                 {
                     var client = new GitClient(fullPath);
-                    var response = await client.Add(_filePattern);
+                    var response = await client.Add(_filePattern, _suppressWarnings.Value);
                     if (response.Status == GitCommandStatus.Error)
                     {
                         ctx.SetState(ActionState.Error);
