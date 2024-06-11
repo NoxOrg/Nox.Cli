@@ -19,7 +19,7 @@ public class GitClient: IGitClient
                 throw new Exception("Git executable not found!");
             }
         }
-        catch(Exception ex)
+        catch
         {
             throw new Exception("Git executable not found!");
         }
