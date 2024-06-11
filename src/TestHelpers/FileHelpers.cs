@@ -1,4 +1,4 @@
-namespace Plugin.Powershell.Tests;
+namespace TestHelpers;
 
 public static class FileHelpers
 {

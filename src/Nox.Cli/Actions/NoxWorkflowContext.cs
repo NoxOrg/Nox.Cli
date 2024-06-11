@@ -432,6 +432,11 @@ public class NoxWorkflowContext : INoxWorkflowContext
         }
         return result;
     }
+
+    internal void SetCurrentActionForTests()
+    {
+        _currentAction = new NoxAction();
+    }
 }
 
 

@@ -6,6 +6,7 @@ using Nox.Cli.Plugin.File;
 using Nox.Cli.Variables.Secrets;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
+using TestHelpers;
 using Xunit;
 
 namespace Plugin.File.Tests;
@@ -17,7 +18,7 @@ public class CopyFileTests
     {
         var path = "./files/copy-file";
         //Ensure the target folder does not exist
-        Helpers.PurgeFolderRecursive(Path.Combine(path, "new-target"), true);
+        FileHelpers.PurgeFolderRecursive(Path.Combine(path, "new-target"), true);
         
         var plugin = new FileCopyFile_v1();
         var inputs = new Dictionary<string, object>
@@ -42,7 +43,7 @@ public class CopyFileTests
     {
         var path = "./files/copy-file";
         //Ensure the target folder exists
-        Helpers.PurgeFolderRecursive(Path.Combine(path, "new-target"), true);
+        FileHelpers.PurgeFolderRecursive(Path.Combine(path, "new-target"), true);
         Directory.CreateDirectory(Path.Combine(path, "new-target"));
         await System.IO.File.WriteAllTextAsync(Path.Combine(path, "new-target/Sample.txt"), "Hello World");
         
@@ -72,7 +73,7 @@ public class CopyFileTests
     {
         var path = "./files/copy-file";
         //Ensure the target folder exists
-        Helpers.PurgeFolderRecursive(Path.Combine(path, "new-target"), true);
+        FileHelpers.PurgeFolderRecursive(Path.Combine(path, "new-target"), true);
         Directory.CreateDirectory(Path.Combine(path, "new-target"));
         await System.IO.File.WriteAllTextAsync(Path.Combine(path, "new-target/Sample.txt"), "Hello World");
         

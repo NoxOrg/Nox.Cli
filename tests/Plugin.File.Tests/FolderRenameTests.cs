@@ -7,6 +7,7 @@ using Nox.Cli.Plugin.File;
 using Nox.Cli.Variables.Secrets;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
+using TestHelpers;
 using Xunit;
 
 namespace Plugin.File.Tests;
@@ -25,7 +26,7 @@ public class FolderRenameTests
 
         if (Directory.Exists(Path.Combine(path, "Sample-After")))
         {
-            Helpers.PurgeFolderRecursive(Path.Combine(path, "Sample-After"), true);
+            FileHelpers.PurgeFolderRecursive(Path.Combine(path, "Sample-After"), true);
         }
         
         CopyRecursively(Path.Combine(path, "Sample"), Path.Combine(path, "Sample-Before"));

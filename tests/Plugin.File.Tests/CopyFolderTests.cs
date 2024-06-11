@@ -6,6 +6,7 @@ using Nox.Cli.Plugin.File;
 using Nox.Cli.Variables.Secrets;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
+using TestHelpers;
 using Xunit;
 
 namespace Plugin.File.Tests;
@@ -17,7 +18,7 @@ public class CopyFolderTests
     {
         var path = "./files/copy-folder";
         //Ensure the target folder does not exist
-        Helpers.PurgeFolderRecursive(Path.Combine(path, "target"), true);
+        FileHelpers.PurgeFolderRecursive(Path.Combine(path, "target"), true);
         
         var plugin = new FileCopyFolder_v1();
         var inputs = new Dictionary<string, object>
