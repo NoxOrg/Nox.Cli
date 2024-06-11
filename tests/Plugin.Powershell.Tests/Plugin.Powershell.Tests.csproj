@@ -1,14 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0"/>
-        <PackageReference Include="Moq" Version="4.20.70" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/><PackageReference Include="Moq" Version="4.20.70" />
         <PackageReference Include="xunit" Version="2.8.0" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.8.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -21,34 +23,28 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="files\rename\Sample.txt">
+      <ProjectReference Include="..\..\src\Nox.Cli.Plugins\Nox.Cli.Plugin.Powershell\Nox.Cli.Plugin.Powershell.csproj" />
+      <ProjectReference Include="..\..\src\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
+      <ProjectReference Include="..\..\src\Nox.Cli\Nox.Cli.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="files\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="no-git\file1.txt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="files\rename\Sample\Sample.txt">
+      <None Update="no-git\file2.txt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="files\copy-file\source\Sample.txt">
+      <None Update="files\no-git\file1.txt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="files\copy-file\source\child\Sample.txt">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="files\copy-folder\source\child\Sample.txt">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="files\copy-folder\source\Sample.txt">
+      <None Update="files\no-git\file2.txt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Nox.Cli.Plugins\Nox.Cli.Plugin.File\Nox.Cli.Plugin.File.csproj" />
-      <ProjectReference Include="..\Nox.Cli.Variables\Nox.Cli.Variables.csproj" />
-      <ProjectReference Include="..\Nox.Cli\Nox.Cli.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="files\copy-file\target\" />
-    </ItemGroup>
-    
 </Project>
