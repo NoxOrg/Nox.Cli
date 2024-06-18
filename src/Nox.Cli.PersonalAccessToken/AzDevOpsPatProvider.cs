@@ -27,7 +27,7 @@ public class AzDevOpsPatProvider
         if (!string.IsNullOrEmpty(cachedPat))
         {
             var pat = JsonConvert.DeserializeObject<AzDevOpsPat>(cachedPat);
-            if (pat!.ValidTo < DateTime.Now)
+            if (pat!.ValidTo < DateTime.Now || !await ValidatePat(accessToken, pat.Token!))
             {
                 pat = await GetOrCreateOnlinePat(accessToken);
             }
@@ -62,6 +62,16 @@ public class AzDevOpsPatProvider
         {
             throw new NoxCliException("Unable to fetch a list of your Azure DevOps Personal access tokens, are you connected to the internet?");
         }
+    }
+
+    private async Task<bool> ValidatePat(string accessToken, string pat)
+    {
+        var onlinePats = await GetOnlinePatList(accessToken);
+        if (onlinePats == null) return false;
+        var existing = onlinePats.PatTokens!.FirstOrDefault(p => p.Token == pat);
+        if (existing == null) return false;
+        if (existing.ValidTo < DateTime.Now) return false;
+        return true;
     }
 
     private async Task<AzDevOpsPatList?> GetOnlinePatList(string accessToken)
