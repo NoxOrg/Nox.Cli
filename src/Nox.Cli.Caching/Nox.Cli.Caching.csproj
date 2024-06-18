@@ -13,13 +13,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Azure.Identity" Version="1.11.3" />
-      <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="8.0.5" />
+      <PackageReference Include="Azure.Identity" Version="1.12.0" />
+      <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="8.0.6" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-      <PackageReference Include="Nox.Secrets.Azure" Version="7.0.234" />
-      <PackageReference Include="Nox.Yaml" Version="7.0.234" />
-      <PackageReference Include="RestSharp" Version="110.2.0" />
+      <PackageReference Include="Nox.Secrets.Azure" Version="8.0.4" />
+      <PackageReference Include="Nox.Yaml" Version="8.0.4" />
+      <PackageReference Include="RestSharp" Version="111.3.0" />
       <PackageReference Include="Spectre.Console" Version="0.49.1" />
     </ItemGroup>
 

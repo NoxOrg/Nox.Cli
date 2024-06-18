@@ -13,7 +13,7 @@
       <PackageReference Include="Microsoft.VisualStudio.Services.ExtensionManagement.WebApi" Version="19.225.1" />
       <PackageReference Include="Microsoft.VisualStudio.Services.MemberEntitlementManagement.WebApi" Version="19.225.1" />
       <PackageReference Include="Microsoft.VisualStudio.Services.ServiceEndpoints.WebApi" Version="19.225.1" />
-      <PackageReference Include="RestSharp" Version="110.2.0" />
+      <PackageReference Include="RestSharp" Version="111.3.0" />
     </ItemGroup>
 
     <ItemGroup>
