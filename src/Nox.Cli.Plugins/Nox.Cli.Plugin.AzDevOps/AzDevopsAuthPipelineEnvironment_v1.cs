@@ -5,15 +5,15 @@ using Nox.Cli.Abstractions.Extensions;
 
 namespace Nox.Cli.Plugin.AzDevOps;
 
-public class AzDevOpsFindEnvironment_v1 : INoxCliAddin
+public class AzDevopsAuthPipelineEnvironment_v1 : INoxCliAddin
 {
     public NoxActionMetaData Discover()
     {
         return new NoxActionMetaData
         {
-            Name = "azdevops/find-environment@v1",
+            Name = "azdevops/auth-pipeline-environment@v1",
             Author = "Jan Schutte",
-            Description = "Find an Azure Devops pipeline environment",
+            Description = "Authorize a pipeline to use an environment",
 
             Inputs =
             {
@@ -41,14 +41,10 @@ public class AzDevOpsFindEnvironment_v1 : INoxCliAddin
 
             Outputs =
             {
-                ["is-found"] = new NoxActionOutput {
-                    Id = "is-found",
-                    Description = "A boolean indicating if the environment was found.",
-                },
                 ["environment-id"] = new NoxActionOutput {
                     Id = "environment-id",
                     Description = "The Id of the Azure devops environment. Will return null if it does not exist.",
-                }
+                },
             }
         };
     }
@@ -64,6 +60,7 @@ public class AzDevOpsFindEnvironment_v1 : INoxCliAddin
         _projectId = inputs.Value<Guid>("project-id");
         _envName = inputs.Value<string>("environment-name");
         _agentClient = await connection!.GetClientAsync<TaskAgentHttpClient>();
+        
     }
 
     public async Task<IDictionary<string, object>> ProcessAsync(INoxWorkflowContext ctx)
@@ -84,15 +81,12 @@ public class AzDevOpsFindEnvironment_v1 : INoxCliAddin
         {
             try
             {
-                outputs["is-found"] = false;
-                var environments = await _agentClient.GetEnvironmentsAsync(_projectId.Value);
-                var env = environments.FirstOrDefault(env => env.Name.Equals(_envName, StringComparison.OrdinalIgnoreCase)); 
-                
-                if (env != null)
+                var envInstance = await _agentClient.AddEnvironmentAsync(_projectId.Value, new EnvironmentCreateParameter
                 {
-                    outputs["is-found"] = true;
-                    outputs["environment-id"] = env.Id;
-                }
+                    Name = _envName,
+                    Description = $"The {_envName} environment"
+                });
+                outputs["environment-id"] = envInstance.Id;
                 
                 ctx.SetState(ActionState.Success);
             }
