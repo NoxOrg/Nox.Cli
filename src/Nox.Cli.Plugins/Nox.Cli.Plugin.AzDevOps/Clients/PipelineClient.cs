@@ -71,8 +71,32 @@ public class PipelineClient
             throw new DevOpsClientException($"An error occurred while trying to authorize the pipelines on a project ({response.ErrorMessage})");
         }
     }
-    
-    
+
+    public async Task AuthorizeEnvironmentPipeline(Guid projectId, int environmentId, int pipelineId)
+    {
+        var request = new RestRequest($"/{projectId}/_apis/pipelines/pipelinePermissions/environment/{environmentId}")
+        {
+            Method = Method.Patch
+        };
+        AddHeaders(request);
+        var payload = new AuthorizeRequest()
+        {
+            Pipelines = new List<PipelineAuthorize>
+            {
+                new PipelineAuthorize
+                {
+                    Id = pipelineId,
+                    Authorized = true
+                }
+            }
+        };
+        request.AddJsonBody(JsonSerializer.Serialize(payload,  JsonOptions.Instance));
+        var response = await _client.ExecuteAsync<AuthorizeResponse>(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new DevOpsClientException($"An error occurred while trying to authorize the pipeline environment on a project ({response.ErrorMessage})");
+        }
+    }
     
     private void AddHeaders(RestRequest request)
     {

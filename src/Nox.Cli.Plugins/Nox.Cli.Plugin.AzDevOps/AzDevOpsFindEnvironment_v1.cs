@@ -44,6 +44,10 @@ public class AzDevOpsFindEnvironment_v1 : INoxCliAddin
                 ["is-found"] = new NoxActionOutput {
                     Id = "is-found",
                     Description = "A boolean indicating if the environment was found.",
+                },
+                ["environment-id"] = new NoxActionOutput {
+                    Id = "environment-id",
+                    Description = "The Id of the Azure devops environment. Will return null if it does not exist.",
                 }
             }
         };
@@ -82,9 +86,12 @@ public class AzDevOpsFindEnvironment_v1 : INoxCliAddin
             {
                 outputs["is-found"] = false;
                 var environments = await _agentClient.GetEnvironmentsAsync(_projectId.Value);
-                if (environments.Any(env => env.Name.Equals(_envName, StringComparison.OrdinalIgnoreCase)))
+                var env = environments.FirstOrDefault(env => env.Name.Equals(_envName, StringComparison.OrdinalIgnoreCase)); 
+                
+                if (env != null)
                 {
                     outputs["is-found"] = true;
+                    outputs["environment-id"] = env.Id;
                 }
                 
                 ctx.SetState(ActionState.Success);
