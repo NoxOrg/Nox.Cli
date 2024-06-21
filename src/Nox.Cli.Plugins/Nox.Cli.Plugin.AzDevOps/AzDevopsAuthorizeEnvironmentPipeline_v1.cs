@@ -63,7 +63,6 @@ public class AzDevopsAuthorizeEnvironmentPipeline_v1 : INoxCliAddin
 
     public Task BeginAsync(IDictionary<string,object> inputs)
     {
-        var connection = inputs.Value<VssConnection>("connection");
         _server = inputs.Value<string>("server");
         _pat = inputs.Value<string>("personal-access-token");
         _projectId = inputs.Value<Guid>("project-id");

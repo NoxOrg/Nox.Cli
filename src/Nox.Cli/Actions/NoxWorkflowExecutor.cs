@@ -59,7 +59,7 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
 
         var workflowCtx = _console.Status()
             .Spinner(Spinner.Known.Clock)
-            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _orgSecretResolver, _cacheManager, _lteConfig, _noxSecretsResolver));
+            .Start("Verifying the workflow script...", _ => new NoxWorkflowContext(workflow, _noxConfig, _orgSecretResolver, _cacheManager, _lteConfig, _noxSecretsResolver, arguments));
 
         while (workflowCtx.CurrentJob != null)
         {
@@ -454,7 +454,6 @@ public class NoxWorkflowExecutor: INoxWorkflowExecutor
         }
         return true;
     }
-
 }
 
 

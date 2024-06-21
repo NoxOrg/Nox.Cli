@@ -10,6 +10,7 @@ using Nox.Cli.Configuration;
 using Nox.Cli.Variables.Secrets;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
+using Spectre.Console.Cli;
 using Environment = System.Environment;
 
 namespace Nox.Cli.Actions;
@@ -45,11 +46,12 @@ public class NoxWorkflowContext : INoxWorkflowContext
         IOrgSecretResolver orgSecretResolver,
         INoxCliCacheManager cacheManager,
         ILocalTaskExecutorConfiguration? lteConfig,
-        INoxSecretsResolver? secretsResolver)
+        INoxSecretsResolver? secretsResolver,
+        IRemainingArguments arguments)
     {
         WorkflowId = Guid.NewGuid();
         _workflow = workflow;
-        _varProvider = new ClientVariableProvider(workflow, orgSecretResolver, projectConfig, lteConfig, cacheManager.Cache);
+        _varProvider = new ClientVariableProvider(workflow, orgSecretResolver, arguments, projectConfig, lteConfig, cacheManager.Cache);
         _cacheManager = cacheManager;
         _secretsResolver = secretsResolver;
         _jobs = ParseWorkflow();

@@ -6,6 +6,7 @@ using Nox.Cli.Abstractions.Configuration;
 using Nox.Cli.Configuration;
 using Nox.Cli.Variables.Secrets;
 using Nox.Solution;
+using Spectre.Console.Cli;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -13,7 +14,7 @@ namespace Nox.Cli.Variables;
 
 public class ClientVariableProvider: IClientVariableProvider
 {
-    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>\b(vars|solution|steps|server|env|runner|cache)[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+    private readonly Regex _variableRegex = new(@"\$\{\{\s*(?<variable>\b(vars|solution|steps|server|env|runner|cache|args)[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
     private readonly Dictionary<string, object?> _variables;
     private readonly IOrgSecretResolver _orgSecretResolver;
@@ -21,10 +22,12 @@ public class ClientVariableProvider: IClientVariableProvider
     private readonly INoxCliCache? _cache;
     private readonly ILocalTaskExecutorConfiguration? _lteConfig;
     private readonly List<string> _serverVariables;
+    private readonly IRemainingArguments _arguments;
     
     public ClientVariableProvider(
         WorkflowConfiguration workflow, 
         IOrgSecretResolver orgSecretResolver,
+        IRemainingArguments arguments,
         NoxSolution? projectConfig = null,
         ILocalTaskExecutorConfiguration? lteConfig = null,
         INoxCliCache? cache = null)
@@ -35,6 +38,7 @@ public class ClientVariableProvider: IClientVariableProvider
         _projectConfig = projectConfig;
         _lteConfig = lteConfig;
         _cache = cache;
+        _arguments = arguments;
         Initialize(workflow);
     }
 
@@ -146,6 +150,7 @@ public class ClientVariableProvider: IClientVariableProvider
     public async Task ResolveAll()
     {
         _variables.ResolveRunnerVariables();
+        _variables.ResolveNoxArgumentVariables(_arguments);
         await ResolveForServer();
     }
 
