@@ -33,7 +33,7 @@ public class CopyFileTests
         var cacheMan = Mock.Of<INoxCliCacheManager>();
         var lteConfig = Mock.Of<LocalTaskExecutorConfiguration>();
         var secretsResolver = Mock.Of<INoxSecretsResolver>();
-        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver);
+        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver, null!);
         await plugin.ProcessAsync(ctx);
         Assert.True(System.IO.File.Exists(Path.Combine(path, "new-target/Sample.txt")));
     }
@@ -60,7 +60,7 @@ public class CopyFileTests
         var cacheMan = Mock.Of<INoxCliCacheManager>();
         var lteConfig = Mock.Of<LocalTaskExecutorConfiguration>();
         var secretsResolver = Mock.Of<INoxSecretsResolver>();
-        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver);
+        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver, null!);
         await plugin.ProcessAsync(ctx);
         await plugin.EndAsync();
         Assert.True(System.IO.File.Exists(Path.Combine(path, "new-target/Sample.txt")));
@@ -91,7 +91,7 @@ public class CopyFileTests
         var cacheMan = Mock.Of<INoxCliCacheManager>();
         var lteConfig = Mock.Of<LocalTaskExecutorConfiguration>();
         var secretsResolver = Mock.Of<INoxSecretsResolver>();
-        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver);
+        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver, null!);
         await plugin.ProcessAsync(ctx);
         await plugin.EndAsync();
         Assert.True(System.IO.File.Exists(Path.Combine(path, "new-target/Sample.txt")));

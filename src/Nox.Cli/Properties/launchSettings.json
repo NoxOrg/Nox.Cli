@@ -2,7 +2,7 @@
   "profiles": {
     "Nox.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "sync ado --offline --force",
+      "commandLineArgs": "sync ado",
       "workingDirectory": "/home/jan/demo/CliDemo",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

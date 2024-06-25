@@ -28,7 +28,7 @@ public class PwshTests
         var cacheMan = Mock.Of<INoxCliCacheManager>();
         var lteConfig = Mock.Of<LocalTaskExecutorConfiguration>();
         var secretsResolver = Mock.Of<INoxSecretsResolver>();
-        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver);
+        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver, null!);
         await plugin.ProcessAsync(ctx);
         Assert.True(Directory.Exists(".git"));
         FileHelpers.PurgeFolderRecursive(".git", false);

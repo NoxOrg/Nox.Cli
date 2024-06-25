@@ -29,7 +29,7 @@ public class SnakeNameTests
         var cacheMan = Mock.Of<INoxCliCacheManager>();
         var lteConfig = Mock.Of<LocalTaskExecutorConfiguration>();
         var secretsResolver = Mock.Of<INoxSecretsResolver>();
-        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver);
+        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver, null!);
         var result = await plugin.ProcessAsync(ctx);
         Assert.Single(result);
         Assert.Equal(expectedValue, result["result"]);
