@@ -32,7 +32,7 @@ public class InitTests
         var cacheMan = Mock.Of<INoxCliCacheManager>();
         var lteConfig = Mock.Of<LocalTaskExecutorConfiguration>();
         var secretsResolver = Mock.Of<INoxSecretsResolver>();
-        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver);
+        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver, null!);
         ctx.SetCurrentActionForTests();
         await plugin.ProcessAsync(ctx);
         Assert.Equal(ActionState.Success, ctx.CurrentAction!.State);
@@ -59,7 +59,7 @@ public class InitTests
         var cacheMan = Mock.Of<INoxCliCacheManager>();
         var lteConfig = Mock.Of<LocalTaskExecutorConfiguration>();
         var secretsResolver = Mock.Of<INoxSecretsResolver>();
-        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver);
+        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver, null!);
         ctx.SetCurrentActionForTests();
         await plugin.ProcessAsync(ctx);
         Assert.Equal(ActionState.Success, ctx.CurrentAction!.State);
@@ -90,7 +90,7 @@ public class InitTests
         var cacheMan = Mock.Of<INoxCliCacheManager>();
         var lteConfig = Mock.Of<LocalTaskExecutorConfiguration>();
         var secretsResolver = Mock.Of<INoxSecretsResolver>();
-        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver);
+        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver, null!);
         ctx.SetCurrentActionForTests();
         await plugin.ProcessAsync(ctx);
         Assert.Equal(ActionState.Success, ctx.CurrentAction!.State);

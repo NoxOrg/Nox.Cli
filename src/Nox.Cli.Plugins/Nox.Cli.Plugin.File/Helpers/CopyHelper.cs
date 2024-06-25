@@ -11,7 +11,8 @@ public static class CopyHelper
                 var createDate = System.IO.File.GetCreationTime(targetPath);
                 System.IO.File.Delete(targetPath);    
                 System.IO.File.Copy(sourcePath, targetPath);
-                System.IO.File.SetCreationTime(targetPath, createDate);        
+                System.IO.File.SetCreationTime(targetPath, createDate);
+                return true;
             }
 
             return false;
