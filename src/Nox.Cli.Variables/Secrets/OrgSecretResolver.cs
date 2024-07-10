@@ -1,12 +1,14 @@
 using Nox.Cli.Abstractions.Configuration;
+using Nox.Cli.Abstractions.Secrets;
+using Nox.Secrets.Abstractions;
 
 namespace Nox.Cli.Variables.Secrets;
 
 public class OrgSecretResolver: IOrgSecretResolver
 {
-    private readonly IPersistedSecretStore _store;
+    private readonly IPersistedSecretStoreEx _store;
 
-    public OrgSecretResolver(IPersistedSecretStore store)
+    public OrgSecretResolver(IPersistedSecretStoreEx store)
     {
         _store = store;
     }

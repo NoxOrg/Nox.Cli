@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.DataProtection;
+using Nox.Cli.Abstractions.Secrets;
 using Nox.Solution.Constants;
 using Nox.Types;
 using DateTime = System.DateTime;
@@ -6,7 +7,7 @@ using File = System.IO.File;
 
 namespace Nox.Cli.Variables.Secrets;
 
-public class PersistedSecretStore: IPersistedSecretStore
+public class PersistedSecretStore: IPersistedSecretStoreEx
 {
     private readonly IDataProtector _protector;
     private const string ProtectorPurpose = "nox-secrets";

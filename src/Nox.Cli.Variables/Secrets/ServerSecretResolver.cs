@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Nox.Cli.Abstractions.Configuration;
+using Nox.Cli.Abstractions.Secrets;
 using Nox.Cli.Server.Abstractions;
 
 namespace Nox.Cli.Variables.Secrets;
@@ -10,12 +11,12 @@ public class ServerSecretResolver: IServerSecretResolver
 {
     private static readonly Regex SecretsVariableRegex = new(@"\$\{\{\s*server\.secrets\.(?<variable>[\w\.\-_:]+)\s*\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
  
-    private readonly IPersistedSecretStore _store;
+    private readonly IPersistedSecretStoreEx _store;
     private readonly string _tenantId;
     private readonly string _clientId;
     private readonly string _clientSecret;
 
-    public ServerSecretResolver(IPersistedSecretStore store, string tenantId, string clientId, string clientSecret)
+    public ServerSecretResolver(IPersistedSecretStoreEx store, string tenantId, string clientId, string clientSecret)
     {
         _store = store;
         _tenantId = tenantId;

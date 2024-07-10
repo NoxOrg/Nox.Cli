@@ -11,7 +11,7 @@ namespace Plugin.Core.Tests;
 
 public class SnakeNameTests
 {
-    [Theory]
+    [Theory (Skip = "This test can only be run locally as it requires a DevOps PAT")] 
     [InlineData("Hello.World", "hello_world")]
     [InlineData("HelloWorld", "helloworld")]
     [InlineData("HELLO.World", "hello_world")]
