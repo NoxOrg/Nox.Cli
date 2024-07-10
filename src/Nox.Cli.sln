@@ -83,6 +83,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plugin.Git.Tests", "..\test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestHelpers", "TestHelpers\TestHelpers.csproj", "{413D3BDF-2572-4DD0-A2F7-5FBEFD9DAC19}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plugin.AzDevOps.Tests", "..\tests\Plugin.AzDevOps.Tests\Plugin.AzDevOps.Tests.csproj", "{8617ACC1-A6C8-4E26-BD79-E9A9D854D0BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -221,6 +223,10 @@ Global
 		{413D3BDF-2572-4DD0-A2F7-5FBEFD9DAC19}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{413D3BDF-2572-4DD0-A2F7-5FBEFD9DAC19}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{413D3BDF-2572-4DD0-A2F7-5FBEFD9DAC19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8617ACC1-A6C8-4E26-BD79-E9A9D854D0BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8617ACC1-A6C8-4E26-BD79-E9A9D854D0BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8617ACC1-A6C8-4E26-BD79-E9A9D854D0BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8617ACC1-A6C8-4E26-BD79-E9A9D854D0BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -260,6 +266,7 @@ Global
 		{45F0637F-945A-42BD-8A2D-5FCFFDA741C8} = {E3FA4748-9B96-42E7-BDE8-1F08AA8AD4D9}
 		{8309A464-7247-4939-AE15-C59B5EC3D516} = {BDFC35C7-EFDC-4502-B69B-45ECB3C805CE}
 		{413D3BDF-2572-4DD0-A2F7-5FBEFD9DAC19} = {70B359E7-710C-4583-99A0-1F59333C3AD1}
+		{8617ACC1-A6C8-4E26-BD79-E9A9D854D0BE} = {BDFC35C7-EFDC-4502-B69B-45ECB3C805CE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B440C24E-F11D-4F28-9EE5-F7AB214679E6}
