@@ -7,6 +7,7 @@ using Nox.Cli.Plugins.Powershell;
 using Nox.Cli.Variables.Secrets;
 using Nox.Secrets.Abstractions;
 using Nox.Solution;
+using Spectre.Console.Cli;
 
 namespace Plugin.Powershell.Tests;
 
@@ -28,7 +29,8 @@ public class ScriptTests
         var cacheMan = Mock.Of<INoxCliCacheManager>();
         var lteConfig = Mock.Of<LocalTaskExecutorConfiguration>();
         var secretsResolver = Mock.Of<INoxSecretsResolver>();
-        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver);
+        var arguments = Mock.Of<IRemainingArguments>();
+        var ctx = new NoxWorkflowContext(wfConfig, sln, orgResolver, cacheMan, lteConfig, secretsResolver, arguments);
         await plugin.ProcessAsync(ctx);
         Console.WriteLine(ctx.CurrentAction!.ErrorMessage!);
         Assert.Equal(ActionState.Success, ctx.State);

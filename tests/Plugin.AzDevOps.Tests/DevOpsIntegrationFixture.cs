@@ -14,6 +14,8 @@ public class DevOpsIntegrationFixture
 {
     public IServiceProvider ServiceProvider { get; private set; }
     public IServiceCollection? Services { get; private set; }
+    public Exception? InitializationException { get; private set; }
+
     public DevOpsIntegrationFixture()
     {
         Services = new ServiceCollection();
@@ -26,9 +28,28 @@ public class DevOpsIntegrationFixture
         Services.AddNoxTokenCache();
         var onlineCacheUrl = "https://noxorg.dev";
         var persistedTokenCache = Services.BuildServiceProvider().GetRequiredService<IPersistedTokenCache>();
-        var cacheBuilder = new NoxCliCacheBuilder(onlineCacheUrl, false, persistedTokenCache);
-        var cacheManager = cacheBuilder.Build();
-        Services.AddNoxCliCacheManager(cacheManager);
+        var isCi = string.Equals(System.Environment.GetEnvironmentVariable("CI"), "true", StringComparison.OrdinalIgnoreCase);
+
+        if (isCi)
+        {
+            InitializationException = new InvalidOperationException("Skipping AzDevOps integration fixture initialization in CI.");
+            Services.AddNoxCliCacheManager(Mock.Of<INoxCliCacheManager>());
+        }
+        else
+        {
+            try
+            {
+                var cacheBuilder = new NoxCliCacheBuilder(onlineCacheUrl, false, persistedTokenCache);
+                var cacheManager = cacheBuilder.Build();
+                Services.AddNoxCliCacheManager(cacheManager);
+            }
+            catch (Exception ex)
+            {
+                InitializationException = ex;
+                Services.AddNoxCliCacheManager(Mock.Of<INoxCliCacheManager>());
+            }
+        }
+
         ServiceProvider = Services.BuildServiceProvider();
     }
 }

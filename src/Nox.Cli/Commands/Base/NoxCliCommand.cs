@@ -19,7 +19,7 @@ public abstract class NoxCliCommand<TSettings> : AsyncCommand<TSettings> where T
         _solution = solution;
     }
 
-    public override Task<int> ExecuteAsync(CommandContext context, TSettings settings)
+    public override Task<int> ExecuteAsync(CommandContext context, TSettings settings, System.Threading.CancellationToken cancellationToken)
     {
 
         if (string.IsNullOrEmpty(_solution.Name) || _solution.Name.Equals("NotSpecified", StringComparison.OrdinalIgnoreCase))

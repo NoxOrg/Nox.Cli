@@ -1,19 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.TeamFoundation.DistributedTask.Common.Contracts" Version="19.225.1" />
-      <PackageReference Include="Microsoft.TeamFoundation.DistributedTask.WebApi" Version="19.225.1" />
-      <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="19.225.1" />
-      <PackageReference Include="Microsoft.VisualStudio.Services.ExtensionManagement.WebApi" Version="19.225.1" />
-      <PackageReference Include="Microsoft.VisualStudio.Services.MemberEntitlementManagement.WebApi" Version="19.225.1" />
-      <PackageReference Include="Microsoft.VisualStudio.Services.ServiceEndpoints.WebApi" Version="19.225.1" />
-      <PackageReference Include="RestSharp" Version="111.3.0" />
+      <PackageReference Include="Microsoft.TeamFoundation.DistributedTask.Common.Contracts" Version="19.225.2" />
+      <PackageReference Include="Microsoft.TeamFoundation.DistributedTask.WebApi" Version="19.225.2" />
+      <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="19.225.2" />
+      <PackageReference Include="Microsoft.VisualStudio.Services.ExtensionManagement.WebApi" Version="19.225.2" />
+      <PackageReference Include="Microsoft.VisualStudio.Services.MemberEntitlementManagement.WebApi" Version="19.225.2" />
+      <PackageReference Include="Microsoft.VisualStudio.Services.ServiceEndpoints.WebApi" Version="19.225.2" />
+      <PackageReference Include="RestSharp" Version="113.1.0" />
+      <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
     </ItemGroup>
 
     <ItemGroup>
