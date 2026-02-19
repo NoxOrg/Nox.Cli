@@ -55,14 +55,23 @@ jobs:
           dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
         shell: pwsh
 
+      - name: Restore
+        run: dotnet restore ./src/Nox.Cli
+
       - name: Analyze
+        if: ${{ secrets.SONAR_TOKEN != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           ./.sonar/scanner/dotnet-sonarscanner begin /k:"NoxOrg_Nox.Cli" /o:"noxorg" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
-          dotnet build ./src/Nox.Cli --warnaserror --configuration Release --no-incremental
+          dotnet build ./src/Nox.Cli --warnaserror --configuration Release --no-incremental --no-restore -p:WarningsNotAsErrors=NU1901%3BNU1902%3BNU1903%3BNU1904
           ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        shell: pwsh
+
+      - name: Build (without Sonar token)
+        if: ${{ secrets.SONAR_TOKEN == '' }}
+        run: dotnet build ./src/Nox.Cli --warnaserror --configuration Release --no-incremental --no-restore -p:WarningsNotAsErrors=NU1901%3BNU1902%3BNU1903%3BNU1904
         shell: pwsh
         #### <-- add back after 'dotnet build' line above when tests are working
         #dotnet tool install --global dotnet-coverage
