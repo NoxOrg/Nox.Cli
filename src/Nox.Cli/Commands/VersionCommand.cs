@@ -17,7 +17,7 @@ public class VersionCommand : AsyncCommand<VersionCommand.Settings>
     {
     }
 
-    public override Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    public override Task<int> ExecuteAsync(CommandContext context, Settings settings, System.Threading.CancellationToken cancellationToken)
     {
         var installedVersion = VersionChecker.GetInstalledNoxCliVersion();
         

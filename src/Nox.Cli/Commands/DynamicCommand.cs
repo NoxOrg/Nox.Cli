@@ -29,9 +29,9 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
         public string DesignFolderPath { get; set; } = null!;
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, System.Threading.CancellationToken cancellationToken)
     {
-        await base.ExecuteAsync(context, settings);
+        await base.ExecuteAsync(context, settings, cancellationToken);
         
         var workflow = (WorkflowConfiguration)context.Data!;
 
@@ -39,4 +39,3 @@ public class DynamicCommand : NoxCliCommand<DynamicCommand.Settings>
     }
 
 }
-

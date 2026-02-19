@@ -1,6 +1,6 @@
 using Elastic.Apm.NetCoreAll;
 using Microsoft.Identity.Web;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Nox.Cli.Caching;
 using Nox.Cli.Server.Abstractions;
 using Nox.Cli.Server.Caching;
@@ -49,23 +49,23 @@ builder.Services.AddSwaggerGen(options =>
                 }
             }
         },
-        Reference = new OpenApiReference {  
-            Type = ReferenceType.SecurityScheme,  
-            Id = "oauth2"  
-        },  
         Scheme = "oauth2",  
         Name = "oauth2",  
         In = ParameterLocation.Header  
     };
     
     options.AddSecurityDefinition("oauth2", secScheme);
-
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement {  
+    options.AddSecurityRequirement(document =>
+    {
+        var securitySchemeReference = new OpenApiSecuritySchemeReference("oauth2", document, string.Empty);
+        return new OpenApiSecurityRequirement
         {
-            secScheme,
-            new [] {$"api://{builder.Configuration["AzureAd:ClientId"]}/access_as_user"}
-        }  
-    }); 
+            {
+                securitySchemeReference,
+                new List<string> { $"api://{builder.Configuration["AzureAd:ClientId"]}/access_as_user" }
+            }
+        };
+    });
 });
 
 builder.Services.AddSingleton<IWorkflowContextFactory, WorkflowContextFactory>();

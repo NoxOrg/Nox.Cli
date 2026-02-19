@@ -18,7 +18,7 @@ public class LogoutCommand : AsyncCommand<LogoutCommand.Settings>
     {
     }
 
-    public override Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    public override Task<int> ExecuteAsync(CommandContext context, Settings settings, System.Threading.CancellationToken cancellationToken)
     {
         var cacheFile = WellKnownPaths.CacheFile;
         var cacheFolder = WellKnownPaths.CachePath;
